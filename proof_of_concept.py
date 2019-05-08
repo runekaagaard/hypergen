@@ -12,9 +12,9 @@ _local.cache = {}
 
 
 def htmlgen(f):
-    def _():
+    def _(*args, **kwargs):
         try:
-            f()
+            f(*args, **kwargs)
             html = u"".join(x for x in _local.html if x)
         finally:
             _local.html = []
@@ -207,9 +207,34 @@ def page():
             test(*data.app_state)
 
 
-my_html = page()
-#print my_html
+@htmlgen
+def page2(n):
+    j = 0
 
-import lxml.html, lxml.etree
-print(lxml.etree.tostring(
-    lxml.html.fromstring(my_html), encoding='unicode', pretty_print=True))
+    with divcm(class_="the-class"):
+        div("My things", class_="Foo")
+        while j < n:
+            div("My li is {}".format(j), class_="Foo")
+            j += 1
+
+
+# import time
+
+# def timer(name, func):
+#     a = time.time() * 1000
+#     print len(func())
+#     b = time.time() * 1000
+#     took = b - a
+#     print name, N, "items took", round(took), "Milliseconds"
+#     print "each item took", took / float(N) * 1000, "u seconds"
+
+#     return took
+
+# a = timer("page2", page2)
+
+# my_html = page()
+# #print my_html
+
+# import lxml.html, lxml.etree
+# print(lxml.etree.tostring(
+#     lxml.html.fromstring(my_html), encoding='unicode', pretty_print=True))

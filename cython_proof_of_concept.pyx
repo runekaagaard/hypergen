@@ -25,73 +25,77 @@ cdef:
     int n_threads = multiprocessing.cpu_count()
     Pool mem = Pool()
     Thread* threads = <Thread*>mem.alloc(n_threads, sizeof(Thread))
+    string e1 = <string> '<'
+    string e2 = <string> ' class="'
+    string e3 = <string> '">'
+    string e4 = <string> "</"
+    string e5 = <string> ">"
+    string e6 = <string> '<'
+    string e7 = <string> '<'
+    string e8 = <string> "div"
 
-    
-class Bunch(dict):
-    def __getattr__(self, k):
-        return self[k]
 
-
-cdef void htmlgen_start():
-    cdef i = openmp.omp_get_thread_num()
+cdef void htmlgen_start() nogil:
+    cdef int i = openmp.omp_get_thread_num()
     threads[i].html.append("-")
     threads[i].html.clear()
     threads[i].index = 0
 
-cdef string htmlgen_stop():
-    cdef i = openmp.omp_get_thread_num()
+cdef string htmlgen_stop() nogil:
+    cdef int i = openmp.omp_get_thread_num()
     return threads[i].html
 
-cdef void write(string html):
-    cdef i = openmp.omp_get_thread_num()
+cdef void write(string html) nogil:
+    cdef int i = openmp.omp_get_thread_num()
     threads[i].html.append(html)
     threads[i].index += 1
 
-cdef void _element_open(string tag, string class_):
-    write(<string> '<')
+cdef void _element_open(string tag, string class_) nogil:
+    write(e1)
     write(tag)
-    write(<string> ' class="')
+    write(e2)
     write(class_)
-    write(<string> '">')
+    write(e3)
 
-cdef void _element_close(string tag):
-    write(<string> "</")
+cdef void _element_close(string tag) nogil:
+    write(e4)
     write(tag)
-    write(<string> ">") 
+    write(e5) 
 
-cdef void element(string tag, string inner, string class_):
+cdef void element(string tag, string inner, string class_) nogil:
     _element_open(tag, class_)
-    write(<string> inner)
+    write(inner)
     _element_close(tag)
 
-cdef void div(str inner, str class_):
-     element(<string> "div", <string> inner, <string> class_)
+cdef void div(string inner, string class_) nogil:
+     element(e8, inner, class_)
 
-cdef class DontExecuteException(Exception):
-    pass
+# @contextmanager
+# def divcm(string class_):
+#     cdef int i = openmp.omp_get_thread_num()
+#     cdef int index = threads[i].index
+#     try:
+#         _element_open(<string> "div", class_)
+#         yield
+#         _element_close(<string> "div")
+#     except DontExecuteException:
+#         threads[i].html[index] = "-"
 
-@contextmanager
-def divcm(string class_):
-    cdef int i = openmp.omp_get_thread_num()
-    cdef int index = threads[i].index
-    try:
-        _element_open(<string> "div", class_)
-        yield
-        _element_close(<string> "div")
-    except DontExecuteException:
-        threads[i].html[index] = "-"
+
 
 cdef int N = 1000000
+cdef string s = <string> "My li is 500000"
+cdef string e = <string> "Foo"
 
-cdef string page():
+cdef string page(int n) nogil:
     cdef int j = 0
     htmlgen_start()
+
     
-    with divcm("the-class"):
-         div("My things", class_="Foo")
-         while j < N:
-            div("My li is {}".format(j), class_="Foo")
-            j += 1
+    while j < N:
+    #for j in prange(n, nogil=True):
+        div(s, e)
+        j += 1
 
     
     return htmlgen_stop()
@@ -99,7 +103,11 @@ cdef string page():
 import time
 def timer(name, func):
     a = time.time() * 1000
-    print len(func())
+    if N < 20:
+        print func(N)
+    else:
+        print len(func(N))
+    #print func()
     b = time.time() * 1000
     took = b - a
     print name, N,"items took", round(took), "Milliseconds"
@@ -107,15 +115,18 @@ def timer(name, func):
 
     return took
 
-a = timer("page", page)
 
 print
+print "..........................."
+
+a = timer("page", page)
 from proof_of_concept import page2
 b = timer("same page from python", page2)
 
-print "--------------"
+print "\n----------------------------"
 print "Speedup = ", b / float(a)
 
+#print page()
 
 # print my_html
 # print "B"
