@@ -15,6 +15,7 @@ cimport openmp
 from cymem.cymem cimport Pool
 import multiprocessing
 from libcpp.string cimport string
+from libcpp.vector cimport vector
 
 from pyrsistent import freeze
 
@@ -70,6 +71,29 @@ cdef void element(string tag, string inner, string class_) nogil:
 cdef void div(string inner, string class_) nogil:
      element(e8, inner, class_)
 
+# -------------------------
+
+cdef string pelement(string tag, string inner, string class_) nogil:
+    cdef string html
+    html.clear()
+    
+    html.append(e1)
+    html.append(tag)
+    html.append(e2)
+    html.append(class_)
+    html.append(e3)
+    
+    html.append(inner)
+    
+    html.append(e4)
+    html.append(tag)
+    html.append(e5)
+
+    return html
+
+cdef string pdiv(string inner, string class_) nogil:
+    return pelement(e8, inner, class_)
+
 # @contextmanager
 # def divcm(string class_):
 #     cdef int i = openmp.omp_get_thread_num()
@@ -83,20 +107,23 @@ cdef void div(string inner, string class_) nogil:
 
 
 
-cdef int N = 1000000
-cdef string s = <string> "My li is 500000"
+cdef int N = 10
+cdef string s = <string> "My li ø 500000"
 cdef string e = <string> "Foo"
 
 cdef string page(int n) nogil:
-    cdef int j = 0
+    cdef:
+        int j = 0
+        #string* parts = <string*>mem.alloc(n_threads, sizeof(string))
+        
     htmlgen_start()
-
-    
     while j < N:
     #for j in prange(n, nogil=True):
-        div(s, e)
+        pdiv(s, e)
         j += 1
 
+    #for part in parts:
+    #    write(part)
     
     return htmlgen_stop()
 
@@ -120,11 +147,17 @@ print
 print "..........................."
 
 a = timer("page", page)
-from proof_of_concept import page2
-b = timer("same page from python", page2)
 
-print "\n----------------------------"
-print "Speedup = ", b / float(a)
+for i in range(n_threads):
+    print i
+    print "   ",
+    print threads[i].html
+    
+# from proof_of_concept import page2
+# b = timer("same page from python", page2)
+
+# print "\n----------------------------"
+# print "Speedup = ", b / float(a)
 
 #print page()
 
