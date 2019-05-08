@@ -208,13 +208,14 @@ def page():
 
 
 @htmlgen
-def page2(n):
+def page_pure_python(n, m):
     j = 0
 
     with divcm(class_="the-class"):
         div("My things", class_="Foo")
         while j < n:
-            div("My li is {}".format(j), class_="Foo")
+            for k in range(m):
+                div("My li is {}".format(j), class_="Foo")
             j += 1
 
 

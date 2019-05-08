@@ -16,6 +16,7 @@ from cymem.cymem cimport Pool
 import multiprocessing
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libc.stdio cimport snprintf
 
 from pyrsistent import freeze
 
@@ -26,14 +27,14 @@ cdef:
     int n_threads = multiprocessing.cpu_count()
     Pool mem = Pool()
     Thread* threads = <Thread*>mem.alloc(n_threads, sizeof(Thread))
-    string e1 = <string> '<'
-    string e2 = <string> ' class="'
-    string e3 = <string> '">'
-    string e4 = <string> "</"
-    string e5 = <string> ">"
-    string e6 = <string> '<'
-    string e7 = <string> '<'
-    string e8 = <string> "div"
+    string e1 = '<'
+    string e2 = ' class="'
+    string e3 = '">'
+    string e4 = "</"
+    string e5 = ">"
+    string e6 = '<'
+    string e7 = '<'
+    string e8 = "div"
 
 
 cdef void htmlgen_start() nogil:
@@ -94,70 +95,97 @@ cdef string pelement(string tag, string inner, string class_) nogil:
 cdef string pdiv(string inner, string class_) nogil:
     return pelement(e8, inner, class_)
 
-# @contextmanager
-# def divcm(string class_):
-#     cdef int i = openmp.omp_get_thread_num()
-#     cdef int index = threads[i].index
-#     try:
-#         _element_open(<string> "div", class_)
-#         yield
-#         _element_close(<string> "div")
-#     except DontExecuteException:
-#         threads[i].html[index] = "-"
+@contextmanager
+def divcm(string class_):
+    cdef int i = openmp.omp_get_thread_num()
+    cdef int index = threads[i].index
+    _element_open(<string> "div", class_)
+    yield
+    _element_close(<string> "div")
 
 
+cdef int N = 1000
+cdef int M = 1000
 
-cdef int N = 10
-cdef string s = <string> "My li ø 500000"
-cdef string e = <string> "Foo"
+cdef string s = "My li is 500"
+cdef string e = "Foo"
 
-cdef string page(int n) nogil:
-    cdef:
-        int j = 0
-        #string* parts = <string*>mem.alloc(n_threads, sizeof(string))
-        
+cdef string page_cython(int n, int m):
     htmlgen_start()
-    while j < N:
-    #for j in prange(n, nogil=True):
-        pdiv(s, e)
+    cdef int j = 0
+
+    with divcm("the-class"):
+        div("My things", "Foo")
+        while j < n:
+            for k in range(m):
+                div("My li is {}".format(j), "Foo")
+            j += 1
+
+    return htmlgen_stop()
+            
+cdef string page_cython_nogil(int n, int m) nogil:
+    htmlgen_start()
+    cdef int j = 0
+
+    while j < n:
+        for k in range(m):
+            div(s, e)
         j += 1
 
-    #for part in parts:
-    #    write(part)
+    return htmlgen_stop()
+
+cdef string page_cython_parallel(int n, int m):
+    htmlgen_start()
+    
+    cdef:
+        int j = 0
+        int k = 0
+        int size = n * m
+        int l = 0
+        string* parts = <string*>mem.alloc(size, sizeof(string))
+
+    for j in prange(n, nogil=True):
+        k = 0
+        while k < m:
+            l = j*n + k
+            parts[l] = pdiv(s, e)
+            k = k + 1
+
+    for part in parts[:size]:
+        write(part)
     
     return htmlgen_stop()
 
 import time
 def timer(name, func):
     a = time.time() * 1000
-    if N < 20:
-        print func(N)
+    output = None
+    if N*M < 20:
+        output = func(N, M)
     else:
-        print len(func(N))
+        func(N, M)
     #print func()
     b = time.time() * 1000
     took = b - a
-    print name, N,"items took", round(took), "Milliseconds"
-    print "each item took", took / float(N) * 1000, "u seconds"
-
+    print
+    print "##############################################################"
+    print name, N*M,"items took", round(took), "Milliseconds"
+    print "each item took", took / float(N*M) * 1000, "u seconds"
+    print
+    if output is not None:
+        print output
+    
     return took
 
-
-print
-print "..........................."
-
-a = timer("page", page)
-
-for i in range(n_threads):
-    print i
-    print "   ",
-    print threads[i].html
+a = timer("Page cython", page_cython)
+d = timer("Page cython no gil", page_cython_nogil)
+c = timer("Page cython parallel", page_cython_parallel)
     
-# from proof_of_concept import page2
-# b = timer("same page from python", page2)
+from proof_of_concept import page_pure_python
+b = timer("Page pure python", page_pure_python)
 
-# print "\n----------------------------"
-# print "Speedup = ", b / float(a)
+print "\n----------------------------"
+print "Speedup = ", b / float(d)
 
 #print page()
 
