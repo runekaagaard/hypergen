@@ -6,6 +6,9 @@ Fast (hopefully), pure python, threadsafe, parallizable, caching and diffing htm
 cm means context manager.
 
 ```python
+from hypergen import *
+from my_app import get_sections
+
 def my_page(sections):
     h1("My Page", _class="top-h1")
     for section in sections:
