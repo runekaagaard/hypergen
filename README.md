@@ -1,5 +1,5 @@
 # python-htmlgen
-Fast (hopefully), pure python, parallizable, caching and diffing html generator. No more templates, just write python (or cython).
+Fast (hopefully), pure python, threadsafe, parallizable, caching and diffing html generator. No more templates, just write python (or cython).
 
 # High level Python api:
 
@@ -33,7 +33,7 @@ def my_page(items):
         c_div() # Closes.
 ```
 
-# Pure c Cython (nogil)
+# Pure c++ Cython (nogil)
 
 Does not touch python.
 
