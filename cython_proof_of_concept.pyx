@@ -102,9 +102,8 @@ cdef string element(string* html, string tag, string inner, attr* attrs) nogil:
 cdef void div_ng(string inner, attr* attrs) nogil:
     element(&threads[openmp.omp_get_thread_num()].html, e8, inner, attrs)
 
-cdef void div_pl(string* html) nogil:
-    html.append(<char*> "hej")
-    #element(html, e8, inner, attrs)
+cdef void div_pl(string* html, string inner, attr* attrs) nogil:
+    element(html, e8, inner, attrs)
 
 
 # -------------------------
@@ -189,22 +188,33 @@ cdef string page_cython_nogil(int n, int m) nogil:
 
 cdef my_page():
     cdef:
-        string parts = <string>mem.alloc(n, sizeof(string))
         int n = 5
+        string* parts = <string*>mem.alloc(n, sizeof(string))
         string html
         int i
 
-    for i in range(5):
-        div_pl(&threads2[i].html)
+    for i in prange(5, nogil=True):
+        div_pl(&parts[i], <char*> "This is gøød", [
+            a(<char*> "height", <char*> "91"),
+            T
+        ])
+        div_pl(&parts[i], <char*> "Mit dis", [
+            a(<char*> "height", <char*> "91"),
+            T
+        ])
         pass
 
-    #for part in parts[:n]:
-    #    html.append(part)
+    for part in parts[:n]:
+        html.append(part)
 
     return html
 
-print my_page(); assert False
 
+def hmm():
+    print my_page()
+
+hmm()
+    
 import time
 def timer(name, func):
     a = time.time() * 1000
