@@ -186,24 +186,19 @@ cdef string page_cython_nogil(int n, int m) nogil:
 
 #     return html
 
-cdef my_page():
+cdef string my_page() nogil:
     cdef:
         int n = 5
         string* parts = <string*>mem.alloc(n, sizeof(string))
         string html
         int i
 
-    for i in prange(5, nogil=True):
+    for i in prange(n, nogil=True):
         div_pl(&parts[i], <char*> "This is gøød", [
             a(<char*> "height", <char*> "91"),
             T
         ])
-        div_pl(&parts[i], <char*> "Mit dis", [
-            a(<char*> "height", <char*> "91"),
-            T
-        ])
-        pass
-
+        
     for part in parts[:n]:
         html.append(part)
 
