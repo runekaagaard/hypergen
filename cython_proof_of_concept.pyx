@@ -44,12 +44,12 @@ cdef:
     attr T = a(<char*> "__the_end__", <char*> "__is_reached__")
     
 
-cdef void _htmlgen_start() nogil:
+cdef void hypergen_start() nogil:
     cdef int i = openmp.omp_get_thread_num()
     threads[i].html.append("-")
     threads[i].html.clear()
 
-cdef string _htmlgen_stop() nogil:
+cdef string hypergen_stop() nogil:
     cdef int i = openmp.omp_get_thread_num()
     return threads[i].html
 
@@ -104,7 +104,7 @@ cdef int N = 1
 cdef int M = 5
 
 # cdef string page_cython(int n, int m):
-#     _htmlgen_start()
+#     hypergen_start()
 #     cdef int j = 0
 
 #     with divcm("the-class"):
@@ -114,10 +114,10 @@ cdef int M = 5
 #                 div("My li is {}".format(j), "Foo")
 #             j += 1
 
-#     return _htmlgen_stop()
+#     return hypergen_stop(
 
 cdef string page_cython_nogil(int n, int m) nogil:
-    _htmlgen_start()
+    hypergen_start()
     cdef int j = 0
     cdef char k_str[10]
 
@@ -138,9 +138,9 @@ cdef string page_cython_nogil(int n, int m) nogil:
             write(<char*> "write")
         j += 1
 
-    return _htmlgen_stop()
+    return hypergen_stop()
 
-# cdef string page_cython_parallel(int n, int m):
+#cdef string page_cython_parallel(int n, int m):
 #     cdef:
 #         int j = 0
 #         int k = 0
