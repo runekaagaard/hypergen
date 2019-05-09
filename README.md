@@ -3,19 +3,24 @@ Fast (hopefully), pure python, threadsafe, parallizable, caching and diffing htm
 
 # High level Python api:
 
+cm means context manager.
+
 ```python
-@hgen
 def my_page(sections):
     h1("My Page", _class="top-h1")
     for section in sections:
         with section_cm(height=100):
             div(section.content, style={"margin": auto})
+
+with hypergen_cm() as document:
+    my_page(get_sections())
+
+print document['html']
 ```
 
 # Caching context manager
 
 ```python
-@hgen
 def my_page(
     for section in sections:
         with section_cm(height=100), cache_cm(key=my_page, section=section) as data:
@@ -25,7 +30,6 @@ def my_page(
 # Low level Python api
 
 ```python
-@hgen
 def my_page(items):
     for item in items:
         o_div(_class="item") # Opens.
@@ -39,7 +43,7 @@ Does not touch python.
 
 ```cython
 cdef string my_page(int n) nogil:
-    hgen_start()
+    hypergen_start()
     cdef char i_str[10]
 
     o_ul_ng()
@@ -53,5 +57,5 @@ cdef string my_page(int n) nogil:
         ])
     c_ul_ng()
 
-    return hgen_stop()
+    return hypergen_stop()
 ```
