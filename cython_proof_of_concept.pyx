@@ -62,15 +62,19 @@ def _element_open(tag, **attrs):
     
     def _attr(k, v):
         k = k.lstrip("_")
+        cdef string k1 = k
+        cdef string v1 = v
         if type(v) is bool:
-            return u" {}".format(k) if v else u""
+            return a(k1, "")
         else:
-            return u' {}="{}"'.format(k, v)
+            return a(k1, v1)
     
-    html.append(u"<{}".format(tag))
-    [html.append(_attr(k, v)) for k, v in attrs.iteritems()]
-    html.append(">")
-    write(u"".join(html))
+    _element_open_ng(&threads[openmp.omp_get_thread_num()].html, tag,
+                     [_attr(k, v) for k, v in attrs.iteritems()])
+    #html.append(u"<{}".format(tag))
+    #[html.append(_attr(k, v)) for k, v in attrs.iteritems()]
+    #html.append(">")
+    #write(u"".join(html))
 
 def _element_close(tag):
     write("</{}>".format(tag))
@@ -88,6 +92,9 @@ cdef string hypergen_stop() nogil:
 cdef void write_ng(string html) nogil:
     cdef int i = openmp.omp_get_thread_num()
     threads[i].html.append(html)
+
+cdef string get_thread_html():
+    return threads[openmp.omp_get_thread_num()].html
     
 cdef void _element_open_ng(string* html, string tag, attr* attrs) nogil:
     cdef int i = 0
