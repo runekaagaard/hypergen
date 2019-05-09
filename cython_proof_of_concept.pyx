@@ -5,6 +5,7 @@
 from cymem.cymem cimport Pool
     
 from contextlib import contextmanager
+from functools import wraps
 
 from cpython cimport array
 from cython.parallel cimport parallel
@@ -35,7 +36,7 @@ cdef attr a(string name, string value) nogil:
 cdef struct Thread:
     string html
     
-### Cdefs ###
+### Global state ###
 
 cdef:
     int n_threads = openmp.omp_get_max_threads()
@@ -43,17 +44,52 @@ cdef:
     Thread* threads = <Thread*>mem.alloc(n_threads, sizeof(Thread))
     attr T = a(<char*> "__the_end__", <char*> "__is_reached__")
     
+### Python api ###
+
+def hypergen(func, *args, **kwargs):
+    hypergen_start()
+    func(*args, **kwargs)
+    
+    return hypergen_stop()
+
+def element(tag, inner, **attrs):
+    _element_open(tag, **attrs)
+    write(inner)
+    _element_close(tag)
+
+def _element_open(tag, **attrs):
+    html = []
+    
+    def _attr(k, v):
+        k = k.lstrip("_")
+        if type(v) is bool:
+            return u" {}".format(k) if v else u""
+        else:
+            return u' {}="{}"'.format(k, v)
+    
+    html.append(u"<{}".format(tag))
+    [html.append(_attr(k, v)) for k, v in attrs.iteritems()]
+    html.append(">")
+    write(u"".join(html))
+
+def _element_close(tag):
+    write("</{}>".format(tag))
+
+### No gil ###
 
 cdef void hypergen_start() nogil:
     cdef int i = openmp.omp_get_thread_num()
-    threads[i].html.append("-")
-    threads[i].html.clear()
-
+    if threads[i].html.length() > 0:
+        threads[i].html.clear()
+    
 cdef string hypergen_stop() nogil:
-    cdef int i = openmp.omp_get_thread_num()
-    return threads[i].html
+    return threads[openmp.omp_get_thread_num()].html
 
-cdef void _element_open(string* html, string tag, attr* attrs) nogil:
+cdef void write_ng(string html) nogil:
+    cdef int i = openmp.omp_get_thread_num()
+    threads[i].html.append(html)
+    
+cdef void _element_open_ng(string* html, string tag, attr* attrs) nogil:
     cdef int i = 0
     
     html.append(<char*> "<").append(tag)
@@ -67,37 +103,43 @@ cdef void _element_open(string* html, string tag, attr* attrs) nogil:
         
     html.append(<char*> ">")
 
-cdef void _element_close(string* html, string tag) nogil:
+cdef void _element_close_ng(string* html, string tag) nogil:
     html.append(<char*> "</").append(tag).append(<char*> ">")
 
-cdef void write(string html) nogil:
-    cdef int i = openmp.omp_get_thread_num()
-    threads[i].html.append(html)
-    
-cdef string element(string* html, string tag, string inner, attr* attrs) nogil:
-    _element_open(html, tag, attrs)
+cdef string element_ng(string* html, string tag, string inner, attr* attrs) nogil:
+    _element_open_ng(html, tag, attrs)
     html.append(inner)
-    _element_close(html, tag)
+    _element_close_ng(html, tag)
 
 cdef void div_ng(string inner, attr* attrs) nogil:
-    element(&threads[openmp.omp_get_thread_num()].html, <char*> "div", inner,
+    element_ng(&threads[openmp.omp_get_thread_num()].html, <char*> "div", inner,
             attrs)
 
 cdef void div_ng_br(string* html, string inner, attr* attrs) nogil:
-    element(html, <char*> "div", inner, attrs)
+    element_ng(html, <char*> "div", inner, attrs)
 
-    
+### Elements ###
 
+def write(html):
+    write_ng(html)
 
+def div(inner, **attrs):
+    element("div", inner, **attrs)
+
+def pageuu():
+    div("UWUW", _class="owow")
+
+print hypergen(pageuu)
+assert False
 # -------------------------
 
 # @contextmanager
 # def divcm(string class_):
 #     cdef int i = openmp.omp_get_thread_num()
 #     cdef int index = threads[i].index
-#     _element_open(<string> "div", class_)
+#     _element_open_ng(<string> "div", class_)
 #     yield
-#     _element_close(<string> "div")
+#     _element_close_ng(<string> "div")
 
 
 cdef int N = 1
@@ -135,7 +177,7 @@ cdef string page_cython_nogil(int n, int m) nogil:
                 a(<char*> "title", <char*> "My øwesome title"),
                 T
             ])
-            write(<char*> "write")
+            write_ng(<char*> "write_ng")
         j += 1
 
     return hypergen_stop()
