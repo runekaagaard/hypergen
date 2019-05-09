@@ -16,29 +16,33 @@ from libcpp.vector cimport vector
 from libc.stdio cimport sprintf
 
 
+###  Datatypes ###
+
 cdef struct attr:
     string name
     string value
 
-# Creates an attr.
 cdef attr a(string name, string value) nogil:
+    """
+    Shortcut to create an attr struct.
+    """
     cdef attr _a
     _a.name = <string> name
     _a.value = <string> value
     
     return _a
 
-# Attribute list terminator.
-cdef attr T = a(<char*> "__the_end__", <char*> "__is_reached__")
-
+cdef struct Thread:
+    string html
+    
 ### Cdefs ###
+
 cdef:
-    struct Thread:
-        string html
     int n_threads = openmp.omp_get_max_threads()
     Pool mem = Pool()
     Thread* threads = <Thread*>mem.alloc(n_threads, sizeof(Thread))
-
+    attr T = a(<char*> "__the_end__", <char*> "__is_reached__")
+    
 
 cdef void htmlgen_start() nogil:
     cdef int i = openmp.omp_get_thread_num()
