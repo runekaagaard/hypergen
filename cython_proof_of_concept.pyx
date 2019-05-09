@@ -15,6 +15,7 @@ from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libc.stdio cimport sprintf
 
+   
 ### Type definitions ###
 ctypedef fused attr_val:
     char
@@ -73,7 +74,7 @@ cdef void write(string html) nogil:
     cdef int i = openmp.omp_get_thread_num()
     threads[i].html.append(html)
 
-cdef void _element_open(string html, string tag, attr* attrs) nogil:
+cdef void _element_open(string* html, string tag, attr* attrs) nogil:
     cdef:
         int j = 0
         
@@ -90,26 +91,20 @@ cdef void _element_open(string html, string tag, attr* attrs) nogil:
         
     html.append(e3)
 
-cdef void _element_close(string html, string tag) nogil:
+cdef void _element_close(string* html, string tag) nogil:
     html.append(e4).append(tag).append(e5)
 
-cdef string element(string html, string tag, string inner, attr* attrs) nogil:
+cdef string element(string* html, string tag, string inner, attr* attrs) nogil:
     _element_open(html, tag, attrs)
     html.append(inner)
     _element_close(html, tag)
 
-    return html
-
 cdef void div_ng(string inner, attr* attrs) nogil:
-    element(threads[openmp.omp_get_thread_num()].html, e8, inner, attrs)
+    element(&threads[openmp.omp_get_thread_num()].html, e8, inner, attrs)
 
-cdef void element_pl(string html, string tag, string inner, attr* attrs) nogil:
-    element(html, tag, inner, attrs)
-    
-cdef void div_pl(string html, string inner, attr* attrs) nogil:
-    threads2[2].html.append("040")
-    html.append("kfkfk")
-    #element_pl(html, e8, inner, attrs)
+cdef void div_pl(string* html) nogil:
+    html.append(<char*> "hej")
+    #element(html, e8, inner, attrs)
 
 
 # -------------------------
@@ -193,34 +188,22 @@ cdef string page_cython_nogil(int n, int m) nogil:
 #     return html
 
 cdef my_page():
-    print "-------------"
-    # print [div_pl(<char*> "x", [
-    #         a(<char*> "class", <char*> "class"),
-    #         T
-    #     ])]
-    
     cdef:
-        int n = 10
-        string* parts = <string*>mem.alloc(n, sizeof(string))
-        Thread* ts = <Thread*>mem.alloc(n, sizeof(Thread))
+        string parts = <string>mem.alloc(n, sizeof(string))
+        int n = 5
         string html
         int i
-        string part_s
 
-    for i in range(n):
-        div_pl(threads2[i].html, <char*> "x", [
-            a(<char*> "class", <char*> "class"),
-            T
-        ])
-        threads2[i].html.append("1234")
+    for i in range(5):
+        div_pl(&threads2[i].html)
+        pass
 
-    for thread2 in threads2[:n]:
-        print "------", thread2.html
-        html.append(thread2.html)
+    #for part in parts[:n]:
+    #    html.append(part)
 
     return html
 
-#print my_page(); assert False
+print my_page(); assert False
 
 import time
 def timer(name, func):
@@ -233,11 +216,11 @@ def timer(name, func):
     #print func()
     b = time.time() * 1000
     took = b - a
-    print()
-    print( "##############################################################")
-    print( name, N*M,"items took", round(took), "Milliseconds")
-    print( "each item took", took / float(N*M) * 1000, "u seconds")
-    print()
+    print
+    print"##############################################################"
+    print name, N*M,"items took", round(took), "Milliseconds"
+    print "each item took", took / float(N*M) * 1000, "u seconds"
+    print
     if output is not None:
         print( output)
     
@@ -250,7 +233,7 @@ d = timer("Page cython no gil", page_cython_nogil)
 from proof_of_concept import page_pure_python
 #b = timer("Page pure python", page_pure_python)
 
-print ("\n----------------------------")
+print "\n----------------------------"
 #print "Speedup = ", b / float(d)
 
 #print page()
