@@ -46,7 +46,7 @@ cdef string page_cython_nogil(int n) nogil:
     for i in range(n):
         sprintf(i_str, <char*> "%d", k)
 
-        div_ng(<char*> "My content.", [
+        li_ng(<char*> "My content.", [
             a(<char*> "class", <char*> "a-class"),
             a(<char*> "width", <char*> i_str),
             T # Terminates.
