@@ -38,7 +38,6 @@ cdef:
     int n_threads = openmp.omp_get_max_threads()
     Pool mem = Pool()
     Thread* threads = <Thread*>mem.alloc(n_threads, sizeof(Thread))
-    Thread* threads2 = <Thread*>mem.alloc(10, sizeof(Thread))
     char* e1 = '<'
     char* e2 = ' class="'
     char* e3 = '>'
@@ -64,19 +63,16 @@ cdef void write(string html) nogil:
     threads[i].html.append(html)
 
 cdef void _element_open(string* html, string tag, attr* attrs) nogil:
-    cdef:
-        int j = 0
-        
-    html.append(e1).append(tag)
+    cdef int i = 0
     
+    html.append(e1).append(tag)
     while True:
-        a = attrs[j]
-        if a.name == T.name:
+        if attrs[i].name == attrs[i].name:
             break
         
-        html.append(e7).append(a.name).append(e6).append(a.value
+        html.append(e7).append(attrs[i].name).append(e6).append(attrs[i].value
             ).append(e9)
-        j = j + 1
+        i = i + 1
         
     html.append(e3)
 
