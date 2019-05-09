@@ -15,32 +15,21 @@ from libcpp.string cimport string
 from libcpp.vector cimport vector
 from libc.stdio cimport sprintf
 
-   
-### Type definitions ###
-ctypedef fused attr_val:
-    char
-    string
-    float
 
-cdef struct attr_s:
+cdef struct attr:
     string name
     string value
 
-ctypedef attr_s attr
-
 # Creates an attr.
-cdef attr a(string name, attr_val value) nogil:
+cdef attr a(string name, string value) nogil:
     cdef attr _a
-    #cdef char* value_c = value
-    
     _a.name = <string> name
     _a.value = <string> value
-
+    
     return _a
 
 # Attribute list terminator.
 cdef attr T = a(<char*> "__the_end__", <char*> "__is_reached__")
-
 
 ### Cdefs ###
 cdef:
@@ -120,9 +109,6 @@ cdef void div_pl(string* html, string inner, attr* attrs) nogil:
 cdef int N = 1
 cdef int M = 5
 
-cdef char* s = "My li is ø 500"
-cdef char* e = "Foøo"
-
 # cdef string page_cython(int n, int m):
 #     htmlgen_start()
 #     cdef int j = 0
@@ -135,9 +121,6 @@ cdef char* e = "Foøo"
 #             j += 1
 
 #     return htmlgen_stop()
-
-cdef void wat(string x) nogil:
-    cdef string y = <string> x
 
 cdef string page_cython_nogil(int n, int m) nogil:
     htmlgen_start()
@@ -158,6 +141,7 @@ cdef string page_cython_nogil(int n, int m) nogil:
                 a(<char*> "title", <char*> "My øwesome title"),
                 T
             ])
+            write(<char*> "write")
         j += 1
 
     return htmlgen_stop()
@@ -186,7 +170,7 @@ cdef string page_cython_nogil(int n, int m) nogil:
 
 #     return html
 
-cdef string my_page() nogil:
+cdef string my_page():
     cdef:
         int n = 5
         string* parts = <string*>mem.alloc(n, sizeof(string))
@@ -203,6 +187,10 @@ cdef string my_page() nogil:
         html.append(part)
 
     return html
+
+print "#####################################"
+
+
 
 
 def hmm():
