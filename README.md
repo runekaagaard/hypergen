@@ -38,7 +38,7 @@ def my_page(items):
 Does not touch python.
 
 ```cython
-cdef string page_cython_nogil(int n) nogil:
+cdef string my_page(int n) nogil:
     hgen_start()
     cdef char i_str[10]
 
