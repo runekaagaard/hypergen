@@ -38,15 +38,6 @@ cdef:
     int n_threads = openmp.omp_get_max_threads()
     Pool mem = Pool()
     Thread* threads = <Thread*>mem.alloc(n_threads, sizeof(Thread))
-    char* e1 = '<'
-    char* e2 = ' class="'
-    char* e3 = '>'
-    char* e4 = "</"
-    char* e5 = ">"
-    char* e6 = '="'
-    char* e7 = ' '
-    char* e8 = "div"
-    char* e9 = '"'
 
 
 cdef void htmlgen_start() nogil:
@@ -65,19 +56,20 @@ cdef void write(string html) nogil:
 cdef void _element_open(string* html, string tag, attr* attrs) nogil:
     cdef int i = 0
     
-    html.append(e1).append(tag)
+    html.append(<char*> "<").append(tag)
     while True:
-        if attrs[i].name == attrs[i].name:
+        if attrs[i].name == T.name:
             break
         
-        html.append(e7).append(attrs[i].name).append(e6).append(attrs[i].value
-            ).append(e9)
+        html.append(<char*> " ").append(attrs[i].name).append(<char*> "="
+            ).append(attrs[i].value
+            ).append(<char*> '"')
         i = i + 1
         
-    html.append(e3)
+    html.append(<char*> ">")
 
 cdef void _element_close(string* html, string tag) nogil:
-    html.append(e4).append(tag).append(e5)
+    html.append(<char*> "</").append(tag).append(<char*> ">")
 
 cdef string element(string* html, string tag, string inner, attr* attrs) nogil:
     _element_open(html, tag, attrs)
@@ -85,10 +77,10 @@ cdef string element(string* html, string tag, string inner, attr* attrs) nogil:
     _element_close(html, tag)
 
 cdef void div_ng(string inner, attr* attrs) nogil:
-    element(&threads[openmp.omp_get_thread_num()].html, e8, inner, attrs)
+    element(&threads[openmp.omp_get_thread_num()].html, <char*> "div", inner, attrs)
 
 cdef void div_pl(string* html, string inner, attr* attrs) nogil:
-    element(html, e8, inner, attrs)
+    element(html, <char*> "div", inner, attrs)
 
 
 # -------------------------
