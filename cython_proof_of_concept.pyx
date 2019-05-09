@@ -48,6 +48,7 @@ cdef:
     int n_threads = openmp.omp_get_max_threads()
     Pool mem = Pool()
     Thread* threads = <Thread*>mem.alloc(n_threads, sizeof(Thread))
+    Thread* threads2 = <Thread*>mem.alloc(10, sizeof(Thread))
     char* e1 = '<'
     char* e2 = ' class="'
     char* e3 = '>'
@@ -72,57 +73,46 @@ cdef void write(string html) nogil:
     cdef int i = openmp.omp_get_thread_num()
     threads[i].html.append(html)
 
-cdef void _element_open(string tag, attr* attrs) nogil:
+cdef void _element_open(string html, string tag, attr* attrs) nogil:
     cdef:
-        int i = openmp.omp_get_thread_num()
         int j = 0
         
-    threads[i].html.append(e1).append(tag)
+    html.append(e1).append(tag)
     
     while True:
         a = attrs[j]
         if a.name == T.name:
             break
         
-        threads[i].html.append(e7).append(a.name).append(e6).append(a.value
+        html.append(e7).append(a.name).append(e6).append(a.value
             ).append(e9)
         j = j + 1
         
-    threads[i].html.append(e3)
-
-cdef void _element_close(string tag) nogil:
-    threads[openmp.omp_get_thread_num()].html.append(e4).append(tag).append(e5)
-
-cdef void element(string tag, string inner, attr* attrs) nogil:
-    _element_open(tag, attrs)
-    threads[openmp.omp_get_thread_num()].html.append(inner)
-    _element_close(tag)
-
-cdef void div(string inner, attr* attrs) nogil:
-    element(e8, inner, attrs)
-
-# -------------------------
-
-cdef string pelement(string tag, string inner, string class_) nogil:
-    cdef string html
-    html.clear()
-    
-    html.append(e1)
-    html.append(tag)
-    html.append(e2)
-    html.append(class_)
     html.append(e3)
-    
+
+cdef void _element_close(string html, string tag) nogil:
+    html.append(e4).append(tag).append(e5)
+
+cdef string element(string html, string tag, string inner, attr* attrs) nogil:
+    _element_open(html, tag, attrs)
     html.append(inner)
-    
-    html.append(e4)
-    html.append(tag)
-    html.append(e5)
+    _element_close(html, tag)
 
     return html
 
-cdef string pdiv(string inner, string class_) nogil:
-    return pelement(e8, inner, class_)
+cdef void div_ng(string inner, attr* attrs) nogil:
+    element(threads[openmp.omp_get_thread_num()].html, e8, inner, attrs)
+
+cdef void element_pl(string html, string tag, string inner, attr* attrs) nogil:
+    element(html, tag, inner, attrs)
+    
+cdef void div_pl(string html, string inner, attr* attrs) nogil:
+    threads2[2].html.append("040")
+    html.append("kfkfk")
+    #element_pl(html, e8, inner, attrs)
+
+
+# -------------------------
 
 # @contextmanager
 # def divcm(string class_):
@@ -156,8 +146,6 @@ cdef void wat(string x) nogil:
     cdef string y = <string> x
 
 cdef string page_cython_nogil(int n, int m) nogil:
-    #with gil:
-    #    cdef ctuple attrs = (<string> "class", <string> "my-class") 
     htmlgen_start()
     cdef int j = 0
     cdef char k_str[10]
@@ -166,12 +154,12 @@ cdef string page_cython_nogil(int n, int m) nogil:
         for k in range(m):
             sprintf(k_str, <char*> "%d", k)
             
-            div(<char*> "This is gøød", [
+            div_ng(<char*> "This is gøød", [
                 a(<char*> "height", <char*> "91"),
                 a(<char*> "width", <char*> k_str),
                 T
             ])
-            div(<char*> "Classical", [
+            div_ng(<char*> "Classical", [
                 a(<char*> "class", <char*> "it-is"),
                 a(<char*> "title", <char*> "My øwesome title"),
                 T
@@ -180,35 +168,59 @@ cdef string page_cython_nogil(int n, int m) nogil:
 
     return htmlgen_stop()
 
-# cdef string wut(string, (int, int) attrs) nogil:
-#     cdef char* x = "ok"
-#     wat(<char*> "WUUUTæ")
-#     wat(e)
-#     #print html, attrs
-#     #cdef string html_s = <string> html
-#     pass
-
 # cdef string page_cython_parallel(int n, int m):
-#     htmlgen_start()
-    
 #     cdef:
 #         int j = 0
 #         int k = 0
 #         int size = n * m
 #         int l = 0
 #         string* parts = <string*>mem.alloc(size, sizeof(string))
+#         string html
 
 #     for j in prange(n, nogil=True):
 #         k = 0
 #         while k < m:
 #             l = j*n + k
-#             parts[l] = pdiv(s, e)
+#             parts[l] =  div_pl(<char*> "This is gøød", [
+#                 a(<char*> "height", <char*> "91"),
+#                 T
+#             ])
 #             k = k + 1
 
 #     for part in parts[:size]:
-#         write(part)
+#         html.append(part)
+
+#     return html
+
+cdef my_page():
+    print "-------------"
+    # print [div_pl(<char*> "x", [
+    #         a(<char*> "class", <char*> "class"),
+    #         T
+    #     ])]
     
-#     return htmlgen_stop()
+    cdef:
+        int n = 10
+        string* parts = <string*>mem.alloc(n, sizeof(string))
+        Thread* ts = <Thread*>mem.alloc(n, sizeof(Thread))
+        string html
+        int i
+        string part_s
+
+    for i in range(n):
+        div_pl(threads2[i].html, <char*> "x", [
+            a(<char*> "class", <char*> "class"),
+            T
+        ])
+        threads2[i].html.append("1234")
+
+    for thread2 in threads2[:n]:
+        print "------", thread2.html
+        html.append(thread2.html)
+
+    return html
+
+#print my_page(); assert False
 
 import time
 def timer(name, func):
