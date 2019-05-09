@@ -44,18 +44,14 @@ cdef:
     attr T = a(<char*> "__the_end__", <char*> "__is_reached__")
     
 
-cdef void htmlgen_start() nogil:
+cdef void _htmlgen_start() nogil:
     cdef int i = openmp.omp_get_thread_num()
     threads[i].html.append("-")
     threads[i].html.clear()
 
-cdef string htmlgen_stop() nogil:
+cdef string _htmlgen_stop() nogil:
     cdef int i = openmp.omp_get_thread_num()
     return threads[i].html
-
-cdef void write(string html) nogil:
-    cdef int i = openmp.omp_get_thread_num()
-    threads[i].html.append(html)
 
 cdef void _element_open(string* html, string tag, attr* attrs) nogil:
     cdef int i = 0
@@ -66,8 +62,7 @@ cdef void _element_open(string* html, string tag, attr* attrs) nogil:
             break
         
         html.append(<char*> " ").append(attrs[i].name).append(<char*> "="
-            ).append(attrs[i].value
-            ).append(<char*> '"')
+            ).append(attrs[i].value).append(<char*> '"')
         i = i + 1
         
     html.append(<char*> ">")
@@ -75,16 +70,23 @@ cdef void _element_open(string* html, string tag, attr* attrs) nogil:
 cdef void _element_close(string* html, string tag) nogil:
     html.append(<char*> "</").append(tag).append(<char*> ">")
 
+cdef void write(string html) nogil:
+    cdef int i = openmp.omp_get_thread_num()
+    threads[i].html.append(html)
+    
 cdef string element(string* html, string tag, string inner, attr* attrs) nogil:
     _element_open(html, tag, attrs)
     html.append(inner)
     _element_close(html, tag)
 
 cdef void div_ng(string inner, attr* attrs) nogil:
-    element(&threads[openmp.omp_get_thread_num()].html, <char*> "div", inner, attrs)
+    element(&threads[openmp.omp_get_thread_num()].html, <char*> "div", inner,
+            attrs)
 
-cdef void div_pl(string* html, string inner, attr* attrs) nogil:
+cdef void div_ng_br(string* html, string inner, attr* attrs) nogil:
     element(html, <char*> "div", inner, attrs)
+
+    
 
 
 # -------------------------
@@ -102,7 +104,7 @@ cdef int N = 1
 cdef int M = 5
 
 # cdef string page_cython(int n, int m):
-#     htmlgen_start()
+#     _htmlgen_start()
 #     cdef int j = 0
 
 #     with divcm("the-class"):
@@ -112,10 +114,10 @@ cdef int M = 5
 #                 div("My li is {}".format(j), "Foo")
 #             j += 1
 
-#     return htmlgen_stop()
+#     return _htmlgen_stop()
 
 cdef string page_cython_nogil(int n, int m) nogil:
-    htmlgen_start()
+    _htmlgen_start()
     cdef int j = 0
     cdef char k_str[10]
 
@@ -136,7 +138,7 @@ cdef string page_cython_nogil(int n, int m) nogil:
             write(<char*> "write")
         j += 1
 
-    return htmlgen_stop()
+    return _htmlgen_stop()
 
 # cdef string page_cython_parallel(int n, int m):
 #     cdef:
@@ -151,7 +153,7 @@ cdef string page_cython_nogil(int n, int m) nogil:
 #         k = 0
 #         while k < m:
 #             l = j*n + k
-#             parts[l] =  div_pl(<char*> "This is gøød", [
+#             parts[l] =  div_ng_br(<char*> "This is gøød", [
 #                 a(<char*> "height", <char*> "91"),
 #                 T
 #             ])
@@ -170,7 +172,7 @@ cdef string my_page():
         int i
 
     for i in prange(n, nogil=True):
-        div_pl(&parts[i], <char*> "This is gøød", [
+        div_ng_br(&parts[i], <char*> "This is gøød", [
             a(<char*> "height", <char*> "91"),
             T
         ])

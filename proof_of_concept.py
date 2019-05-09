@@ -40,7 +40,7 @@ def _element_open(tag, **attrs):
     html = []
 
     def _attr(k, v):
-        k = k.rstrip("_")
+        k = k.lstrip("_")
         if type(v) is bool:
             return u" {}".format(k) if v else u""
         else:
