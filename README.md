@@ -39,7 +39,7 @@ Does not touch python.
 
 ```cython
 cdef string page_cython_nogil(int n) nogil:
-    htmlgen_start()
+    hgen_start()
     cdef char i_str[10]
 
     o_ul_ng()
@@ -53,5 +53,5 @@ cdef string page_cython_nogil(int n) nogil:
         ])
     c_ul_ng()
 
-    return htmlgen_stop()
+    return hgen_stop()
 ```
