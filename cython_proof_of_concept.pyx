@@ -151,16 +151,15 @@ def write(html):
 cdef void write_ng(string html) nogil:
     threads[openmp.omp_get_thread_num()].html.append(html)
 
+cdef void write_br(string* html_dest, string html_src) nogil:
+    html_dest.append(html_src)
+
 ### Below here comes each html5 element. ###
+
+# *div* functions
 
 def div(inner, **attrs):
     element("div", inner, **attrs)
-
-def o_div(inner, **attrs):
-    tag_open("div", **attrs)    
-
-def c_div(inner, **attrs):
-    tag_close_br(&threads[openmp.omp_get_thread_num()].html, "div")
 
 cdef void div_ng(string inner, attr* attrs) nogil:
     element_br(&threads[openmp.omp_get_thread_num()].html, <char*> "div", inner,
@@ -168,6 +167,26 @@ cdef void div_ng(string inner, attr* attrs) nogil:
 
 cdef void div_ng_br(string* html, string inner, attr* attrs) nogil:
     element_br(html, <char*> "div", inner, attrs)
+
+def o_div(inner, **attrs):
+    tag_open("div", **attrs)    
+
+cdef void o_div_ng(attr* attrs) nogil:
+    tag_open_ng(<char*> "div", attrs)
+
+cdef void o_div_br(string* html, attr* attrs) nogil:
+    tag_open_br(html, <char*> "div", attrs)
+
+def c_div():
+    tag_close_br(&threads[openmp.omp_get_thread_num()].html, "div")
+
+cdef void c_div_ng() nogil:
+    tag_close_br(&threads[openmp.omp_get_thread_num()].html, <char*> "div")
+
+cdef void c_div_br(string* html) nogil:
+    tag_close_br(html, <char*> "div")
+
+### Testing ###
 
 def pageuu():
     div("UWUWø", _class="æowow", hidden=False, checked=True, empty="", style=dict(
@@ -224,7 +243,9 @@ cdef string page_cython_nogil(int n, int m) nogil:
                 a(<char*> "empty", <char*> ""),
                 TERM,
             ])
-            write_ng(<char*> "write_ng")
+            o_div_ng([a(<char*> "class", <char*> "some"), TERM])
+            write_ng(<char*> "writing stuff")
+            c_div_ng()
         j += 1
 
     return hypergen_stop()
@@ -265,7 +286,9 @@ cdef string my_page():
             a(<char*> "height", <char*> "91"),
             TERM,
         ])
-        
+        o_div_br(&parts[i], [a(<char*> "x", <char*> "1"), TERM])
+        write_br(&parts[i], <char*> "wut?")
+        c_div_br(&parts[i])
     for part in parts[:n]:
         html.append(part)
 

@@ -7,12 +7,13 @@ import distutils.sysconfig
 cfg_vars = distutils.sysconfig.get_config_vars()
 for key, value in cfg_vars.items():
     if type(value) == str:
-        cfg_vars[key] = value.replace("-Wstrict-prototypes", "")
+        cfg_vars[key] = value.replace("-Wstrict-prototypes", "").replace(
+            "-Wunused-function", "")
 
 ext_modules = [
     Extension(
         "cython_proof_of_concept", ["cython_proof_of_concept.pyx"],
-        extra_compile_args=['-fopenmp', '-O3'],
+        extra_compile_args=['-fopenmp', '-O3', '-Wno-unused-function'],
         extra_link_args=['-fopenmp'])
 ]
 
