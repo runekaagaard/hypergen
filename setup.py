@@ -13,7 +13,7 @@ for key, value in cfg_vars.items():
 ext_modules = [
     Extension(
         "cython_proof_of_concept", ["cython_proof_of_concept.pyx"],
-        extra_compile_args=['-fopenmp', '-O3', '-Wno-unused-function'],
+        extra_compile_args=['-fopenmp', '-Ofast', '-Wno-unused-function'],
         extra_link_args=['-fopenmp'])
 ]
 
