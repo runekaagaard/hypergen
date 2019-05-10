@@ -42,7 +42,7 @@ cdef:
     int n_threads = openmp.omp_get_max_threads()
     Pool mem = Pool()
     Thread* threads = <Thread*>mem.alloc(n_threads, sizeof(Thread))
-    attr T = a(<char*> "__the_end__", <char*> "__is_reached__")
+    attr TERM = a(<char*> "__the_end__", <char*> "__is_reached__")
     char* OMIT = <char*> "__omit__"
     char* EMPTY = <char*> "__empty__"
     
@@ -84,13 +84,14 @@ def _tag_open(tag, **attrs):
         int i = 0
         # If some attributes are skipped, we might use a bit of extra mem here.
         attr* ax = <attr*>mem.alloc(n+1, sizeof(attr))
+        string k
         
-    for k,v in attrs.iteritems():
+    for k, v in attrs.iteritems():
         k = k.lstrip("_").replace("_", "-")
-        if not k:
+        if k == "":
             continue
         if type(v) is bool:
-            if not v:
+            if v is False:
                 continue
             else:
                 ax[i] = a(k, OMIT)
@@ -103,7 +104,7 @@ def _tag_open(tag, **attrs):
             ax[i] = a(k, v if v else EMPTY)
 
         i += 1
-    ax[i] = T
+    ax[i] = TERM
 
     _tag_open_ng(&threads[openmp.omp_get_thread_num()].html, tag, ax)
 
@@ -113,7 +114,7 @@ cdef void _tag_open_ng(string* html, string tag, attr* attrs) nogil:
     html.append(<char*> "<").append(tag)
     while True:
         i = i + 1
-        if attrs[i].name == T.name:
+        if attrs[i].name == TERM.name:
             break
         
         html.append(<char*> " ").append(attrs[i].name)
@@ -152,11 +153,11 @@ cdef void div_ng_br(string* html, string inner, attr* attrs) nogil:
     element_ng(html, <char*> "div", inner, attrs)
 
 def pageuu():
-    div("UWUW", _class="owow", hidden=False, checked=True, empty="", style=dict(
-        height=92, font_weight="bolder",
+    div("UWUWø", _class="æowow", hidden=False, checked=True, empty="", style=dict(
+        height=92, font_weight="bøolder",
     ))
 
-print [hypergen(pageuu)]
+print hypergen(pageuu)
 print [hypergen(pageuu)]
 #assert False
 # -------------------------
@@ -170,8 +171,8 @@ print [hypergen(pageuu)]
 #     _tag_close_ng(<string> "div")
 
 
-cdef int N = 1
-cdef int M = 5
+cdef int N = 100
+cdef int M = 1000
 
 # cdef string page_cython(int n, int m):
 #     hypergen_start()
@@ -198,13 +199,13 @@ cdef string page_cython_nogil(int n, int m) nogil:
             div_ng(<char*> "This is gøød", [
                 a(<char*> "height", <char*> "91"),
                 a(<char*> "width", <char*> k_str),
-                T
+                TERM,
             ])
             div_ng(<char*> "Classical", [
                 a(<char*> "class", <char*> "it-is"),
                 a(<char*> "title", <char*> "My øwesome title"),
                 a(<char*> "empty", <char*> ""),
-                T
+                TERM,
             ])
             write_ng(<char*> "write_ng")
         j += 1
@@ -245,7 +246,7 @@ cdef string my_page():
     for i in prange(n, nogil=True):
         div_ng_br(&parts[i], <char*> "This is gøød", [
             a(<char*> "height", <char*> "91"),
-            T
+            TERM,
         ])
         
     for part in parts[:n]:
