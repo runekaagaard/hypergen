@@ -43,43 +43,19 @@ cdef:
     Pool mem = Pool()
     Thread* threads = <Thread*>mem.alloc(n_threads, sizeof(Thread))
     attr T = a(<char*> "__the_end__", <char*> "__is_reached__")
+    char* OMIT = <char*> "__omit__"
     
-### Python api ###
+### Public api ###
+
+# The hypergen* functions handles the global threadsafe html state.
+# It’s a god c++ string that all the tag functions appends to.
 
 def hypergen(func, *args, **kwargs):
-    hypergen_start()
-    func(*args, **kwargs)
-    
-    return hypergen_stop()
-
-def element(tag, inner, **attrs):
-    _element_open(tag, **attrs)
-    write(inner)
-    _element_close(tag)
-
-def _element_open(tag, **attrs):
-    html = []
-    
-    def _attr(k, v):
-        k = k.lstrip("_")
-        cdef string k1 = k
-        cdef string v1 = v
-        if type(v) is bool:
-            return a(k1, "")
-        else:
-            return a(k1, v1)
-    
-    _element_open_ng(&threads[openmp.omp_get_thread_num()].html, tag,
-                     [_attr(k, v) for k, v in attrs.iteritems()])
-    #html.append(u"<{}".format(tag))
-    #[html.append(_attr(k, v)) for k, v in attrs.iteritems()]
-    #html.append(">")
-    #write(u"".join(html))
-
-def _element_close(tag):
-    write("</{}>".format(tag))
-
-### No gil ###
+    try:
+        hypergen_start()
+        func(*args, **kwargs)
+    finally:
+        return hypergen_stop()
 
 cdef void hypergen_start() nogil:
     cdef int i = openmp.omp_get_thread_num()
@@ -89,23 +65,51 @@ cdef void hypergen_start() nogil:
 cdef string hypergen_stop() nogil:
     return threads[openmp.omp_get_thread_num()].html
 
+# The element* functions makes html elements.
+
+def element(tag, inner, **attrs):
+    _element_open(tag, **attrs)
+    write(inner)
+    _element_close_ng(&threads[openmp.omp_get_thread_num()].html, tag)
+
+def _element_open(tag, **attrs):
+    cdef:
+        int n = len(attrs.keys())
+        attr* ax = <attr*>mem.alloc(n+1, sizeof(attr))
+        
+    for i, pair in enumerate(attrs.iteritems()):
+        k, v = pair
+        k = k.lstrip("_")
+        
+        if type(v) is bool:
+            if not v:
+                ax[i] = a(OMIT, OMIT)
+            else:
+                ax[i] = a(k, OMIT)
+        else:
+            ax[i] = a(k, v)
+    ax[n] = T
+
+    _element_open_ng(&threads[openmp.omp_get_thread_num()].html, tag, ax)
+
+### No gil ###
+
 cdef void write_ng(string html) nogil:
     cdef int i = openmp.omp_get_thread_num()
     threads[i].html.append(html)
-
-cdef string get_thread_html():
-    return threads[openmp.omp_get_thread_num()].html
     
 cdef void _element_open_ng(string* html, string tag, attr* attrs) nogil:
     cdef int i = 0
     
     html.append(<char*> "<").append(tag)
     while True:
-        if attrs[i].name == T.name:
+        if attrs[i].name == T.name or attrs[i].name == OMIT:
             break
-        
-        html.append(<char*> " ").append(attrs[i].name).append(<char*> "="
-            ).append(attrs[i].value).append(<char*> '"')
+        if attrs[i].value != OMIT:
+            html.append(<char*> " ").append(attrs[i].name).append(<char*> '="'
+                ).append(attrs[i].value).append(<char*> '"')
+        else:
+            html.append(<char*> " ").append(attrs[i].name)
         i = i + 1
         
     html.append(<char*> ">")
@@ -134,10 +138,10 @@ def div(inner, **attrs):
     element("div", inner, **attrs)
 
 def pageuu():
-    div("UWUW", _class="owow")
+    div("UWUW", _class="owow", hidden=True, checked=False)
 
 print hypergen(pageuu)
-assert False
+#assert False
 # -------------------------
 
 # @contextmanager
