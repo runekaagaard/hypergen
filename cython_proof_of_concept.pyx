@@ -30,7 +30,7 @@ cdef attr a(string name, string value) nogil:
     cdef attr _a
     _a.name = <string> name
     _a.value = <string> value
-    
+
     return _a
 
 cdef struct Thread:
@@ -44,6 +44,7 @@ cdef:
     Thread* threads = <Thread*>mem.alloc(n_threads, sizeof(Thread))
     attr T = a(<char*> "__the_end__", <char*> "__is_reached__")
     char* OMIT = <char*> "__omit__"
+    char* EMPTY = <char*> "__empty__"
     
 ### Public api ###
 
@@ -65,32 +66,63 @@ cdef void hypergen_start() nogil:
 cdef string hypergen_stop() nogil:
     return threads[openmp.omp_get_thread_num()].html
 
-# The element* functions makes html elements.
+# The element* and tag* functions makes html elements.
 
 def element(tag, inner, **attrs):
-    _element_open(tag, **attrs)
+    _tag_open(tag, **attrs)
     write(inner)
-    _element_close_ng(&threads[openmp.omp_get_thread_num()].html, tag)
+    _tag_close_ng(&threads[openmp.omp_get_thread_num()].html, tag)
 
-def _element_open(tag, **attrs):
+cdef string element_ng(string* html, string tag, string inner, attr* attrs) nogil:
+    _tag_open_ng(html, tag, attrs)
+    html.append(inner)
+    _tag_close_ng(html, tag)
+    
+def _tag_open(tag, **attrs):
     cdef:
         int n = len(attrs.keys())
+        int i = 0
         attr* ax = <attr*>mem.alloc(n+1, sizeof(attr))
         
-    for i, pair in enumerate(attrs.iteritems()):
-        k, v = pair
+    for k,v in attrs.iteritems():
         k = k.lstrip("_")
-        
+        if not k:
+            continue
         if type(v) is bool:
             if not v:
-                ax[i] = a(OMIT, OMIT)
+                continue
             else:
                 ax[i] = a(k, OMIT)
         else:
-            ax[i] = a(k, v)
-    ax[n] = T
+            ax[i] = a(k, v if v else EMPTY)
 
-    _element_open_ng(&threads[openmp.omp_get_thread_num()].html, tag, ax)
+        i += 1
+    ax[i] = T
+
+    _tag_open_ng(&threads[openmp.omp_get_thread_num()].html, tag, ax)
+
+cdef void _tag_open_ng(string* html, string tag, attr* attrs) nogil:
+    cdef int i = -1
+    
+    html.append(<char*> "<").append(tag)
+    while True:
+        i = i + 1
+        if attrs[i].name == T.name or attrs[i].name == OMIT:
+            break
+        
+        html.append(<char*> " ").append(attrs[i].name)
+
+        if attrs[i].value == EMPTY:
+            html.append(<char*> '=""')
+        elif attrs[i].value == OMIT:
+            pass
+        else:
+            html.append(<char*> '="').append(attrs[i].value).append(<char*> '"')
+        
+    html.append(<char*> ">")
+
+cdef void _tag_close_ng(string* html, string tag) nogil:
+    html.append(<char*> "</").append(tag).append(<char*> ">")
 
 ### No gil ###
 
@@ -98,30 +130,6 @@ cdef void write_ng(string html) nogil:
     cdef int i = openmp.omp_get_thread_num()
     threads[i].html.append(html)
     
-cdef void _element_open_ng(string* html, string tag, attr* attrs) nogil:
-    cdef int i = 0
-    
-    html.append(<char*> "<").append(tag)
-    while True:
-        if attrs[i].name == T.name or attrs[i].name == OMIT:
-            break
-        if attrs[i].value != OMIT:
-            html.append(<char*> " ").append(attrs[i].name).append(<char*> '="'
-                ).append(attrs[i].value).append(<char*> '"')
-        else:
-            html.append(<char*> " ").append(attrs[i].name)
-        i = i + 1
-        
-    html.append(<char*> ">")
-
-cdef void _element_close_ng(string* html, string tag) nogil:
-    html.append(<char*> "</").append(tag).append(<char*> ">")
-
-cdef string element_ng(string* html, string tag, string inner, attr* attrs) nogil:
-    _element_open_ng(html, tag, attrs)
-    html.append(inner)
-    _element_close_ng(html, tag)
-
 cdef void div_ng(string inner, attr* attrs) nogil:
     element_ng(&threads[openmp.omp_get_thread_num()].html, <char*> "div", inner,
             attrs)
@@ -138,7 +146,7 @@ def div(inner, **attrs):
     element("div", inner, **attrs)
 
 def pageuu():
-    div("UWUW", _class="owow", hidden=True, checked=False)
+    div("UWUW", _class="owow", hidden=False, checked=True, empty="")
 
 print hypergen(pageuu)
 #assert False
@@ -148,9 +156,9 @@ print hypergen(pageuu)
 # def divcm(string class_):
 #     cdef int i = openmp.omp_get_thread_num()
 #     cdef int index = threads[i].index
-#     _element_open_ng(<string> "div", class_)
+#     _tag_open_ng(<string> "div", class_)
 #     yield
-#     _element_close_ng(<string> "div")
+#     _tag_close_ng(<string> "div")
 
 
 cdef int N = 1
@@ -186,6 +194,7 @@ cdef string page_cython_nogil(int n, int m) nogil:
             div_ng(<char*> "Classical", [
                 a(<char*> "class", <char*> "it-is"),
                 a(<char*> "title", <char*> "My øwesome title"),
+                a(<char*> "empty", <char*> ""),
                 T
             ])
             write_ng(<char*> "write_ng")
