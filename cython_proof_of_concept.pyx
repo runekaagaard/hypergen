@@ -69,16 +69,19 @@ cdef string hypergen_stop() nogil:
 # The element* and tag* functions makes html elements.
 
 def element(tag, inner, **attrs):
-    _tag_open(tag, **attrs)
+    tag_open(tag, **attrs)
     write(inner)
-    _tag_close_ng(&threads[openmp.omp_get_thread_num()].html, tag)
+    tag_close_br(&threads[openmp.omp_get_thread_num()].html, tag)
 
-cdef string element_ng(string* html, string tag, string inner, attr* attrs) nogil:
-    _tag_open_ng(html, tag, attrs)
+cdef string element_ng(string tag, string inner, attr* attrs) nogil:
+    element_br(&threads[openmp.omp_get_thread_num()].html, tag, inner, attrs)
+
+cdef string element_br(string* html, string tag, string inner, attr* attrs) nogil:
+    tag_open_br(html, tag, attrs)
     html.append(inner)
-    _tag_close_ng(html, tag)
+    tag_close_br(html, tag)
     
-def _tag_open(tag, **attrs):
+def tag_open(tag, **attrs):
     cdef:
         int n = len(attrs.keys())
         int i = 0
@@ -106,9 +109,12 @@ def _tag_open(tag, **attrs):
         i += 1
     ax[i] = TERM
 
-    _tag_open_ng(&threads[openmp.omp_get_thread_num()].html, tag, ax)
+    tag_open_br(&threads[openmp.omp_get_thread_num()].html, tag, ax)
 
-cdef void _tag_open_ng(string* html, string tag, attr* attrs) nogil:
+cdef void tag_open_ng(string tag, attr* attrs) nogil:
+    tag_open_br(&threads[openmp.omp_get_thread_num()].html, tag, attrs)
+
+cdef void tag_open_br(string* html, string tag, attr* attrs) nogil:
     cdef int i = -1
     
     html.append(<char*> "<").append(tag)
@@ -128,7 +134,13 @@ cdef void _tag_open_ng(string* html, string tag, attr* attrs) nogil:
         
     html.append(<char*> ">")
 
-cdef void _tag_close_ng(string* html, string tag) nogil:
+def tag_close(tag):
+    tag_close_br(&threads[openmp.omp_get_thread_num()].html, tag)
+    
+cdef void tag_close_ng(string tag) nogil:
+    tag_close_br(&threads[openmp.omp_get_thread_num()].html, tag)
+    
+cdef void tag_close_br(string* html, string tag) nogil:
     html.append(<char*> "</").append(tag).append(<char*> ">")
 
 ### The write* functions adds content verbatime to the global html state. ###
@@ -137,20 +149,25 @@ def write(html):
     write_ng(html)
 
 cdef void write_ng(string html) nogil:
-    cdef int i = openmp.omp_get_thread_num()
-    threads[i].html.append(html)
+    threads[openmp.omp_get_thread_num()].html.append(html)
 
 ### Below here comes each html5 element. ###
 
 def div(inner, **attrs):
     element("div", inner, **attrs)
 
+def o_div(inner, **attrs):
+    tag_open("div", **attrs)    
+
+def c_div(inner, **attrs):
+    tag_close_br(&threads[openmp.omp_get_thread_num()].html, "div")
+
 cdef void div_ng(string inner, attr* attrs) nogil:
-    element_ng(&threads[openmp.omp_get_thread_num()].html, <char*> "div", inner,
+    element_br(&threads[openmp.omp_get_thread_num()].html, <char*> "div", inner,
             attrs)
 
 cdef void div_ng_br(string* html, string inner, attr* attrs) nogil:
-    element_ng(html, <char*> "div", inner, attrs)
+    element_br(html, <char*> "div", inner, attrs)
 
 def pageuu():
     div("UWUWø", _class="æowow", hidden=False, checked=True, empty="", style=dict(
@@ -166,13 +183,13 @@ print [hypergen(pageuu)]
 # def divcm(string class_):
 #     cdef int i = openmp.omp_get_thread_num()
 #     cdef int index = threads[i].index
-#     _tag_open_ng(<string> "div", class_)
+#     tag_open_br(<string> "div", class_)
 #     yield
-#     _tag_close_ng(<string> "div")
+#     tag_close_br(<string> "div")
 
 
-cdef int N = 100
-cdef int M = 1000
+cdef int N = 1
+cdef int M = 1
 
 # cdef string page_cython(int n, int m):
 #     hypergen_start()
