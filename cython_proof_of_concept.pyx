@@ -82,10 +82,11 @@ def _tag_open(tag, **attrs):
     cdef:
         int n = len(attrs.keys())
         int i = 0
+        # If some attributes are skipped, we might use a bit of extra mem here.
         attr* ax = <attr*>mem.alloc(n+1, sizeof(attr))
         
     for k,v in attrs.iteritems():
-        k = k.lstrip("_")
+        k = k.lstrip("_").replace("_", "-")
         if not k:
             continue
         if type(v) is bool:
@@ -93,6 +94,11 @@ def _tag_open(tag, **attrs):
                 continue
             else:
                 ax[i] = a(k, OMIT)
+        elif k == "style" and type(v) is dict:
+            if not v:
+                continue
+            ax[i] = a(k, "".join("{}:{};".format(k1.replace("_", "-"), v1)
+                                 for k1, v1 in v.iteritems()))
         else:
             ax[i] = a(k, v if v else EMPTY)
 
@@ -107,7 +113,7 @@ cdef void _tag_open_ng(string* html, string tag, attr* attrs) nogil:
     html.append(<char*> "<").append(tag)
     while True:
         i = i + 1
-        if attrs[i].name == T.name or attrs[i].name == OMIT:
+        if attrs[i].name == T.name:
             break
         
         html.append(<char*> " ").append(attrs[i].name)
@@ -124,12 +130,20 @@ cdef void _tag_open_ng(string* html, string tag, attr* attrs) nogil:
 cdef void _tag_close_ng(string* html, string tag) nogil:
     html.append(<char*> "</").append(tag).append(<char*> ">")
 
-### No gil ###
+### The write* functions adds content verbatime to the global html state. ###
+
+def write(html):
+    write_ng(html)
 
 cdef void write_ng(string html) nogil:
     cdef int i = openmp.omp_get_thread_num()
     threads[i].html.append(html)
-    
+
+### Below here comes each html5 element. ###
+
+def div(inner, **attrs):
+    element("div", inner, **attrs)
+
 cdef void div_ng(string inner, attr* attrs) nogil:
     element_ng(&threads[openmp.omp_get_thread_num()].html, <char*> "div", inner,
             attrs)
@@ -137,18 +151,13 @@ cdef void div_ng(string inner, attr* attrs) nogil:
 cdef void div_ng_br(string* html, string inner, attr* attrs) nogil:
     element_ng(html, <char*> "div", inner, attrs)
 
-### Elements ###
-
-def write(html):
-    write_ng(html)
-
-def div(inner, **attrs):
-    element("div", inner, **attrs)
-
 def pageuu():
-    div("UWUW", _class="owow", hidden=False, checked=True, empty="")
+    div("UWUW", _class="owow", hidden=False, checked=True, empty="", style=dict(
+        height=92, font_weight="bolder",
+    ))
 
-print hypergen(pageuu)
+print [hypergen(pageuu)]
+print [hypergen(pageuu)]
 #assert False
 # -------------------------
 
