@@ -55,8 +55,11 @@ def hypergen(func, *args, **kwargs):
     try:
         hypergen_start()
         func(*args, **kwargs)
-    finally:
-        return hypergen_stop()
+    except:
+        hypergen_stop()
+        raise
+
+    return hypergen_stop()
 
 cdef void hypergen_start() nogil:
     cdef int i = openmp.omp_get_thread_num()
@@ -168,7 +171,7 @@ cdef void div_ng(string inner, attr* attrs) nogil:
 cdef void div_ng_br(string* html, string inner, attr* attrs) nogil:
     element_br(html, <char*> "div", inner, attrs)
 
-def o_div(inner, **attrs):
+def o_div(**attrs):
     tag_open("div", **attrs)    
 
 cdef void o_div_ng(attr* attrs) nogil:
@@ -189,9 +192,13 @@ cdef void c_div_br(string* html) nogil:
 ### Testing ###
 
 def pageuu():
-    div("UWUWø", _class="æowow", hidden=False, checked=True, empty="", style=dict(
+    div("UWUWø", _class="æowow", hidden=False, checked=True, empty="",
+        style=dict(
         height=92, font_weight="bøolder",
     ))
+    o_div(x="y")
+    write("dass")
+    c_div()
 
 print hypergen(pageuu)
 print [hypergen(pageuu)]
@@ -289,6 +296,7 @@ cdef string my_page():
         o_div_br(&parts[i], [a(<char*> "x", <char*> "1"), TERM])
         write_br(&parts[i], <char*> "wut?")
         c_div_br(&parts[i])
+
     for part in parts[:n]:
         html.append(part)
 
