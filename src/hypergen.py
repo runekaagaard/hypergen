@@ -34,14 +34,13 @@ def tag_open(tag, **attrs):
         if type(v) is bool:
             if v is True:
                 e((u" ", k))
+        elif k == u"style" and type(v) is dict:
+            e((u" ", k, u'="', u";".join(
+                unicode(k1) + u":" + unicode(v1)
+                for k1, v1 in v.iteritems()), u'"'))
         else:
-            if k == u"style" and type(v) is dict:
-                e((u" ", k, u'="', u";".join(
-                    unicode(k1) + u":" + unicode(v1)
-                    for k1, v1 in v.iteritems()), u'"'))
-            else:
-                v = unicode(v)
-                e((u" ", k, u'="', escape(v, quote=True), u'"'))
+            v = unicode(v)
+            e((u" ", k, u'="', escape(v, quote=True), u'"'))
     e((u'>', ))
 
 
