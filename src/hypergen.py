@@ -1,4 +1,5 @@
 from threading import local
+from contextlib import contextmanager
 try:
     from html import escape
 except:
@@ -22,40 +23,56 @@ def hypergen(func, *args, **kwargs):
 
 def element(tag, inner, **attrs):
     tag_open(tag, **attrs)
-    data.extend((inner, ))
+    data.extend((t(inner, quote=False), ))
     tag_close(tag)
+
+
+def t(s, quote=True):
+    return escape(unicode(s), quote=quote)
 
 
 def tag_open(tag, **attrs):
     e = data.extend
     e((u"<", tag))
     for k, v in attrs.iteritems():
-        k = unicode(k)
+        k = t(k).lstrip("_").replace("_", "-")
         if type(v) is bool:
             if v is True:
                 e((u" ", k))
         elif k == u"style" and type(v) is dict:
             e((u" ", k, u'="', u";".join(
-                unicode(k1) + u":" + unicode(v1)
-                for k1, v1 in v.iteritems()), u'"'))
+                t(k1) + u":" + t(v1) for k1, v1 in v.iteritems()), u'"'))
         else:
-            v = unicode(v)
-            e((u" ", k, u'="', escape(v, quote=True), u'"'))
+            e((u" ", k, u'="', t(v), u'"'))
     e((u'>', ))
 
 
 def tag_close(tag):
-    data.extend((u"</", unicode(tag), u">"))
+    data.extend((u"</", t(tag), u">"))
 
 
 def write(html):
-    data.extend(escape(unicode(html), quote=False))
+    data.extend(t(html))
+
+
+@contextmanager
+def div_cm(**attrs):
+    tag_open(u"div", **attrs)
+    yield
+    tag_close(u"div")
 
 
 def test():
-    element(
-        "div", "zup", h=42, w=19, style={1: 2,
-                                         3: 4}, height=93.12, foo=True)
+    with div_cm(_class="no", x=92):
+        element(
+            "div",
+            "zup",
+            h=42,
+            w=19,
+            style={1: 2,
+                   3: 4},
+            height=93.12,
+            foo=True)
 
 
 print hypergen(test)
