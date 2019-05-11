@@ -13,8 +13,12 @@ for key, value in cfg_vars.items():
 ext_modules = [
     Extension(
         "cython_proof_of_concept", ["cython_proof_of_concept.pyx"],
-        extra_compile_args=['-fopenmp', '-Ofast', '-Wno-unused-function'],
-        extra_link_args=['-fopenmp'])
+        extra_compile_args=['-fopenmp', '-O3', '-Wno-unused-function'],
+        extra_link_args=['-fopenmp']),
+    Extension(
+        "pure_python_proof_of_concept", ["pure_python_proof_of_concept.pyx"],
+        extra_compile_args=['-O3', '-Wno-unused-function'],
+        extra_link_args=[]),
 ]
 
 setup(name='wwwgen', ext_modules=cythonize(ext_modules, annotate=True))

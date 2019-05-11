@@ -1,6 +1,5 @@
-# cython: language_level=2
-# distutils: language = c++
-
+# cython: c_string_type=bytes, language_level=2
+# distutils: language=c++
 
 from cymem.cymem cimport Pool
     
@@ -201,7 +200,7 @@ cdef void c_div_br(string* html) nogil:
     {% endfor %}
 </table>
 """
-cpdef string bigtable_benchmark() nogil:
+cdef string bigtable_benchmark() nogil:
     cdef:
         int i
         int j
@@ -210,11 +209,11 @@ cpdef string bigtable_benchmark() nogil:
 
     # hypergen_start()
     write_br(&html, <char*> "<table>")
-    for i in range(10000):
+    for i in range(1):
         write_br(&html, <char*> "<tr>")
         for j in range(10):
             sprintf(j_str, <char*> "%d", j)
-            write_br(&html, <char*> "<td>")
+            write_br(&html, <char*> "ø<td>")
             write_br(&html, j_str)
             write_br(&html, <char*> "</td>")
             write_br(&html, <char*> "<td>")
@@ -227,12 +226,15 @@ cpdef string bigtable_benchmark() nogil:
 
     #return hypergen_stop()
 
+print bigtable_benchmark()
+
+    
 def bigtable_benchmark_real(ctx):
     tag_open("table")
     for row in ctx['table']:
         tag_open("tr")
         for key, value in row.items():
-            tag_open("td")
+            tag_open("øtd")
             write(key)
             tag_close("td")
             tag_open("td")
