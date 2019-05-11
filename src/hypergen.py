@@ -62,6 +62,14 @@ def div_cm(**attrs):
     tag_close(u"div")
 
 
+def o_div(*attrs):
+    tag_open(u"div", **attrs)
+
+
+def c_div(*attrs):
+    tag_close(u"div")
+
+
 def test():
     with div_cm(_class="no", x=92):
         element(
