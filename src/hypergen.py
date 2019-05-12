@@ -73,18 +73,22 @@ def div(*inners, **attrs):
 
 @contextmanager
 def div_cm(*inners, **attrs):
+    sep = attrs.pop("sep", u"")
     tag_open(u"div", **attrs)
-    write(*inners)
+    write(*inners, sep=sep)
     yield
     tag_close(u"div")
 
 
 def o_div(*inners, **attrs):
+    sep = attrs.pop("sep", u"")
     tag_open(u"div", **attrs)
-    write(*inners)
+    write(*inners, sep=sep)
 
 
-def c_div(*attrs):
+def c_div(*inners, **kwargs):
+    sep = kwargs.pop("sep", u"")
+    write(*inners, sep=sep)
     tag_close(u"div")
 
 
@@ -98,15 +102,15 @@ if __name__ == "__main__":
         div("Hello", name, _class="its-hyper", data_x=3.14, hidden=True,
             selected=False, style={"height": 42, "display": "none"}, sep=" ",
             _sort_attrs=True)
-    print hypergen(test2, "hypergen!")
     assert hypergen(test2, "hypergen!") == u'<div class="its-hyper" '\
         'data-x="3.14" hidden style="display:none;height:42">'\
         'Hello hypergen!</div>'
 
 
     def test3():
-        with div_cm("div", "cm", x=1):
-            o_div(1, 2, y=1)
-            write(3, 4)
-            c_div()
-    assert hypergen(test3) == u'<div x="1">divcm<div y="1">1234</div></div>'
+        with div_cm("div", "cm", x=1, sep="_"):
+            o_div(1, 2, y=1, sep="-")
+            write(3, 4, sep="+")
+            c_div(5, 6, sep=" ")
+    print hypergen(test3)
+    assert hypergen(test3) == u'<div x="1">div_cm<div y="1">1-23+45 6</div></div>'
