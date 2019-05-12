@@ -100,11 +100,10 @@ def skippable():
 
 
 @contextmanager
-def cached(key=None, **kwargs):
-    keys = key if type(key) in (list, tuple) else [key]
-    hash_value = hash(
-        tuple([hash(tuple(keys))] + ["SEP_A"] + [(k, v)
-                                                 for k, v in items(kwargs)]))
+def cached(**kwargs):
+    hash_value = "HPG{}".format(
+        hash(tuple((k, kwargs[k]) for k in sorted(kwargs.keys()))))
+
     client = state.cache_client
     html = client.get(hash_value)
 
@@ -113,7 +112,7 @@ def cached(key=None, **kwargs):
         raise SkipException()
     else:
         a = len(state.html)
-        kwargs.update({"key": key, 'hash': hash_value})
+        kwargs.update({'hash': hash_value})
         yield Bunch(kwargs)
         b = len(state.html)
         client.set(hash_value, u"".join(x for x in state.html[a:b]))
