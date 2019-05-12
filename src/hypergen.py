@@ -1,11 +1,17 @@
 from threading import local
 from contextlib import contextmanager
+from collections import OrderedDict
+
 try:
     from html import escape
 except:
     from cgi import escape
 
 data = local()
+
+
+def t(s, quote=True):
+    return escape(unicode(s), quote=quote)
 
 
 def hypergen(func, *args, **kwargs):
@@ -21,17 +27,19 @@ def hypergen(func, *args, **kwargs):
     return html
 
 
-def element(tag, inner, **attrs):
+def element(tag, *inners, **attrs):
+    sep = attrs.pop("sep", u"")
     tag_open(tag, **attrs)
-    data.extend((t(inner, quote=False), ))
+    write(*inners, sep=sep)
     tag_close(tag)
 
 
-def t(s, quote=True):
-    return escape(unicode(s), quote=quote)
-
-
 def tag_open(tag, **attrs):
+    # For testing only, subject to change.
+    sort_attrs = attrs.pop("_sort_attrs", False)
+    if sort_attrs:
+        attrs = OrderedDict((k, attrs[k])
+                            for k in sorted(attrs, key=lambda x: x))
     e = data.extend
     e((u"<", tag))
     for k, v in attrs.iteritems():
@@ -51,36 +59,54 @@ def tag_close(tag):
     data.extend((u"</", t(tag), u">"))
 
 
-def write(html):
-    data.extend(t(html))
+def write(*inners, **kwargs):
+    sep = kwargs.pop("sep", u"")
+    data.extend((t(sep).join(t(inner) for inner in inners), ))
+
+
+### *div* functions. ###
+
+
+def div(*inners, **attrs):
+    return element(u"div", *inners, **attrs)
 
 
 @contextmanager
-def div_cm(**attrs):
+def div_cm(*inners, **attrs):
     tag_open(u"div", **attrs)
+    write(*inners)
     yield
     tag_close(u"div")
 
 
-def o_div(*attrs):
+def o_div(*inners, **attrs):
     tag_open(u"div", **attrs)
+    write(*inners)
 
 
 def c_div(*attrs):
     tag_close(u"div")
 
 
-def test():
-    with div_cm(_class="no", x=92):
-        element(
-            "div",
-            "zup",
-            h=42,
-            w=19,
-            style={1: 2,
-                   3: 4},
-            height=93.12,
-            foo=True)
+if __name__ == "__main__":
+    # yapf: disable
+    def test1():
+        div("Hello, world!")
+    assert hypergen(test1) == u"<div>Hello, world!</div>"
+
+    def test2(name):
+        div("Hello", name, _class="its-hyper", data_x=3.14, hidden=True,
+            selected=False, style={"height": 42, "display": "none"}, sep=" ",
+            _sort_attrs=True)
+    print hypergen(test2, "hypergen!")
+    assert hypergen(test2, "hypergen!") == u'<div class="its-hyper" '\
+        'data-x="3.14" hidden style="display:none;height:42">'\
+        'Hello hypergen!</div>'
 
 
-print hypergen(test)
+    def test3():
+        with div_cm("div", "cm", x=1):
+            o_div(1, 2, y=1)
+            write(3, 4)
+            c_div()
+    assert hypergen(test3) == u'<div x="1">divcm<div y="1">1234</div></div>'
