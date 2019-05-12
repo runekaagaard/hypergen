@@ -100,7 +100,7 @@ def skippable():
 
 
 @contextmanager
-def cached(**kwargs):
+def cached(ttl=3600, **kwargs):
     hash_value = "HPG{}".format(
         hash(tuple((k, kwargs[k]) for k in sorted(kwargs.keys()))))
 
@@ -115,7 +115,7 @@ def cached(**kwargs):
         kwargs.update({'hash': hash_value})
         yield Bunch(kwargs)
         b = len(state.html)
-        client.set(hash_value, u"".join(x for x in state.html[a:b]))
+        client.set(hash_value, u"".join(x for x in state.html[a:b]), ttl)
 
 
 ### *div* functions. ###
@@ -153,7 +153,7 @@ if __name__ == "__main__":
         def __init__(self):
             self.cache = {}
 
-        def set(self, k, v):
+        def set(self, k, v, ttl):
             self.cache[k] = v
 
         def get(self, k):
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     def test_cache(a, b):
         global _h, _t
         _t = False
-        with skippable(), cached(key=test_cache, a=a, b=b) as value:
+        with skippable(), cached(ttl=5, key=test_cache, a=a, b=b) as value:
             div(*(value.a+value.b), data_hash=value.hash)
             _h = value.hash
             _t = True
