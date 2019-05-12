@@ -34,12 +34,14 @@ def element(tag, *inners, **attrs):
     tag_close(tag)
 
 
-def tag_open(tag, **attrs):
+def tag_open(tag, *inners, **attrs):
     # For testing only, subject to change.
     sort_attrs = attrs.pop("_sort_attrs", False)
     if sort_attrs:
         attrs = OrderedDict((k, attrs[k])
                             for k in sorted(attrs, key=lambda x: x))
+
+    sep = attrs.pop("sep", u"")
     e = data.extend
     e((u"<", tag))
     for k, v in attrs.iteritems():
@@ -53,9 +55,11 @@ def tag_open(tag, **attrs):
         else:
             e((u" ", k, u'="', t(v), u'"'))
     e((u'>', ))
+    write(*inners, sep=sep)
 
 
-def tag_close(tag):
+def tag_close(tag, *inners, **kwargs):
+    write(*inners, **kwargs)
     data.extend((u"</", t(tag), u">"))
 
 
@@ -73,23 +77,17 @@ def div(*inners, **attrs):
 
 @contextmanager
 def div_cm(*inners, **attrs):
-    sep = attrs.pop("sep", u"")
-    tag_open(u"div", **attrs)
-    write(*inners, sep=sep)
+    tag_open(u"div", *inners, **attrs)
     yield
     tag_close(u"div")
 
 
 def o_div(*inners, **attrs):
-    sep = attrs.pop("sep", u"")
-    tag_open(u"div", **attrs)
-    write(*inners, sep=sep)
+    tag_open(u"div", *inners, **attrs)
 
 
 def c_div(*inners, **kwargs):
-    sep = kwargs.pop("sep", u"")
-    write(*inners, sep=sep)
-    tag_close(u"div")
+    tag_close(u"div", *inners, **kwargs)
 
 
 if __name__ == "__main__":
@@ -112,5 +110,13 @@ if __name__ == "__main__":
             o_div(1, 2, y=1, sep="-")
             write(3, 4, sep="+")
             c_div(5, 6, sep=" ")
-    print hypergen(test3)
-    assert hypergen(test3) == u'<div x="1">div_cm<div y="1">1-23+45 6</div></div>'
+    assert hypergen(test3) == u'<div x="1">div_cm<div y="1">1-23+45 6</div>'\
+        '</div>'
+
+    def test4():
+        tag_open("li", 1, 2, a=3, _b=4, sep=".")
+        write(5, 6, sep=",")
+        tag_close("li", 7, 8, sep="+")
+
+    print hypergen(test4)
+    assert hypergen(test4) == u'<li a="3" b="4">1.25,67+8</li>'
