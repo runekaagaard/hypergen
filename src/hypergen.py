@@ -117,6 +117,4 @@ if __name__ == "__main__":
         tag_open("li", 1, 2, a=3, _b=4, sep=".")
         write(5, 6, sep=",")
         tag_close("li", 7, 8, sep="+")
-
-    print hypergen(test4)
     assert hypergen(test4) == u'<li a="3" b="4">1.25,67+8</li>'
