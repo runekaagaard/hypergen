@@ -25,27 +25,26 @@ state = local()
 
 
 def hypergen(func, *args, **kwargs):
-    diff = kwargs.pop("diff", False)
+    return_hashes = kwargs.pop("return_hashes", False)
     try:
-        state.html = [] if not diff else OrderedDict()
-        state.extend = (state.html.extend if not diff else extend_diff)
+        state.html = [] if not return_hashes else OrderedDict()
+        state.extend = (state.html.extend
+                        if not return_hashes else extend_return_hashes)
         state.cache_client = kwargs.pop("cache_client", None)
         state.hash_value = None
-        state.diff = kwargs.pop("diff", False)
         func(*args, **kwargs)
-        html = u"".join(state.html) if not diff else OrderedDict(
+        html = u"".join(state.html) if not return_hashes else OrderedDict(
             (k, u"".join(v)) for k, v in state.html.iteritems())
     finally:
-        state.html = [] if not diff else OrderedDict()
+        state.html = [] if not return_hashes else OrderedDict()
         state.extend = None
         state.cache_client = None
-        state.diff = False
 
     return html
 
 
-def extend_diff(items):
-    assert state.hash_value is not None, "Diff needs hash."
+def extend_return_hashes(items):
+    assert state.hash_value is not None, "Cannot extend without a hash"
     try:
         state.html[state.hash_value].extend(items)
     except KeyError:
@@ -205,20 +204,14 @@ if __name__ == "__main__":
     assert _t is True
     assert state.hash_value is None
 
-    def test_diffing(xs):
+    def test_return_hashes(xs):
         for x in xs:
             with hashing(x=x) as hashed:
                 div("x=", hashed.x)
 
-    html = hypergen(test_diffing, [1,2,3,4], diff=True)
-    next_html = hypergen(test_diffing, [1,2,4], diff=True)
-
-    for k, v in html.items(): print k, '=', v
-    print
-    for k, v in next_html.items(): print k, '=', v
-
-    print html
-    assert False
+    html = hypergen(test_return_hashes, [1,2,3,4], return_hashes=True)
+    next_html = hypergen(test_return_hashes, [1,2,4], return_hashes=True)
+    assert len(set(html.keys()) - set(next_html.keys())) == 1
 
     def test_div1():
         div("Hello, world!")
