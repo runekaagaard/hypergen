@@ -29,6 +29,7 @@ def hypergen(func, *args, **kwargs):
         state.html = []
         state.extend = state.html.extend
         state.cache_client = kwargs.pop("cache_client", None)
+        state.hash_value = None
         func(*args, **kwargs)
         html = u"".join(state.html)
     finally:
@@ -100,22 +101,31 @@ def skippable():
 
 
 @contextmanager
-def cached(ttl=3600, **kwargs):
-    hash_value = "HPG{}".format(
-        hash(tuple((k, kwargs[k]) for k in sorted(kwargs.keys()))))
+def hashing(**kwargs):
+    with skippable():
+        try:
+            state.hash_value = "HPG{}".format(
+                hash(tuple((k, kwargs[k]) for k in sorted(kwargs.keys()))))
+            kwargs.update({'hash': state.hash_value})
+            yield Bunch(kwargs)
+        finally:
+            state.hash_value = None
 
+
+@contextmanager
+def caching(ttl=3600):
     client = state.cache_client
-    html = client.get(hash_value)
+    assert state.hash_value is not None, "Missing caching context manager."
+    html = client.get(state.hash_value)
 
     if html is not None:
         state.extend((html, ))
         raise SkipException()
     else:
         a = len(state.html)
-        kwargs.update({'hash': hash_value})
-        yield Bunch(kwargs)
+        yield
         b = len(state.html)
-        client.set(hash_value, u"".join(x for x in state.html[a:b]), ttl)
+        client.set(state.hash_value, u"".join(x for x in state.html[a:b]), ttl)
 
 
 ### *div* functions. ###
@@ -165,10 +175,11 @@ if __name__ == "__main__":
     def test_cache(a, b):
         global _h, _t
         _t = False
-        with skippable(), cached(ttl=5, key=test_cache, a=a, b=b) as value:
-            div(*(value.a+value.b), data_hash=value.hash)
-            _h = value.hash
+        with hashing(key=test_cache, a=a, b=b) as hashed, caching(ttl=5):
+            div(*(hashed.a+hashed.b), data_hash=hashed.hash)
+            _h = hashed.hash
             _t = True
+            assert state.hash_value is not None
 
     assert hypergen(test_cache, (1, 2), (3, 4), cache_client=cache_client)\
         == u'<div data-hash="{}">1234</div>'.format(_h)
@@ -179,7 +190,7 @@ if __name__ == "__main__":
     assert hypergen(test_cache, (1, 2), (3, 5), cache_client=cache_client)\
         == u'<div data-hash="{}">1235</div>'.format(_h)
     assert _t is True
-
+    assert state.hash_value is None
 
     def test_div1():
         div("Hello, world!")
