@@ -25,19 +25,32 @@ state = local()
 
 
 def hypergen(func, *args, **kwargs):
+    diff = kwargs.pop("diff", False)
     try:
-        state.html = []
-        state.extend = state.html.extend
+        state.html = [] if not diff else OrderedDict()
+        state.extend = (state.html.extend if not diff else extend_diff)
         state.cache_client = kwargs.pop("cache_client", None)
         state.hash_value = None
+        state.diff = kwargs.pop("diff", False)
         func(*args, **kwargs)
-        html = u"".join(state.html)
+        html = u"".join(state.html) if not diff else OrderedDict(
+            (k, u"".join(v)) for k, v in state.html.iteritems())
     finally:
-        state.html = []
+        state.html = [] if not diff else OrderedDict()
         state.extend = None
         state.cache_client = None
+        state.diff = False
 
     return html
+
+
+def extend_diff(items):
+    assert state.hash_value is not None, "Diff needs hash."
+    try:
+        state.html[state.hash_value].extend(items)
+    except KeyError:
+        state.html[state.hash_value] = []
+        state.html[state.hash_value].extend(items)
 
 
 def element(tag, *inners, **attrs):
@@ -191,6 +204,21 @@ if __name__ == "__main__":
         == u'<div data-hash="{}">1235</div>'.format(_h)
     assert _t is True
     assert state.hash_value is None
+
+    def test_diffing(xs):
+        for x in xs:
+            with hashing(x=x) as hashed:
+                div("x=", hashed.x)
+
+    html = hypergen(test_diffing, [1,2,3,4], diff=True)
+    next_html = hypergen(test_diffing, [1,2,4], diff=True)
+
+    for k, v in html.items(): print k, '=', v
+    print
+    for k, v in next_html.items(): print k, '=', v
+
+    print html
+    assert False
 
     def test_div1():
         div("Hello, world!")
