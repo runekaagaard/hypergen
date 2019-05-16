@@ -1,6 +1,7 @@
 from threading import local
 from contextlib import contextmanager
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
+
 import sys
 
 if sys.version_info.major > 2:
@@ -23,6 +24,8 @@ else:
 
 state = local()
 
+Element = namedtuple("Element", "parent, previous, html")
+
 
 def hypergen(func, *args, **kwargs):
     return_hashes = kwargs.pop("return_hashes", False)
@@ -31,25 +34,36 @@ def hypergen(func, *args, **kwargs):
         state.extend = (state.html.extend
                         if not return_hashes else extend_return_hashes)
         state.cache_client = kwargs.pop("cache_client", None)
-        state.hash_value = None
+        state.hash_values = []
+        state.prev_hash_value = None
         func(*args, **kwargs)
         html = u"".join(state.html) if not return_hashes else OrderedDict(
-            (k, u"".join(v)) for k, v in state.html.iteritems())
+            (k, Element(v[0], v[1], u"".join(v[2])))
+            for k, v in state.html.iteritems())
     finally:
         state.html = [] if not return_hashes else OrderedDict()
         state.extend = None
         state.cache_client = None
+        state.hash_values = []
+        state.prev_hash_value = None
 
     return html
 
 
 def extend_return_hashes(items):
-    assert state.hash_value is not None, "Cannot extend without a hash"
+    assert state.hash_values, "Cannot extend without a hash"
+    i = state.hash_values[-1]
+
     try:
-        state.html[state.hash_value].extend(items)
+        parent = state.hash_values[-2]
+    except IndexError:
+        parent = "HPGROOT"
+
+    try:
+        state.html[i][2].extend(items)
     except KeyError:
-        state.html[state.hash_value] = []
-        state.html[state.hash_value].extend(items)
+        state.html[i] = Element(parent, state.prev_hash_value, [])
+        state.html[i][2].extend(items)
 
 
 def element(tag, *inners, **attrs):
@@ -84,6 +98,8 @@ def tag_open(tag, *inners, **attrs):
     e((u'>', ))
     write(*inners, sep=sep)
 
+    state.prev_hash_value = None
+
 
 def tag_close(tag, *inners, **kwargs):
     write(*inners, **kwargs)
@@ -116,19 +132,19 @@ def skippable():
 def hashing(**kwargs):
     with skippable():
         try:
-            state.hash_value = "HPG{}".format(
-                hash(tuple((k, kwargs[k]) for k in sorted(kwargs.keys()))))
-            kwargs.update({'hash': state.hash_value})
+            state.hash_values.append("HPG{}".format(
+                hash(tuple((k, kwargs[k]) for k in sorted(kwargs.keys())))))
+            kwargs.update({'hash': state.hash_values[-1]})
             yield Bunch(kwargs)
         finally:
-            state.hash_value = None
+            state.prev_hash_value = state.hash_values.pop()
 
 
 @contextmanager
 def caching(ttl=3600):
     client = state.cache_client
-    assert state.hash_value is not None, "Missing caching context manager."
-    html = client.get(state.hash_value)
+    assert state.hash_values, "Missing caching context manager."
+    html = client.get(state.hash_values[-1])
 
     if html is not None:
         state.extend((html, ))
@@ -137,7 +153,8 @@ def caching(ttl=3600):
         a = len(state.html)
         yield
         b = len(state.html)
-        client.set(state.hash_value, u"".join(x for x in state.html[a:b]), ttl)
+        client.set(state.hash_values[-1], u"".join(x for x in state.html[a:b]),
+                   ttl)
 
 
 ### *div* functions. ###
@@ -191,7 +208,7 @@ if __name__ == "__main__":
             div(*(hashed.a+hashed.b), data_hash=hashed.hash)
             _h = hashed.hash
             _t = True
-            assert state.hash_value is not None
+            assert state.hash_values
 
     assert hypergen(test_cache, (1, 2), (3, 4), cache_client=cache_client)\
         == u'<div data-hash="{}">1234</div>'.format(_h)
@@ -202,16 +219,35 @@ if __name__ == "__main__":
     assert hypergen(test_cache, (1, 2), (3, 5), cache_client=cache_client)\
         == u'<div data-hash="{}">1235</div>'.format(_h)
     assert _t is True
-    assert state.hash_value is None
+    assert not state.hash_values
 
     def test_return_hashes(xs):
-        for x in xs:
-            with hashing(x=x) as hashed:
-                div("x=", hashed.x)
+        with hashing(key="static1") as hashed:
+            div("static1", data_hash=hashed.hash)
+        with hashing(key="static2") as hsh1:
+            with div_cm("static2", data_hash=hsh1.hash):
+                for x in xs:
+                    with hashing(x=x) as hsh2:
+                        div("x=", hsh2.x, data_hash=hsh2.hash)
 
     html = hypergen(test_return_hashes, [1,2,3,4], return_hashes=True)
     next_html = hypergen(test_return_hashes, [1,2,4], return_hashes=True)
+    print "NEXT_HTML PARTS"
+    print "===============\n"
+    for k, v in next_html.iteritems(): print k, v
+
+    print "HTML"
+    print "====\n"
+
+    print u"".join(x.html for x in next_html.values())
     assert len(set(html.keys()) - set(next_html.keys())) == 1
+
+    """
+    - create: Insert item after previous element in parent. If no previous
+              element in parent, insert as first inside parent.
+    - update: Run delete on old item, and create on new.
+    - delete: Delete the old item.
+    """
 
     def test_div1():
         div("Hello, world!")
