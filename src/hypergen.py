@@ -36,6 +36,7 @@ def hypergen(func, *args, **kwargs):
         state.cache_client = kwargs.pop("cache_client", None)
         state.hash_values = []
         state.prev_hash_value = None
+        state.return_hashes = return_hashes
         func(*args, **kwargs)
         html = u"".join(state.html) if not return_hashes else OrderedDict(
             (k, Element(v[0], v[1], u"".join(v[2])))
@@ -46,6 +47,7 @@ def hypergen(func, *args, **kwargs):
         state.cache_client = None
         state.hash_values = []
         state.prev_hash_value = None
+        state.return_hashes = None
 
     return html
 
