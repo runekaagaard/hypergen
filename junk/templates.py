@@ -1,3 +1,11 @@
+# Local Variables:
+# flymake-mode: nil
+# End:
+
+from threading import local
+S = local()
+
+
 def page(title, content):
     menu()
     with div_cm("outer"), div_cm("inner"):
