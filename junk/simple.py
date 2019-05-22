@@ -48,7 +48,7 @@ def login(request):
 @hypergen
 def list_movies(request):
     def update_my_rating(form_data):
-        if 0 < form_data.my_rating < 100:
+        if 0 <= form_data.my_rating <= 100:
             db.update_rating(movie_id=form_data.meta["id"],
                              my_rating=form_data.my_rating)
         else:
@@ -66,5 +66,24 @@ def list_movies(request):
                     td(movie.year)
 
                     errors(movie.my_rating.errors)
-                    td(input_(value=movie.my_rating), onchange=update_my_rating,
-                       type_="number")
+                    with td():
+                        input_(value=movie.my_rating,
+                               onchange=update_my_rating, type_="number")
+
+
+"""
+<table>
+    <tr><th>Title</th><th>Year</th><th>My rating</th></tr>
+    <tr>
+        <td>The Matrix</t>
+        <td>1999</td>
+        <td>
+            <form id="10">
+                <input type="number" value=100
+                    onchange='send("myapp.views.list_movies|update_my_rating", 10)'
+                />
+            </form>
+        </td>
+    </tr>
+</table>
+"""
