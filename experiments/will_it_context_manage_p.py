@@ -1,5 +1,12 @@
 # yapf: disable
 class element(object):
+    # Decorator withput ().
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 1 and callable(args[0]) and not kwargs:
+            return cls()(args[0])
+        else:
+            return super(element, cls).__new__(cls, *args, **kwargs)
+
     def __init__(self, *texts, **attributes):
         # There are texts, so we are calling as a function.
         if texts:
@@ -41,3 +48,10 @@ print
 def foo(x):
     print "C", x
 foo(42)
+
+print
+@div
+def bar(x):
+    print "D", x
+
+bar(91)
