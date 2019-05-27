@@ -3,12 +3,12 @@ import string
 
 def base65_counter():
     # THX: https://stackoverflow.com/a/49710563/164449
+    abc = string.letters + string.digits + "-_:"
+    base = len(abc)
     i = -1
     while True:
         i += 1
         num = i
-        abc = string.letters + string.digits + "-_:"
-        base = len(abc)
         output = abc[num % base]  # rightmost digit
 
         while num >= base:
