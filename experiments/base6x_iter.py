@@ -12,7 +12,7 @@ def base65_counter():
         while s:
             res += BS[s % b]
             s //= b
-        res = res[::-1] or BS[0]
+        res = res[::-1] or "a"
         try:
             int(res[0])
             yield "h" + res
@@ -21,5 +21,5 @@ def base65_counter():
 
 
 c = base65_counter()
-for i in range(1000):
+for i in range(100):
     print next(c),

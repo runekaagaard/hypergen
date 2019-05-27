@@ -29,27 +29,3 @@ How to handle server side ids with async requests?
 The client keeps track of how many requests it has made and requests a specific series that gets prefixed to each element id. So if the series is 42 the ids will look like "h42.1", "h42.2", etc.
 
 The ids could be base66 encoded. Valid id chars are "a-zA-Z0-9._:-". Must start with a letter. Series use "." as a separator. They could be base65 encoded. 
-
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
