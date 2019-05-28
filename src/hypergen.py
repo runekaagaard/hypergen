@@ -1,3 +1,4 @@
+import string
 from threading import local
 from contextlib import contextmanager
 from collections import OrderedDict
@@ -24,29 +25,51 @@ else:
 state = local()
 
 
+def base65_counter():
+    # THX: https://stackoverflow.com/a/49710563/164449
+    abc = string.letters + string.digits + "-_:"
+    base = len(abc)
+    i = -1
+    while True:
+        i += 1
+        num = i
+        output = abc[num % base]  # rightmost digit
+
+        while num >= base:
+            num //= base  # move to next digit to the left
+            output = abc[num % base] + output  # this digit
+
+        yield state.id_prefix + output
+
+
 def hypergen(func, *args, **kwargs):
     try:
         state.html = []
         state.extend = state.html.extend
         state.cache_client = kwargs.pop("cache_client", None)
+        state.id_counter = base65_counter()
+        state.id_prefix = (kwargs.pop("id_prefix") + u"."
+                           if "id_prefix" in kwargs else u"")
         func(*args, **kwargs)
         html = u"".join(state.html)
     finally:
         state.html = []
         state.extend = None
         state.cache_client = None
+        state.id_counter = None
+        state.id_prefix = u""
 
     return html
 
 
-def element(tag, *inners, **attrs):
+def element_fn(tag, *texts, **attrs):
     sep = attrs.pop("sep", u"")
     tag_open(tag, **attrs)
-    write(*inners, sep=sep)
+    write(*texts, sep=sep)
     tag_close(tag)
 
 
-def tag_open(tag, *inners, **attrs):
+def tag_open(tag, *texts, **attrs):
     # For testing only, subject to change.
     sort_attrs = attrs.pop("_sort_attrs", False)
     if sort_attrs:
@@ -59,7 +82,7 @@ def tag_open(tag, *inners, **attrs):
     e = state.extend
     e((u"<", tag))
     for k, v in items(attrs):
-        k = t(k).lstrip("_").replace("_", "-")
+        k = t(k).rstrip("_").replace("_", "-")
         if type(v) is bool:
             if v is True:
                 e((u" ", k))
@@ -69,17 +92,17 @@ def tag_open(tag, *inners, **attrs):
         else:
             e((u" ", k, u'="', t(v), u'"'))
     e((u'>', ))
-    write(*inners, sep=sep)
+    write(*texts, sep=sep)
 
 
-def tag_close(tag, *inners, **kwargs):
-    write(*inners, **kwargs)
+def tag_close(tag, *texts, **kwargs):
+    write(*texts, **kwargs)
     state.extend((u"</", t(tag), u">"))
 
 
-def write(*inners, **kwargs):
+def write(*texts, **kwargs):
     sep = kwargs.pop("sep", u"")
-    state.extend((t(sep).join(t(inner) for inner in inners), ))
+    state.extend((t(sep).join(t(inner) for inner in texts), ))
 
 
 class Bunch(dict):
@@ -118,36 +141,80 @@ def cached(ttl=3600, **kwargs):
         client.set(hash_value, u"".join(x for x in state.html[a:b]), ttl)
 
 
-### *div* functions. ###
+class element(object):
+    # Decorator without ().
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 1 and callable(args[0]) and not kwargs:
+            return cls()(args[0])
+        else:
+            return super(element, cls).__new__(cls, *args, **kwargs)
+
+    def __init__(self, *texts, **attrs):
+        # There are texts, so we are calling as a function.
+        if texts:
+            element_fn(self.tag, *texts, **attrs)
+        else:
+            self.attrs = attrs
+
+    # Context manager "with" invocation.
+    def __enter__(self):
+        tag_open(self.tag, **self.attrs)
+
+    def __exit__(self, type, value, traceback):
+        tag_close(self.tag)
+
+    # Decorator with ().
+    def __call__(self, func):
+        def _(*args, **kwargs):
+            tag_open(self.tag, **self.attrs)
+            func(*args, **kwargs)
+            tag_close(self.tag)
+
+        return _
 
 
-def div(*inners, **attrs):
-    return element(u"div", *inners, **attrs)
+### div* functions. ###
+
+
+def div_fn(*texts, **attrs):
+    return element_fn(u"div", *texts, **attrs)
 
 
 @contextmanager
-def div_cm(*inners, **attrs):
-    tag_open(u"div", *inners, **attrs)
+def div_cm(*texts, **attrs):
+    tag_open(u"div", *texts, **attrs)
     yield
     tag_close(u"div")
 
 
-def o_div(*inners, **attrs):
-    tag_open(u"div", *inners, **attrs)
+def div_o(*texts, **attrs):
+    tag_open(u"div", *texts, **attrs)
 
 
-def c_div(*inners, **kwargs):
-    tag_close(u"div", *inners, **kwargs)
+def div_c(*texts, **attrs):
+    tag_close(u"div", *texts, **attrs)
+
+
+class div(element):
+    tag = "div"
+
+
+### input* functions ###
+def input_(**attrs):
+    if not "id_" in attrs:
+        attrs["id_"] = next(state.id_counter)
+
+    element_fn("input", **attrs)
 
 
 if __name__ == "__main__":
     # yapf: disable
     def test_basics():
-        tag_open("li", 1, 2, a=3, _b=4, sep=".", style={1: 2}, x=True, y=False,
+        tag_open("li", 1, 2, a=3, b_=4, sep=".", style={1: 2}, x=True, y=False,
                  _sort_attrs=True)
         write(5, 6, sep=",")
         tag_close("li", 7, 8, sep="+")
-    assert hypergen(test_basics) == u'<li b="4" a="3" style="1:2" x>1.25,67+8</li>'
+    assert hypergen(test_basics) == u'<li a="3" b="4" style="1:2" x>1.25,67+8</li>'
 
     class Cache(object):
         def __init__(self):
@@ -166,7 +233,7 @@ if __name__ == "__main__":
         global _h, _t
         _t = False
         with skippable(), cached(ttl=5, key=test_cache, a=a, b=b) as value:
-            div(*(value.a+value.b), data_hash=value.hash)
+            div_fn(*(value.a+value.b), data_hash=value.hash)
             _h = value.hash
             _t = True
 
@@ -182,11 +249,11 @@ if __name__ == "__main__":
 
 
     def test_div1():
-        div("Hello, world!")
+        div_fn("Hello, world!")
     assert hypergen(test_div1) == u"<div>Hello, world!</div>"
 
     def test_div2(name):
-        div("Hello", name, _class="its-hyper", data_x=3.14, hidden=True,
+        div_fn("Hello", name, class_="its-hyper", data_x=3.14, hidden=True,
             selected=False, style={"height": 42, "display": "none"}, sep=" ",
             _sort_attrs=True)
     assert hypergen(test_div2, "hypergen!") == u'<div class="its-hyper" '\
@@ -195,7 +262,30 @@ if __name__ == "__main__":
 
     def test_div3():
         with div_cm("div", "cm", x=1, sep="_"):
-            o_div(1, 2, y=1, sep="-")
-            c_div(5, 6, sep=" ")
+            div_o(1, 2, y=1, sep="-")
+            div_c(5, 6, sep=" ")
     assert hypergen(test_div3) == u'<div x="1">div_cm<div y="1">1-25 6</div>'\
         '</div>'
+
+    def test_unicorn_class1(x):
+        div("yo", blink="true")
+        with div():
+            write(1, x)
+    assert hypergen(test_unicorn_class1, 2) == \
+        u'<div blink="true">yo</div><div>12</div>'
+
+    @div
+    def test_unicorn_class2(x):
+        write(19, x)
+    assert hypergen(test_unicorn_class2, 1) == '<div>191</div>'
+
+    @div(id_=100)
+    def test_unicorn_class3(x):
+        write("hello", x)
+    assert hypergen(test_unicorn_class3, 2) == '<div id="100">hello2</div>'
+
+    def test_input():
+        input_(value=1)
+        input_(value=2)
+        input_(value=3, type="number")
+    print hypergen(test_input, id_prefix="t9")
