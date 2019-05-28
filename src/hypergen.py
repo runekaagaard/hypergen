@@ -69,9 +69,15 @@ def element_fn(tag, *texts, **attrs):
     tag_close(tag)
 
 
+def void_element_fn(tag, **attrs):
+    attrs["void"] = True
+    tag_open(tag, **attrs)
+
+
 def tag_open(tag, *texts, **attrs):
     # For testing only, subject to change.
     sort_attrs = attrs.pop("_sort_attrs", False)
+    void = attrs.pop("void", False)
     if sort_attrs:
         attrs = OrderedDict((k, attrs[k]) for k in sorted(attrs.keys()))
         if u"style" in attrs and type(attrs["style"]) is dict:
@@ -91,6 +97,8 @@ def tag_open(tag, *texts, **attrs):
                 t(k1) + u":" + t(v1) for k1, v1 in items(v)), u'"'))
         else:
             e((u" ", k, u'="', t(v), u'"'))
+    if void:
+        e(("/"))
     e((u'>', ))
     write(*texts, sep=sep)
 
@@ -203,8 +211,7 @@ class div(element):
 def input_(**attrs):
     if not "id_" in attrs:
         attrs["id_"] = next(state.id_counter)
-
-    element_fn("input", **attrs)
+    void_element_fn("input", **attrs)
 
 
 if __name__ == "__main__":
@@ -247,7 +254,6 @@ if __name__ == "__main__":
         == u'<div data-hash="{}">1235</div>'.format(_h)
     assert _t is True
 
-
     def test_div1():
         div_fn("Hello, world!")
     assert hypergen(test_div1) == u"<div>Hello, world!</div>"
@@ -288,4 +294,6 @@ if __name__ == "__main__":
         input_(value=1)
         input_(value=2)
         input_(value=3, type="number")
-    print hypergen(test_input, id_prefix="t9")
+    assert hypergen(test_input, id_prefix="t9") == u'<input id="t9.a" '\
+        'value="1"/><input id="t9.b" value="2"/><input id="t9.c" '\
+        'type="number" value="3"/>'
