@@ -1,8 +1,7 @@
-import string
+import string, sys, json
 from threading import local
 from contextlib import contextmanager
 from collections import OrderedDict
-import sys
 
 if sys.version_info.major > 2:
     from html import escape
@@ -39,7 +38,7 @@ def base65_counter():
             num //= base  # move to next digit to the left
             output = abc[num % base] + output  # this digit
 
-        yield state.id_prefix + output
+        yield output
 
 
 def hypergen(func, *args, **kwargs):
@@ -50,6 +49,7 @@ def hypergen(func, *args, **kwargs):
         state.id_counter = base65_counter()
         state.id_prefix = (kwargs.pop("id_prefix") + u"."
                            if "id_prefix" in kwargs else u"")
+        state.liveview = kwargs.pop("liveview", False)
         func(*args, **kwargs)
         html = u"".join(state.html)
     finally:
@@ -58,7 +58,7 @@ def hypergen(func, *args, **kwargs):
         state.cache_client = None
         state.id_counter = None
         state.id_prefix = u""
-
+        state.liveview = False
     return html
 
 
@@ -89,7 +89,13 @@ def tag_open(tag, *texts, **attrs):
     e((u"<", tag))
     for k, v in items(attrs):
         k = t(k).rstrip("_").replace("_", "-")
-        if type(v) is bool:
+        if state.liveview and k.startswith("on") and type(v) in (list, tuple):
+            assert callable(v[0]), "First arg must be a callable."
+            print [v[0].hypergen_url]
+            v = u"H({})".format(u",".join(
+                json.dumps(x) for x in [v[0].hypergen_url] + list(v[1:])))
+            e((u" ", k, u'="', t(v), u'"'))
+        elif type(v) is bool:
             if v is True:
                 e((u" ", k))
         elif k == u"style" and type(v) in (dict, OrderedDict):
@@ -111,6 +117,11 @@ def tag_close(tag, *texts, **kwargs):
 def write(*texts, **kwargs):
     sep = kwargs.pop("sep", u"")
     state.extend((t(sep).join(t(inner) for inner in texts), ))
+
+
+def raw(*texts, **kwargs):
+    sep = kwargs.pop("sep", u"")
+    state.extend((sep.join(texts), ))
 
 
 class Bunch(dict):
@@ -207,10 +218,16 @@ class div(element):
     tag = "div"
 
 
+class script(element):
+    tag = "script"
+
+
 ### input* functions ###
 def input_(**attrs):
-    if not "id_" in attrs:
+    if state.liveview and "id_" not in attrs:
         attrs["id_"] = next(state.id_counter)
+    if "id_" in attrs:
+        attrs["id_"] = state.id_prefix + attrs["id_"]
     void_element_fn("input", **attrs)
 
 
@@ -292,8 +309,19 @@ if __name__ == "__main__":
 
     def test_input():
         input_(value=1)
-        input_(value=2)
+        input_(value=2, id_="custom")
         input_(value=3, type="number")
-    assert hypergen(test_input, id_prefix="t9") == u'<input id="t9.a" '\
-        'value="1"/><input id="t9.b" value="2"/><input id="t9.c" '\
-        'type="number" value="3"/>'
+    assert hypergen(test_input, id_prefix="t9") == u'<input value="1"/><input '\
+        'id="t9.custom" value="2"/><input type="number" value="3"/>'
+    assert hypergen(test_input, id_prefix="e", liveview=True) == u'<input '\
+        'id="e.a" value="1"/><input id="e.custom" value="2"/><input '\
+        'id="e.b" type="number" value="3"/>'
+
+    def test_liveview_events():
+        def callback1(x):
+            pass
+        callback1.hypergen_url = "/hpg/cb1/"
+        input_(value=91, onchange=(callback1, 9, [1], True, u"foo"))
+    assert hypergen(test_liveview_events, id_prefix="I", liveview=True) == \
+        u'<input id="I.a" onchange="s(&quot;/hpg/cb1/&quot;,9,[1],true,&quot;'\
+        'foo&quot;)" value="91"/>'
