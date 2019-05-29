@@ -9,6 +9,7 @@ class element(object):
 
     def __init__(self, *texts, **attributes):
         # There are texts, so we are calling as a function.
+        print "INIT"
         if texts:
             print self.tag, attributes
             for text in texts:
@@ -55,3 +56,6 @@ def bar(x):
     print "D", x
 
 bar(91)
+
+print
+div(class_="clearfix")

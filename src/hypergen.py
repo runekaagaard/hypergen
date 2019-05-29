@@ -77,13 +77,13 @@ def void_element_fn(tag, **attrs):
 def tag_open(tag, *texts, **attrs):
     # For testing only, subject to change.
     sort_attrs = attrs.pop("_sort_attrs", False)
-    void = attrs.pop("void", False)
     if sort_attrs:
         attrs = OrderedDict((k, attrs[k]) for k in sorted(attrs.keys()))
         if u"style" in attrs and type(attrs["style"]) is dict:
             attrs["style"] = OrderedDict(
                 (k, attrs["style"][k]) for k in sorted(attrs["style"].keys()))
 
+    void = attrs.pop("void", False)
     sep = attrs.pop("sep", u"")
     e = state.extend
     e((u"<", tag))
@@ -91,7 +91,6 @@ def tag_open(tag, *texts, **attrs):
         k = t(k).rstrip("_").replace("_", "-")
         if state.liveview and k.startswith("on") and type(v) in (list, tuple):
             assert callable(v[0]), "First arg must be a callable."
-            print [v[0].hypergen_url]
             v = u"H({})".format(u",".join(
                 json.dumps(x) for x in [v[0].hypergen_url] + list(v[1:])))
             e((u" ", k, u'="', t(v), u'"'))
@@ -116,7 +115,7 @@ def tag_close(tag, *texts, **kwargs):
 
 def write(*texts, **kwargs):
     sep = kwargs.pop("sep", u"")
-    state.extend((t(sep).join(t(inner) for inner in texts), ))
+    state.extend((t(sep).join(t(x) for x in texts if x is not None), ))
 
 
 def raw(*texts, **kwargs):
@@ -290,6 +289,15 @@ if __name__ == "__main__":
     assert hypergen(test_div3) == u'<div x="1">div_cm<div y="1">1-25 6</div>'\
         '</div>'
 
+    def test_div_4():
+        div(x=1)
+    assert hypergen(test_div_4) == ""
+
+    def test_div_5():
+        div(None, x=1)
+    assert hypergen(test_div_5) == u'<div x="1"></div>'
+
+
     def test_unicorn_class1(x):
         div("yo", blink="true")
         with div():
@@ -323,5 +331,5 @@ if __name__ == "__main__":
         callback1.hypergen_url = "/hpg/cb1/"
         input_(value=91, onchange=(callback1, 9, [1], True, u"foo"))
     assert hypergen(test_liveview_events, id_prefix="I", liveview=True) == \
-        u'<input id="I.a" onchange="s(&quot;/hpg/cb1/&quot;,9,[1],true,&quot;'\
+        u'<input id="I.a" onchange="H(&quot;/hpg/cb1/&quot;,9,[1],true,&quot;'\
         'foo&quot;)" value="91"/>'
