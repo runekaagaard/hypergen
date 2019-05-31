@@ -41,6 +41,9 @@ def base65_counter():
         yield output
 
 
+UPDATE = 1
+
+
 def hypergen(func, *args, **kwargs):
     try:
         state.html = []
@@ -49,7 +52,9 @@ def hypergen(func, *args, **kwargs):
         state.id_counter = base65_counter()
         state.id_prefix = (kwargs.pop("id_prefix") + u"."
                            if "id_prefix" in kwargs else u"")
-        state.liveview = kwargs.pop("liveview", False)
+        state.auto_id = kwargs.pop("auto_id", False)
+        state.target_id = target_id = kwargs.pop("target_id", False)
+        state.liveview = liveview = kwargs.pop("liveview", False)
         func(*args, **kwargs)
         html = u"".join(state.html)
     finally:
@@ -59,7 +64,13 @@ def hypergen(func, *args, **kwargs):
         state.id_counter = None
         state.id_prefix = u""
         state.liveview = False
-    return html
+        state.target_id = None
+        state.auto_id = False
+
+    if liveview:
+        return [[UPDATE, target_id, html]]
+    else:
+        return html
 
 
 def element_fn(tag, *texts, **attrs):
@@ -72,6 +83,14 @@ def element_fn(tag, *texts, **attrs):
 def void_element_fn(tag, **attrs):
     attrs["void"] = True
     tag_open(tag, **attrs)
+
+
+def liveview_arg(x):
+    id_ = getattr(x, "id", None)
+    if id_:
+        return json.dumps(["_H", id_])
+    else:
+        return json.dumps(x)
 
 
 def tag_open(tag, *texts, **attrs):
@@ -92,7 +111,7 @@ def tag_open(tag, *texts, **attrs):
         if state.liveview and k.startswith("on") and type(v) in (list, tuple):
             assert callable(v[0]), "First arg must be a callable."
             v = u"H({})".format(u",".join(
-                json.dumps(x) for x in [v[0].hypergen_url] + list(v[1:])))
+                liveview_arg(x) for x in [v[0].hypergen_url] + list(v[1:])))
             e((u" ", k, u'="', t(v), u'"'))
         elif type(v) is bool:
             if v is True:
@@ -223,11 +242,14 @@ class script(element):
 
 ### input* functions ###
 def input_(**attrs):
-    if state.liveview and "id_" not in attrs:
+    if state.auto_id and "id_" not in attrs:
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
     void_element_fn("input", **attrs)
+
+    if state.auto_id:
+        return Bunch({"id": attrs["id_"]})
 
 
 if __name__ == "__main__":
