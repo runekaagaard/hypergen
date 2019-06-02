@@ -1,4 +1,6 @@
-from flask import Flask, request, jsonify
+from functools import partial
+
+from flask import Flask
 from hypergen import hypergen, div, input_, script, raw
 
 app = Flask(__name__)
@@ -6,27 +8,15 @@ app = Flask(__name__)
 i = 0
 
 
+@hypergen(target_id="counter")
 @app.route('/inc/', methods=['POST'])
-def increase_counter():
+def increase_counter(inc):
     global i
-    args = request.get_json()
-    print "ARGS IT", args
-    inc, = args
-    i += int(inc)
-    print "NEW I IS", i
-    return jsonify(
-        hypergen(
-            hello_counter_template,
-            i,
-            int(inc),
-            liveview=True,
-            auto_id=True,
-            target_id="counter"))
+    i += inc
+    return hello_counter_template(i, inc)
 
 
-increase_counter.hypergen_url = '/inc/'
-
-
+@hypergen(as_deltas=False)
 def base_template(content_func, *args, **kwargs):
     script(
         None,
@@ -51,6 +41,4 @@ def hello_counter_template(i, inc=1):
 
 @app.route('/')
 def hello_counter():
-    return hypergen(
-        base_template, hello_counter_template, i, auto_id=True,
-        liveview=True)[0][-1]
+    return base_template(partial(hello_counter_template, i))

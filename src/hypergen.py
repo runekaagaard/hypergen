@@ -55,6 +55,7 @@ def hypergen(func, *args, **kwargs):
         state.auto_id = kwargs.pop("auto_id", False)
         state.target_id = target_id = kwargs.pop("target_id", False)
         state.liveview = liveview = kwargs.pop("liveview", False)
+        as_deltas = kwargs.pop("is_base", True)
         func(*args, **kwargs)
         html = u"".join(state.html)
     finally:
@@ -67,10 +68,17 @@ def hypergen(func, *args, **kwargs):
         state.target_id = None
         state.auto_id = False
 
-    if liveview:
+    if liveview and as_deltas:
         return [[UPDATE, target_id, html]]
     else:
         return html
+
+
+def flask_liveview_hypergen(func, *args, **kwargs):
+    # hypergen(
+    #     base_template, hello_counter_template, i, auto_id=True,
+    #     liveview=True)[0][-1]
+    pass
 
 
 def element_fn(tag, *texts, **attrs):
