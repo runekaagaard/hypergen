@@ -42,7 +42,7 @@ def base_template(content_func):
                 raw(f.read())
 
         with body():
-            div(a("Home", href=url_for("index")))
+            div(a.r("Home", href=url_for("index")))
             with div(id_="main"):
                 content_func()
 
@@ -59,8 +59,7 @@ def counter_template(i, inc=1):
 
 def index_template():
     h1("Browse the following examples")
-    with ul():
-        li(a("Basic counter", href=url_for("counter")))
+    ul(li.r(a.r("Basic counter", href=url_for("counter"))))
 
 
 @app.route('/counter/')

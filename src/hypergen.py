@@ -24,6 +24,10 @@ else:
 state = local()
 
 
+class Safe(unicode):
+    pass
+
+
 def base65_counter():
     # THX: https://stackoverflow.com/a/49710563/164449
     abc = string.letters + string.digits + "-_:"
@@ -54,8 +58,8 @@ def hypergen(func, *args, **kwargs):
                            if "id_prefix" in kwargs else u"")
         state.auto_id = kwargs.pop("auto_id", False)
         state.target_id = target_id = kwargs.pop("target_id", False)
-        state.liveview = liveview = kwargs.pop("liveview", False)
-        as_deltas = kwargs.pop("as_deltas", True)
+        state.liveview = kwargs.pop("liveview", False)
+        as_deltas = kwargs.pop("as_deltas", False)
         func(*args, **kwargs)
         html = u"".join(state.html)
     finally:
@@ -68,7 +72,7 @@ def hypergen(func, *args, **kwargs):
         state.target_id = None
         state.auto_id = False
 
-    if liveview and as_deltas:
+    if as_deltas:
         return [[UPDATE, target_id, html]]
     else:
         return html
@@ -161,7 +165,9 @@ def tag_close(tag, *texts, **kwargs):
 
 def write(*texts, **kwargs):
     sep = kwargs.pop("sep", u"")
-    state.extend((t(sep).join(t(x) for x in texts if x is not None), ))
+    state.extend((t(sep).join(
+        t(x) if not isinstance(x, Safe) else x for x in texts
+        if x is not None), ))
 
 
 def raw(*texts, **kwargs):
@@ -237,6 +243,16 @@ class element(object):
             tag_close(self.tag)
 
         return _
+
+    # Return html instead of adding it to god list.
+    @classmethod
+    def r(cls, *args, **kwargs):
+        e = state.extend
+        html = []
+        state.extend = html.extend
+        element_fn(cls.tag, *args, **kwargs)
+        state.extend = e
+        return Safe(u"".join(html))
 
 
 ### div* functions. ###
@@ -356,6 +372,10 @@ if __name__ == "__main__":
         tag_close("li", 7, 8, sep="+")
     assert hypergen(test_basics) == u'<li a="3" b="4" style="1:2" x>1.25,67+8</li>'
 
+    def test_basics2():
+        div(111, div.r(222), 333)
+    assert hypergen(test_basics2) == u'<div>111<div>222</div>333</div>'
+
     class Cache(object):
         def __init__(self):
             self.cache = {}
@@ -438,7 +458,8 @@ if __name__ == "__main__":
         input_(value=3, type="number")
     assert hypergen(test_input, id_prefix="t9") == u'<input value="1"/><input '\
         'id="t9.custom" value="2"/><input type="number" value="3"/>'
-    assert hypergen(test_input, id_prefix="e", liveview=True) == u'<input '\
+    assert hypergen(test_input, id_prefix="e", liveview=True,
+                    auto_id=True) == u'<input '\
         'id="e.a" value="1"/><input id="e.custom" value="2"/><input '\
         'id="e.b" type="number" value="3"/>'
 
@@ -447,6 +468,7 @@ if __name__ == "__main__":
             pass
         callback1.hypergen_url = "/hpg/cb1/"
         input_(value=91, onchange=(callback1, 9, [1], True, u"foo"))
-    assert hypergen(test_liveview_events, id_prefix="I", liveview=True) == \
+    assert hypergen(test_liveview_events, id_prefix="I", liveview=True,
+                    auto_id=True) == \
         u'<input id="I.a" onchange="H(&quot;/hpg/cb1/&quot;,9,[1],true,&quot;'\
         'foo&quot;)" value="91"/>'
