@@ -1,24 +1,23 @@
-# To run, pip install flask and then
+# To run, pip install flask, and then
 #     FLASK_ENV=development FLASK_APP=flask_example flask run
 
 from functools import partial
 
 from flask import Flask
-from hypergen import (flask_liveview_hypergen as hypergen, div, input_, script,
-                      raw, label, p, h1)
+from hypergen import (flask_liveview_hypergen as hypergen,
+                      flask_liveview_callback_route as callback_route, div,
+                      input_, script, raw, label, p, h1)
 
 app = Flask(__name__)
 
 i = 0
 
 
+@callback_route(app, '/inc/')
 def increase_counter(inc):
     global i
     i += inc
-    return hello_counter_template(i, inc)
-
-
-increase_counter.target_id = "counter"
+    return hypergen(hello_counter_template, i, inc, target_id="counter")
 
 
 def base_template(content_func):
@@ -32,7 +31,7 @@ def base_template(content_func):
 
 
 def hello_counter_template(i, inc=1):
-    h1("The counter is: ", i, style={"display": "block"})
+    h1("The counter is: ", i)
     with p():
         label("Increment with:", style={"display": "block"})
         inc_with = input_(type_="number", value=inc)
@@ -42,6 +41,5 @@ def hello_counter_template(i, inc=1):
 
 
 @app.route('/')
-@hypergen(app)
 def hello_counter():
-    return base_template(partial(hello_counter_template, i))
+    return hypergen(base_template, partial(hello_counter_template, i))
