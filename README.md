@@ -1,5 +1,5 @@
 # python-htmlgen
-Pure python, threadsafe, parallizable, caching and diffing html generator. No more templates, just write python (or cython). Includes a liveview feature alá Phoenix Liveview.
+Pure python, threadsafe, parallizable, caching and diffing html generator. No more templates, just write python (or cython). Includes a liveview feature similar to Phoenix Liveview.
 
 # Example of liveview features inside a flask app.
 
