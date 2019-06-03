@@ -122,6 +122,7 @@ def element_fn_returning(tag, *texts, **attrs):
     state.extend = html.extend
     element_fn(tag, *texts, **attrs)
     state.extend = e
+
     return Safe(u"".join(html))
 
 
