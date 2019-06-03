@@ -111,9 +111,18 @@ def element_fn(tag, *texts, **attrs):
     tag_close(tag)
 
 
-def void_element_fn(tag, **attrs):
+def element_fn_void(tag, **attrs):
     attrs["void"] = True
     tag_open(tag, **attrs)
+
+
+def element_fn_returning(tag, *texts, **attrs):
+    e = state.extend
+    html = []
+    state.extend = html.extend
+    element_fn(tag, *texts, **attrs)
+    state.extend = e
+    return Safe(u"".join(html))
 
 
 def liveview_arg(x):
@@ -246,13 +255,8 @@ class element(object):
 
     # Return html instead of adding it to god list.
     @classmethod
-    def r(cls, *args, **kwargs):
-        e = state.extend
-        html = []
-        state.extend = html.extend
-        element_fn(cls.tag, *args, **kwargs)
-        state.extend = e
-        return Safe(u"".join(html))
+    def r(cls, *texts, **attrs):
+        return element_fn_returning(cls.tag, *texts, **attrs)
 
 
 ### div* functions. ###
@@ -279,25 +283,6 @@ def div_c(*texts, **attrs):
 
 class div(element):
     tag = "div"
-
-
-def div_fn(*texts, **attrs):
-    return element_fn(u"div", *texts, **attrs)
-
-
-@contextmanager
-def div_cm(*texts, **attrs):
-    tag_open(u"div", *texts, **attrs)
-    yield
-    tag_close(u"div")
-
-
-def div_o(*texts, **attrs):
-    tag_open(u"div", *texts, **attrs)
-
-
-def div_c(*texts, **attrs):
-    tag_close(u"div", *texts, **attrs)
 
 
 class p(element):
@@ -357,7 +342,7 @@ def input_(**attrs):
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
-    void_element_fn("input", **attrs)
+    element_fn_void("input", **attrs)
 
     if state.auto_id:
         return Bunch({"id": attrs["id_"]})
