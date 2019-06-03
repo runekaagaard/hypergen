@@ -1,64 +1,72 @@
 # python-htmlgen
-Fast (hopefully), pure python, threadsafe, parallizable, caching and diffing html generator. No more templates, just write python (or cython).
+Pure python, threadsafe, parallizable, caching and diffing html generator. No more templates, just write python (or cython). Includes a liveview feature alá Phoenix Liveview.
 
-# High level Python api:
-
-cm means context manager.
+# Example of liveview features inside a flask app.
 
 ```python
-from hypergen import *
-from my_app import get_sections
+# To run, pip install flask, and then
+#     FLASK_ENV=development FLASK_APP=flask_example flask run
 
-def my_page(sections):
-    h1("My Page", _class="top-h1")
-    for section in sections:
-        with section_cm(height=100):
-            div(section.content, style={"margin": auto})
+from functools import partial
 
-with hypergen_cm() as document:
-    my_page(get_sections())
+from flask import Flask, url_for
+from hypergen import (flask_liveview_hypergen as hypergen,
+                      flask_liveview_callback_route as callback_route, div,
+                      input_, script, raw, label, p, h1, ul, li, a, html, head,
+                      body, link)
 
-print document['html']
-```
+NORMALISE = "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+SAKURA = "https://unpkg.com/sakura.css/css/sakura.css"
+JQUERY = "https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"
+app = Flask(__name__)
 
-# Caching context manager
+i = 0
 
-```python
-def my_page(
-    for section in sections:
-        with section_cm(height=100), cache_cm(key=my_page, section=section) as data:
-            div(data.content, style={"margin": auto})
-```
 
-# Low level Python api
+def base_template(content_func):
+    raw("<!DOCTYPE html>")
+    with html():
+        with head():
+            link(href=NORMALISE, rel="stylesheet", type_="text/css")
+            link(href=SAKURA, rel="stylesheet", type_="text/css")
+            script(src=JQUERY)
+            with script(), open("hypergen.js") as f:
+                raw(f.read())
 
-```python
-def my_page(items):
-    for item in items:
-        o_div(_class="item") # Opens.
-        write(item.text) # Writes verbatim.
-        c_div() # Closes.
-```
+        with body():
+            div(a.r("Home", href=url_for("index")))
+            with div(id_="content"):
+                content_func()
 
-# Pure c++ Cython (nogil)
 
-Does not touch python.
+def counter_template(i, inc=1):
+    h1("The counter is: ", i)
+    with p():
+        label("Increment with:")
+        inc_with = input_(type_="number", value=inc)
+    with p():
+        input_(
+            type_="button", onclick=(increase_counter, inc_with), value="Add")
 
-```cython
-cdef string my_page(int n) nogil:
-    hypergen_start()
-    cdef char i_str[10]
 
-    o_ul_ng()
-    for i in range(n):
-        sprintf(i_str, <char*> "%d", k)
+@callback_route(app, '/inc/')
+def increase_counter(inc):
+    global i
+    i += inc
+    return hypergen(counter_template, i, inc, target_id="content")
 
-        li_ng(<char*> "My content.", [
-            a(<char*> "class", <char*> "a-class"),
-            a(<char*> "width", <char*> i_str),
-            T # Terminates.
-        ])
-    c_ul_ng()
 
-    return hypergen_stop()
+@app.route('/counter/')
+def counter():
+    return hypergen(base_template, partial(counter_template, i))
+
+
+@app.route('/')
+def index():
+    def template():
+        h1("Browse the following examples")
+        ul(li.r(a.r("Basic counter", href=url_for("counter"))))
+
+    return hypergen(base_template, template)
+
 ```
