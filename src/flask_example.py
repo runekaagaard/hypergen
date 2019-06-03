@@ -3,10 +3,11 @@
 
 from functools import partial
 
-from flask import Flask
+from flask import Flask, url_for
 from hypergen import (flask_liveview_hypergen as hypergen,
                       flask_liveview_callback_route as callback_route, div,
-                      input_, script, raw, label, p, h1)
+                      input_, script, raw, label, p, h1, ul, li, a, html, head,
+                      body, link)
 
 app = Flask(__name__)
 
@@ -17,29 +18,56 @@ i = 0
 def increase_counter(inc):
     global i
     i += inc
-    return hypergen(hello_counter_template, i, inc, target_id="counter")
+    return hypergen(counter_template, i, inc, target_id="main")
 
 
 def base_template(content_func):
-    script(
-        src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"
-    )
-    with script(), open("hypergen.js") as f:
-        raw(f.read())
-    with div(id_="counter"):
-        content_func()
+    raw("<!DOCTYPE html>")
+    with html():
+        with head():
+            link(
+                href=
+                "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css",
+                rel="stylesheet",
+                type_="text/css")
+            link(
+                href="https://unpkg.com/sakura.css/css/sakura.css",
+                rel="stylesheet",
+                type_="text/css")
+            script(
+                src=
+                "https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"
+            )
+            with script(), open("hypergen.js") as f:
+                raw(f.read())
+
+        with body():
+            div(a("Home", href=url_for("index")))
+            with div(id_="main"):
+                content_func()
 
 
-def hello_counter_template(i, inc=1):
+def counter_template(i, inc=1):
     h1("The counter is: ", i)
     with p():
-        label("Increment with:", style={"display": "block"})
+        label("Increment with:")
         inc_with = input_(type_="number", value=inc)
     with p():
         input_(
             type_="button", onclick=(increase_counter, inc_with), value="Add")
 
 
+def index_template():
+    h1("Browse the following examples")
+    with ul():
+        li(a("Basic counter", href=url_for("counter")))
+
+
+@app.route('/counter/')
+def counter():
+    return hypergen(base_template, partial(counter_template, i))
+
+
 @app.route('/')
-def hello_counter():
-    return hypergen(base_template, partial(hello_counter_template, i))
+def index():
+    return hypergen(base_template, index_template)

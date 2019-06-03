@@ -292,8 +292,32 @@ class h1(element):
     tag = "h1"
 
 
+class ul(element):
+    tag = "ul"
+
+
+class li(element):
+    tag = "li"
+
+
+class a(element):
+    tag = "a"
+
+
 class label(element):
     tag = "label"
+
+
+class html(element):
+    tag = "html"
+
+
+class head(element):
+    tag = "head"
+
+
+class body(element):
+    tag = "body"
 
 
 class script(element):
@@ -303,6 +327,11 @@ class script(element):
 
 class style(element):
     tag = "style"
+    attr_forces_eval = ("href", )
+
+
+class link(element):
+    tag = "link"
     attr_forces_eval = ("href", )
 
 
