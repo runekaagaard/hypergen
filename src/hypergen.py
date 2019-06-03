@@ -2,6 +2,7 @@ import string, sys, json
 from threading import local
 from contextlib import contextmanager
 from collections import OrderedDict
+from functools import wraps
 
 if sys.version_info.major > 2:
     from html import escape
@@ -45,40 +46,97 @@ UPDATE = 1
 
 
 def hypergen(func, *args, **kwargs):
+    cache_client = kwargs.pop("cache_client", None)
+    id_prefix = (kwargs.pop("id_prefix") + u"."
+                 if "id_prefix" in kwargs else u"")
+    auto_id = kwargs.pop("auto_id", False)
+    target_id = kwargs.pop("target_id", False)
+    liveview = kwargs.pop("liveview", False)
+    as_deltas = kwargs.pop("as_deltas", True)
+    callback_url = kwargs.pop("callback_url", None)
+    state.level = level = getattr(state, "level", -1) + 1
+
     try:
-        state.html = []
-        state.extend = state.html.extend
-        state.cache_client = kwargs.pop("cache_client", None)
-        state.id_counter = base65_counter()
-        state.id_prefix = (kwargs.pop("id_prefix") + u"."
-                           if "id_prefix" in kwargs else u"")
-        state.auto_id = kwargs.pop("auto_id", False)
-        state.target_id = target_id = kwargs.pop("target_id", False)
-        state.liveview = liveview = kwargs.pop("liveview", False)
-        as_deltas = kwargs.pop("is_base", True)
+        if level == 0:
+            state.html = []
+            state.cache_client = cache_client
+            state.id_counter = base65_counter()
+            state.id_prefix = id_prefix
+            state.auto_id = auto_id
+            state.target_id = target_id
+            state.liveview = liveview
+            state.callback_url = callback_url
+            as_deltas = as_deltas
         func(*args, **kwargs)
-        html = u"".join(state.html)
+        if level == 0:
+            html = u"".join(state.html)
     finally:
-        state.html = []
-        state.extend = None
-        state.cache_client = None
-        state.id_counter = None
-        state.id_prefix = u""
-        state.liveview = False
-        state.target_id = None
-        state.auto_id = False
+        if level == 0:
+            state.active = False
+            state.html = []
+            state.cache_client = None
+            state.id_counter = None
+            state.id_prefix = u""
+            state.liveview = False
+            state.target_id = None
+            state.auto_id = False
+            state.callback_url = None
+        state.level -= 1
 
-    if liveview and as_deltas:
-        return [[UPDATE, target_id, html]]
-    else:
-        return html
+    if level == 0:
+        if liveview and as_deltas:
+            return [[UPDATE, target_id, html]]
+        else:
+            return html
 
 
-def flask_liveview_hypergen(func, *args, **kwargs):
-    # hypergen(
-    #     base_template, hello_counter_template, i, auto_id=True,
-    #     liveview=True)[0][-1]
-    pass
+FLASK_I = 0
+FLASK_CBS = set()
+
+
+def flask_liveview_hypergen(app):
+    with app.app_context():
+        from flask import request, url_for, jsonify
+
+        def callback_url(callback):
+            global FLASK_I
+            name = callback.__module__ + "." + callback.__name__
+            if not any(True for x in FLASK_CBS if x[0] == name):
+                FLASK_CBS.add((name, FLASK_I, callback))
+                FLASK_I += 1
+
+            return url_for(
+                "hypergen_callback",
+                func_id=[x[1] for x in FLASK_CBS if x[0] == name][0])
+
+        @app.route('/hypergen-callback/<int:func_id>/', methods=["POST"])
+        def hypergen_callback(func_id):
+            args = request.get_json()
+            cb = [x[2] for x in FLASK_CBS if x[1] == func_id][0]
+            return jsonify(
+                hypergen(
+                    cb,
+                    *args,
+                    callback_url=callback_url,
+                    as_deltas=True,
+                    liveview=True,
+                    auto_id=True,
+                    target_id=cb.target_id))
+
+    def _(f):
+        def __(*args, **kwargs):
+            return hypergen(
+                f,
+                *args,
+                callback_url=callback_url,
+                as_deltas=False,
+                liveview=True,
+                auto_id=True,
+                **kwargs)
+
+        return __
+
+    return _
 
 
 def element_fn(tag, *texts, **attrs):
@@ -112,14 +170,15 @@ def tag_open(tag, *texts, **attrs):
 
     void = attrs.pop("void", False)
     sep = attrs.pop("sep", u"")
-    e = state.extend
+    e = state.html.extend
     e((u"<", tag))
     for k, v in items(attrs):
         k = t(k).rstrip("_").replace("_", "-")
         if state.liveview and k.startswith("on") and type(v) in (list, tuple):
             assert callable(v[0]), "First arg must be a callable."
             v = u"H({})".format(u",".join(
-                liveview_arg(x) for x in [v[0].hypergen_url] + list(v[1:])))
+                liveview_arg(x)
+                for x in [state.callback_url(v[0])] + list(v[1:])))
             e((u" ", k, u'="', t(v), u'"'))
         elif type(v) is bool:
             if v is True:
@@ -137,17 +196,17 @@ def tag_open(tag, *texts, **attrs):
 
 def tag_close(tag, *texts, **kwargs):
     write(*texts, **kwargs)
-    state.extend((u"</", t(tag), u">"))
+    state.html.extend((u"</", t(tag), u">"))
 
 
 def write(*texts, **kwargs):
     sep = kwargs.pop("sep", u"")
-    state.extend((t(sep).join(t(x) for x in texts if x is not None), ))
+    state.html.extend((t(sep).join(t(x) for x in texts if x is not None), ))
 
 
 def raw(*texts, **kwargs):
     sep = kwargs.pop("sep", u"")
-    state.extend((sep.join(texts), ))
+    state.html.extend((sep.join(texts), ))
 
 
 class Bunch(dict):
@@ -176,7 +235,7 @@ def cached(ttl=3600, **kwargs):
     html = client.get(hash_value)
 
     if html is not None:
-        state.extend((html, ))
+        state.html.extend((html, ))
         raise SkipException()
     else:
         a = len(state.html)
@@ -187,6 +246,8 @@ def cached(ttl=3600, **kwargs):
 
 
 class element(object):
+    trig_fn_call_attrs = tuple()
+
     # Decorator without ().
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and callable(args[0]) and not kwargs:
@@ -196,7 +257,7 @@ class element(object):
 
     def __init__(self, *texts, **attrs):
         # There are texts, so we are calling as a function.
-        if texts:
+        if texts or any(x in attrs for x in self.trig_fn_call_attrs):
             element_fn(self.tag, *texts, **attrs)
         else:
             self.attrs = attrs
@@ -244,8 +305,26 @@ class div(element):
     tag = "div"
 
 
+class p(element):
+    tag = "p"
+
+
+class h1(element):
+    tag = "h1"
+
+
+class label(element):
+    tag = "label"
+
+
 class script(element):
     tag = "script"
+    trig_fn_call_attrs = ("src", )
+
+
+class style(element):
+    tag = "style"
+    trig_fn_call_attrs = ("href", )
 
 
 ### input* functions ###
@@ -256,8 +335,7 @@ def input_(**attrs):
         attrs["id_"] = state.id_prefix + attrs["id_"]
     void_element_fn("input", **attrs)
 
-    if state.auto_id:
-        return Bunch({"id": attrs["id_"]})
+    return Bunch({"id": attrs.get("id_")})
 
 
 if __name__ == "__main__":

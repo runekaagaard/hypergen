@@ -5,7 +5,7 @@ function H(url, ...args) {
   const data = args.map(x => {
     try {
       if (x.length !== 2 || x[0] !== "_H") throw("")
-      return $("#" + x[1]).val()
+      return parseInt($("#" + x[1]).val())
     } catch(err) {
       console.log(err)
       return x
