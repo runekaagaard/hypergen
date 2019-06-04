@@ -18,10 +18,10 @@ from hypergen import (flask_liveview_hypergen as hypergen,
 NORMALISE = "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
 SAKURA = "https://unpkg.com/sakura.css/css/sakura.css"
 JQUERY = "https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"
+
 app = Flask(__name__)
-
+# The global counter state.
 i = 0
-
 
 def base_template(content_func):
     raw("<!DOCTYPE html>")
