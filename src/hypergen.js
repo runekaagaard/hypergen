@@ -20,7 +20,6 @@ function H() {
     return "" + $("#" + id).val()
   }
   
-  
   for (var i=1; i<arguments.length; i++) {
     var x = arguments[i]
     try {
@@ -49,7 +48,7 @@ function H() {
         if (cmd === UPDATE) {
           $("#" + target_id).html(html)
         } else {
-          throw(`Unknown command: $(cmd).`)
+          throw("Unknown command: " + cmd)
         }
       }
     }
