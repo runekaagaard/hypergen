@@ -127,9 +127,9 @@ def element_fn_returning(tag, *texts, **attrs):
 
 
 def liveview_arg(x):
-    id_ = getattr(x, "id", None)
-    if id_:
-        return json.dumps(["H_", "i", id_])
+    arg = getattr(x, "liveview_arg", None)
+    if arg:
+        return json.dumps(arg)
     else:
         return json.dumps(x)
 
@@ -338,6 +338,9 @@ class link(element):
 
 
 ### input* functions ###
+INPUT_TYPES = dict(checkbox="b", month="i", number="i", range="f", week="i")
+
+
 def input_(**attrs):
     if state.auto_id and "id_" not in attrs:
         attrs["id_"] = next(state.id_counter)
@@ -345,8 +348,12 @@ def input_(**attrs):
         attrs["id_"] = state.id_prefix + attrs["id_"]
     element_fn_void("input", **attrs)
 
-    if state.auto_id:
-        return Bunch({"id": attrs["id_"]})
+    if state.liveview:
+        type_ = attrs.get("type_", "text")
+        return Bunch({
+            "liveview_arg": ["H_",
+                             INPUT_TYPES.get(type_, "s"), attrs["id_"]]
+        })
 
 
 if __name__ == "__main__":
