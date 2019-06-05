@@ -129,7 +129,7 @@ def element_fn_returning(tag, *texts, **attrs):
 def liveview_arg(x):
     id_ = getattr(x, "id", None)
     if id_:
-        return json.dumps(["_H", id_])
+        return json.dumps(["H_", "i", id_])
     else:
         return json.dumps(x)
 
