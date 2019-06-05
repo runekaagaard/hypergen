@@ -2,6 +2,7 @@ import string, sys, json
 from threading import local
 from contextlib import contextmanager
 from collections import OrderedDict
+from functools import wraps
 
 if sys.version_info.major > 2:
     from html import escape
@@ -94,6 +95,7 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
 
     def _(f):
         @app.route(path, methods=["POST"], *args, **kwargs)
+        @wraps(f)
         def __():
             with app.app_context():
                 return jsonify(f(*request.get_json()))
@@ -338,7 +340,7 @@ class link(element):
 
 
 ### input* functions ###
-INPUT_TYPES = dict(checkbox="b", month="i", number="i", range="f", week="i")
+INPUT_TYPES = dict(checkbox="c", month="i", number="i", range="f", week="i")
 
 
 def input_(**attrs):

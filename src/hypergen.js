@@ -19,6 +19,9 @@ function H() {
   cbs.s = function(id) {
     return "" + $("#" + id).val()
   }
+  cbs.c = function(id) {
+    return document.getElementById(id).checked
+  }
   
   for (var i=1; i<arguments.length; i++) {
     var x = arguments[i]

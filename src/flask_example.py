@@ -2,6 +2,7 @@
 #     FLASK_ENV=development FLASK_APP=flask_example flask run
 
 from functools import partial
+import json
 
 from flask import Flask, url_for
 from hypergen import (flask_liveview_hypergen as hypergen,
@@ -55,10 +56,49 @@ def counter():
     return hypergen(base_template, partial(counter_template, i))
 
 
+INPUT_TYPES = [
+    "button", "checkbox", "color", "date", "datetime", "datetime-local",
+    "email", "file", "hidden", "image", "month", "number", "password", "radio",
+    "range", "reset", "search", "submit", "tel", "text", "time", "url", "week"
+]
+
+
+@callback_route(app, '/submit-inputs/')
+def submit_inputs(*args):
+    def template():
+        for type_, value in zip(INPUT_TYPES, args):
+            div(type_, "=", repr(value), sep=" ")
+
+    return hypergen(template, target_id="server-data")
+
+
+@app.route('/inputs/')
+def inputs():
+    def template():
+        h1("Showing all input types.")
+        inputs = []
+        for type_ in INPUT_TYPES:
+            attrs = {"value": "Dont Click Me"} if type_ == "button" else {}
+            label(type_)
+            inputs.append(input_(type_=type_, **attrs))
+
+        h1("Submit all data to server")
+        input_(
+            type_="button",
+            value="So lets go",
+            onclick=[submit_inputs] + inputs)
+        label("This is what the server sees:")
+        div("", id_="server-data")
+
+    return hypergen(base_template, partial(template))
+
+
 @app.route('/')
 def index():
     def template():
         h1("Browse the following examples")
-        ul(li.r(a.r("Basic counter", href=url_for("counter"))))
+        ul(
+            li.r(a.r("Basic counter", href=url_for("counter"))),
+            li.r(a.r("Input fields", href=url_for("inputs"))), )
 
     return hypergen(base_template, template)
