@@ -25,30 +25,9 @@ else:
 
 
 state = local()
-
-
-class Safe(unicode):
-    pass
-
-
-def base65_counter():
-    # THX: https://stackoverflow.com/a/49710563/164449
-    abc = string.letters + string.digits + "-_:"
-    base = len(abc)
-    i = -1
-    while True:
-        i += 1
-        num = i
-        output = abc[num % base]  # rightmost digit
-
-        while num >= base:
-            num //= base  # move to next digit to the left
-            output = abc[num % base] + output  # this digit
-
-        yield output
-
-
 UPDATE = 1
+
+### Control ###
 
 
 def hypergen(func, *args, **kwargs):
@@ -81,65 +60,51 @@ def hypergen(func, *args, **kwargs):
         return html
 
 
-def element(tag, *texts, **attrs):
-    sep = attrs.pop("sep", u"")
-    element_open(tag, **attrs)
-    write(*texts, sep=sep)
-    element_close(tag)
+class SkipException(Exception):
+    pass
 
 
-def element_ret(tag, *texts, **attrs):
-    e = state.extend
-    html = []
-    state.extend = html.extend
-    element(tag, *texts, **attrs)
-    state.extend = e
-
-    return Safe(u"".join(html))
+@contextmanager
+def skippable():
+    try:
+        yield
+    except SkipException:
+        pass
 
 
-def flask_liveview_hypergen(func, *args, **kwargs):
-    from flask import request
-    return hypergen(
-        func,
-        *args,
-        as_deltas=request.is_xhr,
-        auto_id=True,
-        liveview=True,
-        **kwargs)
+@contextmanager
+def cached(ttl=3600, **kwargs):
+    hash_value = "HPG{}".format(
+        hash(tuple((k, kwargs[k]) for k in sorted(kwargs.keys()))))
 
+    client = state.cache_client
+    html = client.get(hash_value)
 
-def flask_liveview_callback_route(app, path, *args, **kwargs):
-    from flask import request, jsonify
-
-    def _(f):
-        @app.route(path, methods=["POST"], *args, **kwargs)
-        @wraps(f)
-        def __():
-            with app.app_context():
-                return jsonify(f(*request.get_json()))
-
-        __.hypergen_url = path
-        return __
-
-    return _
-
-
-THIS = "THIS_"
-
-
-def get_liveview_arg(x, liveview_arg):
-    if x == THIS:
-        return json.dumps(liveview_arg)
+    if html is not None:
+        state.extend((html, ))
+        raise SkipException()
     else:
-        arg = getattr(x, "liveview_arg", None)
-        if arg:
-            return json.dumps(arg)
-        else:
-            return json.dumps(x)
+        a = len(state.html)
+        kwargs.update({'hash': hash_value})
+        yield Bunch(kwargs)
+        b = len(state.html)
+        client.set(hash_value, u"".join(x for x in state.html[a:b]), ttl)
+
+
+### Building HTML ###
 
 
 def element_open(tag, *texts, **attrs):
+    def get_liveview_arg(x, liveview_arg):
+        if x == THIS:
+            return json.dumps(liveview_arg)
+        else:
+            arg = getattr(x, "liveview_arg", None)
+            if arg:
+                return json.dumps(arg)
+            else:
+                return json.dumps(x)
+
     # For testing only, subject to change.
     sort_attrs = attrs.pop("_sort_attrs", False)
     if sort_attrs:
@@ -180,6 +145,23 @@ def element_close(tag, *texts, **kwargs):
     state.extend((u"</", t(tag), u">"))
 
 
+def element(tag, *texts, **attrs):
+    sep = attrs.pop("sep", u"")
+    element_open(tag, **attrs)
+    write(*texts, sep=sep)
+    element_close(tag)
+
+
+def element_ret(tag, *texts, **attrs):
+    e = state.extend
+    html = []
+    state.extend = html.extend
+    element(tag, *texts, **attrs)
+    state.extend = e
+
+    return Safe(u"".join(html))
+
+
 def write(*texts, **kwargs):
     sep = kwargs.pop("sep", u"")
     state.extend((t(sep).join(
@@ -192,43 +174,88 @@ def raw(*texts, **kwargs):
     state.extend((sep.join(texts), ))
 
 
+### LIVEVIEW ###
+
+THIS = "THIS_"
+
+
+def flask_liveview_hypergen(func, *args, **kwargs):
+    from flask import request
+    return hypergen(
+        func,
+        *args,
+        as_deltas=request.is_xhr,
+        auto_id=True,
+        liveview=True,
+        **kwargs)
+
+
+def flask_liveview_callback_route(app, path, *args, **kwargs):
+    from flask import request, jsonify
+
+    def _(f):
+        @app.route(path, methods=["POST"], *args, **kwargs)
+        @wraps(f)
+        def __():
+            with app.app_context():
+                return jsonify(f(*request.get_json()))
+
+        __.hypergen_url = path
+        return __
+
+    return _
+
+
+### Misc ###
+
+
+class Safe(unicode):
+    pass
+
+
+def base65_counter():
+    # THX: https://stackoverflow.com/a/49710563/164449
+    abc = string.letters + string.digits + "-_:"
+    base = len(abc)
+    i = -1
+    while True:
+        i += 1
+        num = i
+        output = abc[num % base]  # rightmost digit
+
+        while num >= base:
+            num //= base  # move to next digit to the left
+            output = abc[num % base] + output  # this digit
+
+        yield output
+
+
 class Bunch(dict):
     def __getattr__(self, k):
         return self[k]
 
 
-class SkipException(Exception):
-    pass
+### Input ###
+
+INPUT_TYPES = dict(checkbox="c", month="i", number="i", range="f", week="i")
 
 
-@contextmanager
-def skippable():
-    try:
-        yield
-    except SkipException:
-        pass
+def input_(**attrs):
+    if state.auto_id and "id_" not in attrs:
+        attrs["id_"] = next(state.id_counter)
+    if "id_" in attrs:
+        attrs["id_"] = state.id_prefix + attrs["id_"]
+    if state.liveview:
+        type_ = attrs.get("type_", "text")
+        liveview_arg = attrs["liveview_arg"] = [
+            "H_", INPUT_TYPES.get(type_, "s"), attrs["id_"]
+        ]
+    element_void("input", **attrs)
+
+    return Bunch({"liveview_arg": attrs["liveview_arg"]})
 
 
-@contextmanager
-def cached(ttl=3600, **kwargs):
-    hash_value = "HPG{}".format(
-        hash(tuple((k, kwargs[k]) for k in sorted(kwargs.keys()))))
-
-    client = state.cache_client
-    html = client.get(hash_value)
-
-    if html is not None:
-        state.extend((html, ))
-        raise SkipException()
-    else:
-        a = len(state.html)
-        kwargs.update({'hash': hash_value})
-        yield Bunch(kwargs)
-        b = len(state.html)
-        client.set(hash_value, u"".join(x for x in state.html[a:b]), ttl)
-
-
-### div* functions. ###
+### All the elements ###
 
 
 def div_open(*texts, **attrs):
@@ -335,24 +362,7 @@ class link(element):
     attr_forces_eval = ("href", )
 
 
-### input* functions ###
-INPUT_TYPES = dict(checkbox="c", month="i", number="i", range="f", week="i")
-
-
-def input_(**attrs):
-    if state.auto_id and "id_" not in attrs:
-        attrs["id_"] = next(state.id_counter)
-    if "id_" in attrs:
-        attrs["id_"] = state.id_prefix + attrs["id_"]
-    if state.liveview:
-        type_ = attrs.get("type_", "text")
-        liveview_arg = attrs["liveview_arg"] = [
-            "H_", INPUT_TYPES.get(type_, "s"), attrs["id_"]
-        ]
-    element_void("input", **attrs)
-
-    return Bunch({"liveview_arg": attrs["liveview_arg"]})
-
+### Tests ###
 
 if __name__ == "__main__":
     # yapf: disable
