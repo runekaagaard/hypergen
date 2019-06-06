@@ -19,26 +19,26 @@ i = 0
 
 def base_template(content_func):
     raw("<!DOCTYPE html>")
-    with html():
-        with head():
+    with html.c():
+        with head.c():
             link(href=NORMALISE, rel="stylesheet", type_="text/css")
             link(href=SAKURA, rel="stylesheet", type_="text/css")
             script(src=JQUERY)
-            with script(), open("hypergen.js") as f:
+            with script.c(), open("hypergen.js") as f:
                 raw(f.read())
 
-        with body():
+        with body.c():
             div(a.r("Home", href=url_for("index")))
-            with div(id_="content"):
+            with div.c(id_="content"):
                 content_func()
 
 
 def counter_template(i, inc=1):
     h1("The counter is: ", i)
-    with p():
+    with p.c():
         label("Increment with:")
         inc_with = input_(type_="number", value=inc)
-    with p():
+    with p.c():
         input_(
             type_="button", onclick=(increase_counter, inc_with), value="Add")
 
@@ -67,7 +67,7 @@ SUB_ID = "inp-type-"
 @callback_route(app, '/submit-inputs/')
 def submit_inputs(value, type_):
     def template():
-        with pre(style={"padding": 0}):
+        with pre.c(style={"padding": 0}):
             raw(repr(value), " (", type(value).__name__, ")")
 
     return hypergen(template, target_id=SUB_ID + type_)
@@ -77,21 +77,19 @@ def submit_inputs(value, type_):
 def inputs():
     def template():
         h1("Showing all input types.")
-        with table():
-            tr(th.r("Input type"), th.r("Element"), th.r("Server value"))
+        with table.c():
+            tr(th.r(x) for x in ["Input type", "Element", "Server value"])
 
             for type_ in INPUT_TYPES:
-                with tr():
-                    cb = (submit_inputs, THIS, type_)
-                    attrs = dict(onclick=cb, oninput=cb)
-                    if type_ in ["button", "image", "reset", "submit"]:
-                        attrs["value"] = "Click"
-                    td(type_)
-                    with td():
-                        input_(type_=type_, **attrs)
-                    td.e(id_=SUB_ID + type_)
+                cb = (submit_inputs, THIS, type_)
+                attrs = dict(onclick=cb, oninput=cb)
+                if type_ in ["button", "image", "reset", "submit"]:
+                    attrs["value"] = "Click"
+                tr(td.r(type_),
+                   td.r(input_.r(type_=type_, **attrs)),
+                   td.r(id_=SUB_ID + type_))
 
-    return hypergen(base_template, partial(template))
+    return hypergen(base_template, template)
 
 
 @app.route('/')

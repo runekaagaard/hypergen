@@ -81,6 +81,23 @@ def hypergen(func, *args, **kwargs):
         return html
 
 
+def element(tag, *texts, **attrs):
+    sep = attrs.pop("sep", u"")
+    element_open(tag, **attrs)
+    write(*texts, sep=sep)
+    element_close(tag)
+
+
+def element_ret(tag, *texts, **attrs):
+    e = state.extend
+    html = []
+    state.extend = html.extend
+    element(tag, *texts, **attrs)
+    state.extend = e
+
+    return Safe(u"".join(html))
+
+
 def flask_liveview_hypergen(func, *args, **kwargs):
     from flask import request
     return hypergen(
@@ -108,28 +125,6 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
     return _
 
 
-def element_fn(tag, *texts, **attrs):
-    sep = attrs.pop("sep", u"")
-    tag_open(tag, **attrs)
-    write(*texts, sep=sep)
-    tag_close(tag)
-
-
-def element_fn_void(tag, **attrs):
-    attrs["void"] = True
-    tag_open(tag, **attrs)
-
-
-def element_fn_returning(tag, *texts, **attrs):
-    e = state.extend
-    html = []
-    state.extend = html.extend
-    element_fn(tag, *texts, **attrs)
-    state.extend = e
-
-    return Safe(u"".join(html))
-
-
 THIS = "THIS_"
 
 
@@ -144,7 +139,7 @@ def get_liveview_arg(x, liveview_arg):
             return json.dumps(x)
 
 
-def tag_open(tag, *texts, **attrs):
+def element_open(tag, *texts, **attrs):
     # For testing only, subject to change.
     sort_attrs = attrs.pop("_sort_attrs", False)
     if sort_attrs:
@@ -180,7 +175,7 @@ def tag_open(tag, *texts, **attrs):
     write(*texts, sep=sep)
 
 
-def tag_close(tag, *texts, **kwargs):
+def element_close(tag, *texts, **kwargs):
     write(*texts, **kwargs)
     state.extend((u"</", t(tag), u">"))
 
@@ -233,70 +228,32 @@ def cached(ttl=3600, **kwargs):
         client.set(hash_value, u"".join(x for x in state.html[a:b]), ttl)
 
 
-class element(object):
-    attr_forces_eval = tuple()
-
-    # Decorator without ().
-    def __new__(cls, *args, **kwargs):
-        if len(args) == 1 and callable(args[0]) and not kwargs:
-            return cls()(args[0])
-        else:
-            return super(element, cls).__new__(cls, *args, **kwargs)
-
-    def __init__(self, *texts, **attrs):
-        # There are texts, so we are calling as a function.
-        if texts or any(x in attrs for x in self.attr_forces_eval):
-            element_fn(self.tag, *texts, **attrs)
-        else:
-            self.attrs = attrs
-
-    # Context manager "with" invocation.
-    def __enter__(self):
-        tag_open(self.tag, **self.attrs)
-
-    def __exit__(self, type, value, traceback):
-        tag_close(self.tag)
-
-    # Decorator with ().
-    def __call__(self, func):
-        def _(*args, **kwargs):
-            tag_open(self.tag, **self.attrs)
-            func(*args, **kwargs)
-            tag_close(self.tag)
-
-        return _
-
-    # Return html instead of adding it to god list.
-    @classmethod
-    def r(cls, *texts, **attrs):
-        return element_fn_returning(cls.tag, *texts, **attrs)
-
-    # Make an empty tag, only with attributes
-    @classmethod
-    def e(cls, **attrs):
-        return element_fn(cls.tag, u"", **attrs)
-
-
 ### div* functions. ###
 
 
-def div_fn(*texts, **attrs):
-    return element_fn(u"div", *texts, **attrs)
+def div_open(*texts, **attrs):
+    return element_open(u"div", *texts, **attrs)
+
+
+def div_close():
+    return element_close(u"div")
+
+
+def div(*texts, **attrs):
+    element = div_open(*texts, **attrs)
+    div_close()
+    return element
 
 
 @contextmanager
-def div_cm(*texts, **attrs):
-    tag_open(u"div", *texts, **attrs)
-    yield
-    tag_close(u"div")
+def div_con(*texts, **attrs):
+    element = element_open(u"div", *texts, **attrs)
+    yield element
+    element_close(u"div")
 
 
-def div_o(*texts, **attrs):
-    tag_open(u"div", *texts, **attrs)
-
-
-def div_c(*texts, **attrs):
-    tag_close(u"div", *texts, **attrs)
+def div_dec(*texts, **attrs):
+    element_dec(*texts, **attrs)
 
 
 class div(element):
@@ -392,7 +349,7 @@ def input_(**attrs):
         liveview_arg = attrs["liveview_arg"] = [
             "H_", INPUT_TYPES.get(type_, "s"), attrs["id_"]
         ]
-    element_fn_void("input", **attrs)
+    element_void("input", **attrs)
 
     return Bunch({"liveview_arg": attrs["liveview_arg"]})
 
@@ -400,10 +357,10 @@ def input_(**attrs):
 if __name__ == "__main__":
     # yapf: disable
     def test_basics():
-        tag_open("li", 1, 2, a=3, b_=4, sep=".", style={1: 2}, x=True, y=False,
+        element_open("li", 1, 2, a=3, b_=4, sep=".", style={1: 2}, x=True, y=False,
                  _sort_attrs=True)
         write(5, 6, sep=",")
-        tag_close("li", 7, 8, sep="+")
+        element_close("li", 7, 8, sep="+")
     assert hypergen(test_basics) == u'<li a="3" b="4" style="1:2" x>1.25,67+8</li>'
 
     def test_basics2():
@@ -427,7 +384,7 @@ if __name__ == "__main__":
         global _h, _t
         _t = False
         with skippable(), cached(ttl=5, key=test_cache, a=a, b=b) as value:
-            div_fn(*(value.a+value.b), data_hash=value.hash)
+            div(*(value.a+value.b), data_hash=value.hash)
             _h = value.hash
             _t = True
 
@@ -442,11 +399,11 @@ if __name__ == "__main__":
     assert _t is True
 
     def test_div1():
-        div_fn("Hello, world!")
+        div("Hello, world!")
     assert hypergen(test_div1) == u"<div>Hello, world!</div>"
 
     def test_div2(name):
-        div_fn("Hello", name, class_="its-hyper", data_x=3.14, hidden=True,
+        div("Hello", name, class_="its-hyper", data_x=3.14, hidden=True,
             selected=False, style={"height": 42, "display": "none"}, sep=" ",
             _sort_attrs=True)
     assert hypergen(test_div2, "hypergen!") == u'<div class="its-hyper" '\
