@@ -271,6 +271,11 @@ class element(object):
     def r(cls, *texts, **attrs):
         return element_fn_returning(cls.tag, *texts, **attrs)
 
+    # Make an empty tag, only with attributes
+    @classmethod
+    def e(cls, **attrs):
+        return element_fn_returning(cls.tag, u"", **attrs)
+
 
 ### div* functions. ###
 

@@ -89,7 +89,7 @@ def inputs():
                     td(type_)
                     with td():
                         input_(type_=type_, **attrs)
-                    td("", id_=SUB_ID + type_)
+                    td.e(id_=SUB_ID + type_)
 
     return hypergen(base_template, partial(template))
 
