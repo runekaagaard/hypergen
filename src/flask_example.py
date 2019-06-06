@@ -2,13 +2,12 @@
 #     FLASK_ENV=development FLASK_APP=flask_example flask run
 
 from functools import partial
-import json
 
 from flask import Flask, url_for
 from hypergen import (flask_liveview_hypergen as hypergen,
                       flask_liveview_callback_route as callback_route, div,
                       input_, script, raw, label, p, h1, ul, li, a, html, head,
-                      body, link)
+                      body, link, table, tr, th, td, THIS, pre)
 
 NORMALISE = "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
 SAKURA = "https://unpkg.com/sakura.css/css/sakura.css"
@@ -62,33 +61,35 @@ INPUT_TYPES = [
     "range", "reset", "search", "submit", "tel", "text", "time", "url", "week"
 ]
 
+SUB_ID = "inp-type-"
+
 
 @callback_route(app, '/submit-inputs/')
-def submit_inputs(*args):
+def submit_inputs(value, type_):
     def template():
-        for type_, value in zip(INPUT_TYPES, args):
-            div(type_, "=", repr(value), sep=" ")
+        with pre(style={"padding": 0}):
+            raw(repr(value), " (", type(value).__name__, ")")
 
-    return hypergen(template, target_id="server-data")
+    return hypergen(template, target_id=SUB_ID + type_)
 
 
 @app.route('/inputs/')
 def inputs():
     def template():
         h1("Showing all input types.")
-        inputs = []
-        for type_ in INPUT_TYPES:
-            attrs = {"value": "Dont Click Me"} if type_ == "button" else {}
-            label(type_)
-            inputs.append(input_(type_=type_, **attrs))
+        with table():
+            tr(th.r("Input type"), th.r("Element"), th.r("Server value"))
 
-        h1("Submit all data to server")
-        input_(
-            type_="button",
-            value="So lets go",
-            onclick=[submit_inputs] + inputs)
-        label("This is what the server sees:")
-        div("", id_="server-data")
+            for type_ in INPUT_TYPES:
+                with tr():
+                    cb = (submit_inputs, THIS, type_)
+                    attrs = dict(onclick=cb, oninput=cb)
+                    if type_ in ["button", "image", "reset", "submit"]:
+                        attrs["value"] = "Click"
+                    td(type_)
+                    with td():
+                        input_(type_=type_, **attrs)
+                    td("", id_=SUB_ID + type_)
 
     return hypergen(base_template, partial(template))
 

@@ -12,6 +12,8 @@ if sys.version_info.major > 2:
 
     def t(s, quote=True):
         return escape(str(s), quote=quote)
+
+    str = unicode
 else:
     from cgi import escape
 
@@ -128,12 +130,18 @@ def element_fn_returning(tag, *texts, **attrs):
     return Safe(u"".join(html))
 
 
-def liveview_arg(x):
-    arg = getattr(x, "liveview_arg", None)
-    if arg:
-        return json.dumps(arg)
+THIS = "THIS_"
+
+
+def get_liveview_arg(x, liveview_arg):
+    if x == THIS:
+        return json.dumps(liveview_arg)
     else:
-        return json.dumps(x)
+        arg = getattr(x, "liveview_arg", None)
+        if arg:
+            return json.dumps(arg)
+        else:
+            return json.dumps(x)
 
 
 def tag_open(tag, *texts, **attrs):
@@ -147,6 +155,7 @@ def tag_open(tag, *texts, **attrs):
 
     void = attrs.pop("void", False)
     sep = attrs.pop("sep", u"")
+    liveview_arg = attrs.pop("liveview_arg", None)
     e = state.extend
     e((u"<", tag))
     for k, v in items(attrs):
@@ -154,7 +163,8 @@ def tag_open(tag, *texts, **attrs):
         if state.liveview and k.startswith("on") and type(v) in (list, tuple):
             assert callable(v[0]), "First arg must be a callable."
             v = u"H({})".format(u",".join(
-                liveview_arg(x) for x in [v[0].hypergen_url] + list(v[1:])))
+                get_liveview_arg(x, liveview_arg)
+                for x in [v[0].hypergen_url] + list(v[1:])))
             e((u" ", k, u'="', t(v), u'"'))
         elif type(v) is bool:
             if v is True:
@@ -304,6 +314,30 @@ class li(element):
     tag = "li"
 
 
+class code(element):
+    tag = "code"
+
+
+class pre(element):
+    tag = "pre"
+
+
+class table(element):
+    tag = "table"
+
+
+class tr(element):
+    tag = "tr"
+
+
+class th(element):
+    tag = "th"
+
+
+class td(element):
+    tag = "td"
+
+
 class a(element):
     tag = "a"
 
@@ -348,14 +382,14 @@ def input_(**attrs):
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
-    element_fn_void("input", **attrs)
-
     if state.liveview:
         type_ = attrs.get("type_", "text")
-        return Bunch({
-            "liveview_arg": ["H_",
-                             INPUT_TYPES.get(type_, "s"), attrs["id_"]]
-        })
+        liveview_arg = attrs["liveview_arg"] = [
+            "H_", INPUT_TYPES.get(type_, "s"), attrs["id_"]
+        ]
+    element_fn_void("input", **attrs)
+
+    return Bunch({"liveview_arg": attrs["liveview_arg"]})
 
 
 if __name__ == "__main__":
