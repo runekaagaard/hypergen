@@ -39,6 +39,7 @@ def div_ret(*texts, **attrs):
     Like div, but does not add to the global state. Use this when using an
     element as argument to another element.
     """
+    return element_ret("div", *texts, **attrs)
 
 
 def div_dec(*texts, **attrs):
@@ -46,6 +47,7 @@ def div_dec(*texts, **attrs):
     Decorates a function with a div, and wraps elements called inside the
     decorated function. Given texts is added first.
     """
+    return element_dec("div", *texts, **attrs)
 
 
 def div_con(*texts, **attrs):
@@ -53,6 +55,7 @@ def div_con(*texts, **attrs):
     Use a div as a context manager. Wraps elements called inside the context.
     Given texts is added first.
     """
+    return element_con("div", *texts, **attrs)
 
 
 """
