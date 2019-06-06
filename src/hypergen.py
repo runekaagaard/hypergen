@@ -274,7 +274,7 @@ class element(object):
     # Make an empty tag, only with attributes
     @classmethod
     def e(cls, **attrs):
-        return element_fn_returning(cls.tag, u"", **attrs)
+        return element_fn(cls.tag, u"", **attrs)
 
 
 ### div* functions. ###
