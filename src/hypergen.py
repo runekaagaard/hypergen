@@ -60,15 +60,28 @@ def hypergen(func, *args, **kwargs):
         return html
 
 
-hypergen(lambda: None)  # Reset global state.
+def reset_state():
+    # Reset global state.
+    hypergen(lambda: None)
 
-### Building HTML ###
+
+reset_state()
+
+
+def get_state():
+    return state.html
+
+
+### Building HTML, internal API ###
 
 
 def element_open(tag,
                  children=[],
                  into=state.html,
+                 void=False,
+                 sep="",
                  liveview=state.liveview,
+                 liveview_arg=None,
                  **attrs):
     """
     >>> into=[]; element_open("div", class_="hello", into=into); "".join(into)
@@ -103,9 +116,6 @@ def element_open(tag,
         return attrs
 
     attrs = sort_attrs(attrs)
-    void = attrs.pop("void", False)
-    sep = attrs.pop("sep", "")
-    liveview_arg = attrs.pop("liveview_arg", None)
     e = into.extend
 
     e(("<", tag))
@@ -162,7 +172,7 @@ def element_ret(tag, children, **attrs):
     return "".join(into)
 
 
-def element_con(tag, children, **attrs):
+def element_con(tag, children, into=state.html, **attrs):
     """
     >>> into=[]
     >>> with div_con(into=into):
@@ -170,10 +180,35 @@ def element_con(tag, children, **attrs):
     >>> "".join(into)
     '<div>X</div>'
     """
-    into = attrs.pop("into", state.html)
     element = element_open("div", children, into=into, **attrs)
     yield element
     element_close("div", [], into=into)
+
+
+def element_dec(tag, children, **attrs):
+    """
+    >>> into = []
+    >>> @div_dec("foo", "1", height=91, sep="+", into=into)
+    ... def x(y):
+    ...     element("div", [y*4], class_="dec", into=into)
+    >>> x(2)
+    >>> "".join(into)
+    '<div height="91">foo+1<div class="dec">8</div>'
+    >>>
+    """
+
+    def _(f):
+        def __(*args, **kwargs):
+            element_open(tag, children, **attrs)
+            f(*args, **kwargs)
+            element_close(tag, [])
+
+        return __
+
+    return _
+
+
+### Building HTML, public API ###
 
 
 def write(*children, **kwargs):
@@ -181,10 +216,9 @@ def write(*children, **kwargs):
     >>> into=[]; write("a", "<", Safe("<"), into=into, sep=","); into
     ['a,&lt;,<']
     """
-    into = kwargs.pop("into", state.html)
-    sep = kwargs.pop("sep", "")
-    into.extend((t(sep).join((t(x) if not isinstance(x, Safe) else x)
-                             for x in children if x is not None), ))
+    kwargs.pop("into", state.html).extend((t(kwargs.pop("sep", "")).join(
+        (t(x) if not isinstance(x, Safe) else x) for x in children
+        if x is not None), ))
 
 
 def raw(*children, **kwargs):
@@ -192,8 +226,8 @@ def raw(*children, **kwargs):
     >>> into=[]; raw("a", "<", Safe("<"), into=into, sep=","); "".join(into)
     'a,<,<'
     """
-    sep = kwargs.pop("sep", "")
     into = kwargs.pop("into")
+    sep = kwargs.pop("sep", "")
     into.extend((sep.join(children), ))
 
 
@@ -286,11 +320,11 @@ def input_(**attrs):
 
 
 def div_open(into=state.html, *children, **attrs):
-    return element_open("div", *children, **attrs)
+    return element_open("div", children, **attrs)
 
 
 def div_close():
-    return element_close("div")
+    return element_close("div", [])
 
 
 def div(*children, **attrs):
@@ -306,7 +340,7 @@ def div_con(*children, **attrs):
 
 
 def div_dec(*children, **attrs):
-    element_dec(*children, **attrs)
+    return element_dec("div", children, **attrs)
 
 
 # class div(element):
