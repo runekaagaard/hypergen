@@ -67,17 +67,12 @@ def reset_state():
 
 reset_state()
 
-
-def get_state():
-    return state.html
-
-
 ### Building HTML, internal API ###
 
 
 def element_open(tag,
                  children=[],
-                 into=state.html,
+                 into=None,
                  void=False,
                  sep="",
                  liveview=state.liveview,
@@ -115,6 +110,8 @@ def element_open(tag,
 
         return attrs
 
+    if into is None:
+        into = state.html
     attrs = sort_attrs(attrs)
     e = into.extend
 
@@ -142,21 +139,26 @@ def element_open(tag,
     write(*children, into=into, sep=sep)
 
 
-def element_close(tag, children, into=state.html):
+def element_close(tag, children, into=None):
     """
     >>> into=[]; element_close("label", [7, 9, 13], into=into); "".join(into)
     '7913</label>'
     """
+    if into is None:
+        into = state.html
     write(*children, into=into)
     into.extend(("</", t(tag), ">"))
 
 
-def element(tag, children, into=state.html, **attrs):
+def element(tag, children, into=None, **attrs):
     """
-    >>> element("div", [42, 21], data_x=100, sep=".")
-    >>> "".join(state.html)
+    >>> into = []
+    >>> element("div", [42, 21], data_x=100, sep=".", into=into)
+    >>> "".join(into)
     '<div data-x="100">42.21</div>'
     """
+    if into is None:
+        into = state.html
     element_open(tag, children, into=into, **attrs)
     element_close(tag, [], into=into)
 
@@ -172,7 +174,7 @@ def element_ret(tag, children, **attrs):
     return "".join(into)
 
 
-def element_con(tag, children, into=state.html, **attrs):
+def element_con(tag, children, into=None, **attrs):
     """
     >>> into=[]
     >>> with div_con(into=into):
@@ -180,6 +182,8 @@ def element_con(tag, children, into=state.html, **attrs):
     >>> "".join(into)
     '<div>X</div>'
     """
+    if into is None:
+        into = state.html
     element = element_open("div", children, into=into, **attrs)
     yield element
     element_close("div", [], into=into)
@@ -189,11 +193,11 @@ def element_dec(tag, children, **attrs):
     """
     >>> into = []
     >>> @div_dec("foo", "1", height=91, sep="+", into=into)
-    ... def x(y):
+    ... def z(y):
     ...     element("div", [y*4], class_="dec", into=into)
-    >>> x(2)
+    >>> z(2)
     >>> "".join(into)
-    '<div height="91">foo+1<div class="dec">8</div>'
+    '<div height="91">foo+1<div class="dec">8</div></div>'
     >>>
     """
 
@@ -319,29 +323,69 @@ def input_(**attrs):
 ### All the elements ###
 
 
-def div_open(into=state.html, *children, **attrs):
+def div_open(*children, **attrs):
+    """
+    >>> into=[]; div_open(9, x=2, into=into); "".join(into)
+    '<div x="2">9'
+    """
     return element_open("div", children, **attrs)
 
 
-def div_close():
-    return element_close("div", [])
+def div_close(*children, **kwargs):
+    """
+    >>> into=[]; div_close(1, into=into); "".join(into) 
+    '1</div>'
+    """
+    return element_close("div", children, **kwargs)
 
 
-def div(*children, **attrs):
-    element = div_open(*children, **attrs)
-    div_close()
-    return element
+def div_ret(*children, **kwargs):
+    """
+    >>> div_ret("WUT?")
+    '<div>WUT?</div>'
+    """
+    return element_ret("div", children, **kwargs)
 
 
 @contextmanager
 def div_con(*children, **attrs):
+    """
+    >>> into = []
+    >>> with div_con("x", x=9, into=into):
+    ...     div(1, into=into)
+    >>> "".join(into)
+    '<div x="9">x<div>1</div></div>'
+    """
     for x in element_con("div", children, **attrs):
         yield x
 
 
 def div_dec(*children, **attrs):
+    """
+    >>> into = []
+    >>> @div_dec(1, 2, sep=".", class_=3, into=into)
+    ... def x(y):
+    ...     div(9, y*2, into=into)
+    >>> x(3)
+    >>> "".join(into)
+    '<div class="3">1.2<div>96</div>'
+    """
     return element_dec("div", children, **attrs)
 
+
+def div(*children, **attrs):
+    """
+    >>> into=[]; div("1", class_="2", into=into); "".join(into)
+    '<div class="2">1</div>'
+    """
+    return element("div", children, **attrs)
+
+
+div.o = div_open
+div.c = div_close
+div.r = div_ret
+div.c = div_con
+div.d = div_dec
 
 # class div(element):
 #     tag = "div"
