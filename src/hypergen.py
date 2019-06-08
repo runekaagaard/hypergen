@@ -232,7 +232,7 @@ def raw(*children, **kwargs):
     >>> into=[]; raw("a", "<", Safe("<"), into=into, sep=","); "".join(into)
     'a,<,<'
     """
-    into = kwargs.pop("into")
+    into = kwargs.pop("into", state.html)
     sep = kwargs.pop("sep", "")
     into.extend((sep.join(children), ))
 
