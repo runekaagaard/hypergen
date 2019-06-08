@@ -189,7 +189,7 @@ def element_con(tag, children, into=None, **attrs):
     element_close("div", [], into=into)
 
 
-def element_dec(tag, children, **attrs):
+def element_dec(tag, children, into=None, **attrs):
     """
     >>> into = []
     >>> @div_dec("foo", "1", height=91, sep="+", into=into)
@@ -200,12 +200,14 @@ def element_dec(tag, children, **attrs):
     '<div height="91">foo+1<div class="dec">8</div></div>'
     >>>
     """
+    if into is None:
+        into = state.html
 
     def _(f):
         def __(*args, **kwargs):
-            element_open(tag, children, **attrs)
+            element_open(tag, children, into=into, **attrs)
             f(*args, **kwargs)
-            element_close(tag, [])
+            element_close(tag, [], into=into)
 
         return __
 
@@ -368,7 +370,15 @@ def div_dec(*children, **attrs):
     ...     div(9, y*2, into=into)
     >>> x(3)
     >>> "".join(into)
-    '<div class="3">1.2<div>96</div>'
+    '<div class="3">1.2<div>96</div></div>'
+    
+    >>> state.html = []
+    >>> @div_dec(1, 2, sep=".", class_=3)
+    ... def x(y):
+    ...     div(9, y*2)
+    >>> x(3)
+    >>> "".join(state.html)
+    '<div class="3">1.2<div>96</div></div>'
     """
     return element_dec("div", children, **attrs)
 
