@@ -62,6 +62,38 @@ def hypergen(func, *args, **kwargs):
 
 hypergen(lambda: None)  # Reset global state.
 
+
+class SkipException(Exception):
+    pass
+
+
+@contextmanager
+def skippable():
+    try:
+        yield
+    except SkipException:
+        pass
+
+
+@contextmanager
+def cached(ttl=3600, **kwargs):
+    hash_value = "HPG{}".format(
+        hash(tuple((k, kwargs[k]) for k in sorted(kwargs.keys()))))
+
+    client = state.cache_client
+    html = client.get(hash_value)
+
+    if html is not None:
+        state.extend((html, ))
+        raise SkipException()
+    else:
+        a = len(state.html)
+        kwargs.update({'hash': hash_value})
+        yield Bunch(kwargs)
+        b = len(state.html)
+        client.set(hash_value, "".join(x for x in state.html[a:b]), ttl)
+
+
 ### Building HTML ###
 
 
@@ -71,12 +103,10 @@ def element_open(tag,
                  liveview=state.liveview,
                  **attrs):
     """
-    >>> into=[]; element_open("div", class_="hello", into=into); "".join(into)
+    >>> element_open("div", class_="hello")
     '<div class="hello">'
-    >>> into = []
     >>> element_open("li", [1, 2], a=3, b_=4, sep=".", style={1: 2}, x=True,
-    ...    y=False, into=into, _sort_attrs=True)
-    >>> "".join(into)
+    ...    y=False, _sort_attrs=True)
     '<li a="3" b="4" style="1:2" x>1.2'
     """
 
@@ -106,6 +136,7 @@ def element_open(tag,
     void = attrs.pop("void", False)
     sep = attrs.pop("sep", "")
     liveview_arg = attrs.pop("liveview_arg", None)
+
     e = into.extend
 
     e(("<", tag))
@@ -132,18 +163,18 @@ def element_open(tag,
     write(*children, into=into, sep=sep)
 
 
-def element_close(tag, children, into=state.html):
+def element_close(tag, children, into=state.html, return_=True):
     """
-    >>> into=[]; element_close("label", [7, 9, 13], into=into); "".join(into)
+    >>> element_close("label", [7, 9, 13]); "".join(state.html)
     '7913</label>'
     """
-    write(*children, into=into)
+    write(*children, into=into, return_=return_)
     into.extend(("</", t(tag), ">"))
 
 
-def element(tag, children, into=state.html, **attrs):
+def element(tag, children, into=state.html, return_=True, **attrs):
     """
-    >>> element("div", [42, 21], data_x=100, sep=".")
+    >>> element("div", [42, 21], return_=True, data_x=100, sep=".")
     >>> "".join(state.html)
     '<div data-x="100">42.21</div>'
     """
@@ -156,24 +187,7 @@ def element_ret(tag, children, **attrs):
     >>> element_ret("p", [2, 4], class_="ret")
     '<p class="ret">24</p>'
     """
-    into = []
-    element(tag, children, into=into, **attrs)
-
-    return "".join(into)
-
-
-def element_con(tag, children, **attrs):
-    """
-    >>> into=[]
-    >>> with div_con(into=into):
-    ...     write("X", into=into)
-    >>> "".join(into)
-    '<div>X</div>'
-    """
-    into = attrs.pop("into", state.html)
-    element = element_open("div", children, into=into, **attrs)
-    yield element
-    element_close("div", [], into=into)
+    return element(tag, children, return_=True, **attrs)
 
 
 def write(*children, **kwargs):
@@ -181,7 +195,7 @@ def write(*children, **kwargs):
     >>> into=[]; write("a", "<", Safe("<"), into=into, sep=","); into
     ['a,&lt;,<']
     """
-    into = kwargs.pop("into", state.html)
+    into = kwargs.pop("into")
     sep = kwargs.pop("sep", "")
     into.extend((t(sep).join((t(x) if not isinstance(x, Safe) else x)
                              for x in children if x is not None), ))
@@ -189,8 +203,8 @@ def write(*children, **kwargs):
 
 def raw(*children, **kwargs):
     """
-    >>> into=[]; raw("a", "<", Safe("<"), into=into, sep=","); "".join(into)
-    'a,<,<'
+    >>> into=[]; raw("a", "<", Safe("<"), into=into, sep=","); into
+    ok
     """
     sep = kwargs.pop("sep", "")
     into = kwargs.pop("into")
@@ -285,7 +299,7 @@ def input_(**attrs):
 ### All the elements ###
 
 
-def div_open(into=state.html, *children, **attrs):
+def div_open(into=state.html, return_=False, *children, **attrs):
     return element_open("div", *children, **attrs)
 
 
@@ -301,8 +315,9 @@ def div(*children, **attrs):
 
 @contextmanager
 def div_con(*children, **attrs):
-    for x in element_con("div", children, **attrs):
-        yield x
+    element = element_open("div", *children, **attrs)
+    yield element
+    element_close("div")
 
 
 def div_dec(*children, **attrs):
