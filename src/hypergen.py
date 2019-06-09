@@ -1,6 +1,5 @@
 # coding=utf-8
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+from __future__ import (absolute_import, division, unicode_literals)
 import string, sys, json
 from threading import local
 from contextlib import contextmanager
@@ -66,7 +65,7 @@ hypergen(lambda: None)
 
 
 def element_start(tag,
-                  children=[],
+                  children,
                   into=None,
                   sep="",
                   void=False,
@@ -145,16 +144,17 @@ def element_ret(tag, children, **attrs):
 
 
 def element_con(tag, children, **attrs):
-    element = element_start("div", children, **attrs)
+    element = element_start(tag, children, **attrs)
     yield element
-    element_end("div", [], **attrs)
+    element_end(tag, [], **attrs)
 
 
 def element_dec(tag, children, **attrs):
     def _(f):
         def __(*args, **kwargs):
-            with element_con(tag, children, **attrs):
-                f(*args, **kwargs)
+            element_start(tag, children, **attrs)
+            f(*args, **kwargs)
+            element_end(tag, [], **attrs)
 
         return __
 
@@ -165,17 +165,15 @@ def element_dec(tag, children, **attrs):
 
 
 def write(*children, **kwargs):
-    into = kwargs.pop("into", state.html)
-    pr(5, "".join(into), children)
-    into.extend((t(kwargs.pop("sep", "")).join((t(x) if
+    into = kwargs.get("into", state.html)
+    into.extend((t(kwargs.get("sep", "")).join((t(x) if
                                                 not isinstance(x, Safe) else x)
                                                for x in children
                                                if x is not None), ))
-    pr(6, "".join(into))
 
 
 def raw(*children, **kwargs):
-    kwargs.pop("into", state.html).extend((kwargs.pop("sep",
+    kwargs.get("into", state.html).extend((kwargs.get("sep",
                                                       "").join(children), ))
 
 
@@ -286,7 +284,6 @@ def div_con(*children, **attrs):
 
 
 def div_dec(*children, **attrs):
-    pr(100000, children, attrs)
     return element_dec("div", children, **attrs)
 
 
@@ -363,39 +360,6 @@ div.d = div_dec
 ### Tests ###
 
 if __name__ == "__main__":
-    import doctest, sys, logging, re
-    from doctest import DocTestFinder, DocTestRunner
-    # Support print in doctests.
-    L_ = logging.getLogger(":")
-    logging.basicConfig(level=logging.DEBUG)
-    pr = print = lambda *xs: L_.debug(" ".join(repr(x) for x in xs))
-
-    # Make doctest think u"" and "" is the same.
-    class Py23DocChecker(doctest.OutputChecker, object):
-        RE = re.compile(r"(\W|^)[uU]([rR]?[\'\"])", re.UNICODE)
-
-        def remove_u(self, want, got):
-            if sys.version_info[0] < 3:
-                return (re.sub(self.RE, r'\1\2', want), re.sub(
-                    self.RE, r'\1\2', got))
-            else:
-                return want, got
-
-        def check_output(self, want, got, optionflags):
-            want, got = self.remove_u(want, got)
-            return super(Py23DocChecker, self).check_output(
-                want, got, optionflags)
-
-        def output_difference(self, example, got, optionflags):
-            example.want, got = self.remove_u(example.want, got)
-            return super(Py23DocChecker, self).output_difference(
-                example, got, optionflags)
-
-    finder = DocTestFinder()
-    runner = DocTestRunner(checker=Py23DocChecker())
-    for test in finder.find(sys.modules.get('__main__')):
-        runner.run(test)
-    runner.summarize()
 
     def test_div1():
         div("Hello, world!")
@@ -433,25 +397,17 @@ if __name__ == "__main__":
     def test_context_manager(x):
         div("yo", blink="true")
         with div.c():
-            write(1, x)
+            div("12")
+
     assert hypergen(test_context_manager, 2) == \
-        '<div blink="true">yo</div><div>12</div>'
+        '<div blink="true">yo</div><div><div>12</div></div>'
 
-    @div.d()
+    @div.d(1, class_="f")
     def test_decorator(x):
-        write(19, x)
+        div(2, 3, y=4)
 
-    #state.html = []
-    #test_decorator(4)
-    #print(state.html)
-    print(333, hypergen(test_decorator, 1))
-    assert hypergen(test_decorator, 1) == '<div>191</div>'
-
-    @div(id_=100)
-    def test_unicorn_class3(x):
-        write("hello", x)
-
-    assert hypergen(test_unicorn_class3, 2) == '<div id="100">hello2</div>'
+    assert hypergen(test_decorator,
+                    1) == '<div class="f">1<div y="4">23</div></div>'
 
     def test_input():
         input_(value=1)
