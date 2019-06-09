@@ -60,34 +60,19 @@ def hypergen(func, *args, **kwargs):
         return html
 
 
-def reset_state():
-    # Reset global state.
-    hypergen(lambda: None)
-
-
-reset_state()
+hypergen(lambda: None)
 
 ### Building HTML, internal API ###
 
 
-def element_open(tag,
-                 children=[],
-                 into=None,
-                 void=False,
-                 sep="",
-                 liveview=state.liveview,
-                 liveview_arg=None,
-                 **attrs):
-    """
-    >>> into=[]; element_open("div", class_="hello", into=into); "".join(into)
-    '<div class="hello">'
-    >>> into = []
-    >>> element_open("li", [1, 2], a=3, b_=4, sep=".", style={1: 2}, x=True,
-    ...    y=False, into=into, _sort_attrs=True)
-    >>> "".join(into)
-    '<li a="3" b="4" style="1:2" x>1.2'
-    """
-
+def element_start(tag,
+                  children=[],
+                  into=None,
+                  sep="",
+                  void=False,
+                  liveview=None,
+                  liveview_arg=None,
+                  **attrs):
     def get_liveview_arg(x, liveview_arg):
         if x == THIS:
             return json.dumps(liveview_arg)
@@ -109,6 +94,9 @@ def element_open(tag,
                     for k in sorted(attrs["style"].keys()))
 
         return attrs
+
+    if liveview is None:
+        liveview = state.liveview
 
     if into is None:
         into = state.html
@@ -139,75 +127,34 @@ def element_open(tag,
     write(*children, into=into, sep=sep)
 
 
-def element_close(tag, children, into=None):
-    """
-    >>> into=[]; element_close("label", [7, 9, 13], into=into); "".join(into)
-    '7913</label>'
-    """
-    if into is None:
-        into = state.html
-    write(*children, into=into)
-    into.extend(("</", t(tag), ">"))
+def element_end(tag, children, **kwargs):
+    write(*children, **kwargs)
+    kwargs.get("into", state.html).extend(("</", t(tag), ">"))
 
 
-def element(tag, children, into=None, **attrs):
-    """
-    >>> into = []
-    >>> element("div", [42, 21], data_x=100, sep=".", into=into)
-    >>> "".join(into)
-    '<div data-x="100">42.21</div>'
-    """
-    if into is None:
-        into = state.html
-    element_open(tag, children, into=into, **attrs)
-    element_close(tag, [], into=into)
+def element(tag, children, **attrs):
+    element_start(tag, children, **attrs)
+    element_end(tag, [], **attrs)
 
 
 def element_ret(tag, children, **attrs):
-    """
-    >>> element_ret("p", [2, 4], class_="ret")
-    '<p class="ret">24</p>'
-    """
     into = []
     element(tag, children, into=into, **attrs)
 
     return "".join(into)
 
 
-def element_con(tag, children, into=None, **attrs):
-    """
-    >>> into=[]
-    >>> with div_con(into=into):
-    ...     write("X", into=into)
-    >>> "".join(into)
-    '<div>X</div>'
-    """
-    if into is None:
-        into = state.html
-    element = element_open("div", children, into=into, **attrs)
+def element_con(tag, children, **attrs):
+    element = element_start("div", children, **attrs)
     yield element
-    element_close("div", [], into=into)
+    element_end("div", [], **attrs)
 
 
-def element_dec(tag, children, into=None, **attrs):
-    """
-    >>> into = []
-    >>> @div_dec("foo", "1", height=91, sep="+", into=into)
-    ... def z(y):
-    ...     element("div", [y*4], class_="dec", into=into)
-    >>> z(2)
-    >>> "".join(into)
-    '<div height="91">foo+1<div class="dec">8</div></div>'
-    >>>
-    """
-    if into is None:
-        into = state.html
-
+def element_dec(tag, children, **attrs):
     def _(f):
         def __(*args, **kwargs):
-            element_open(tag, children, into=into, **attrs)
-            f(*args, **kwargs)
-            element_close(tag, [], into=into)
+            with element_con(tag, children, **attrs):
+                f(*args, **kwargs)
 
         return __
 
@@ -218,23 +165,18 @@ def element_dec(tag, children, into=None, **attrs):
 
 
 def write(*children, **kwargs):
-    """
-    >>> into=[]; write("a", "<", Safe("<"), into=into, sep=","); into
-    ['a,&lt;,<']
-    """
-    kwargs.pop("into", state.html).extend((t(kwargs.pop("sep", "")).join(
-        (t(x) if not isinstance(x, Safe) else x) for x in children
-        if x is not None), ))
+    into = kwargs.pop("into", state.html)
+    pr(5, "".join(into), children)
+    into.extend((t(kwargs.pop("sep", "")).join((t(x) if
+                                                not isinstance(x, Safe) else x)
+                                               for x in children
+                                               if x is not None), ))
+    pr(6, "".join(into))
 
 
 def raw(*children, **kwargs):
-    """
-    >>> into=[]; raw("a", "<", Safe("<"), into=into, sep=","); "".join(into)
-    'a,<,<'
-    """
-    into = kwargs.pop("into", state.html)
-    sep = kwargs.pop("sep", "")
-    into.extend((sep.join(children), ))
+    kwargs.pop("into", state.html).extend((kwargs.pop("sep",
+                                                      "").join(children), ))
 
 
 ### LIVEVIEW ###
@@ -325,74 +267,35 @@ def input_(**attrs):
 ### All the elements ###
 
 
-def div_open(*children, **attrs):
-    """
-    >>> into=[]; div_open(9, x=2, into=into); "".join(into)
-    '<div x="2">9'
-    """
-    return element_open("div", children, **attrs)
+def div_start(*children, **attrs):
+    return element_start("div", children, **attrs)
 
 
-def div_close(*children, **kwargs):
-    """
-    >>> into=[]; div_close(1, into=into); "".join(into) 
-    '1</div>'
-    """
-    return element_close("div", children, **kwargs)
+def div_end(*children, **kwargs):
+    return element_end("div", children, **kwargs)
 
 
 def div_ret(*children, **kwargs):
-    """
-    >>> div_ret("WUT?")
-    '<div>WUT?</div>'
-    """
     return element_ret("div", children, **kwargs)
 
 
 @contextmanager
 def div_con(*children, **attrs):
-    """
-    >>> into = []
-    >>> with div_con("x", x=9, into=into):
-    ...     div(1, into=into)
-    >>> "".join(into)
-    '<div x="9">x<div>1</div></div>'
-    """
     for x in element_con("div", children, **attrs):
         yield x
 
 
 def div_dec(*children, **attrs):
-    """
-    >>> into = []
-    >>> @div_dec(1, 2, sep=".", class_=3, into=into)
-    ... def x(y):
-    ...     div(9, y*2, into=into)
-    >>> x(3)
-    >>> "".join(into)
-    '<div class="3">1.2<div>96</div></div>'
-    
-    >>> state.html = []
-    >>> @div_dec(1, 2, sep=".", class_=3)
-    ... def x(y):
-    ...     div(9, y*2)
-    >>> x(3)
-    >>> "".join(state.html)
-    '<div class="3">1.2<div>96</div></div>'
-    """
+    pr(100000, children, attrs)
     return element_dec("div", children, **attrs)
 
 
 def div(*children, **attrs):
-    """
-    >>> into=[]; div("1", class_="2", into=into); "".join(into)
-    '<div class="2">1</div>'
-    """
     return element("div", children, **attrs)
 
 
-div.o = div_open
-div.c = div_close
+div.s = div_start
+div.e = div_end
 div.r = div_ret
 div.c = div_con
 div.d = div_dec
@@ -488,91 +391,66 @@ if __name__ == "__main__":
             return super(Py23DocChecker, self).output_difference(
                 example, got, optionflags)
 
-    global master
-    m = sys.modules.get('__main__')
     finder = DocTestFinder()
     runner = DocTestRunner(checker=Py23DocChecker())
-    for test in finder.find(m, m.__name__):
+    for test in finder.find(sys.modules.get('__main__')):
         runner.run(test)
     runner.summarize()
-    import sys
-    sys.exit()
-
-    # yapf: disable
-    class Cache(object):
-        def __init__(self):
-            self.cache = {}
-
-        def set(self, k, v, ttl):
-            self.cache[k] = v
-
-        def get(self, k):
-            return self.cache.get(k, None)
-    cache_client = Cache()
-
-    _h = None
-    _t = False
-    def test_cache(a, b):
-        global _h, _t
-        _t = False
-        with skippable(), cached(ttl=5, key=test_cache, a=a, b=b) as value:
-            div(*(value.a+value.b), data_hash=value.hash)
-            _h = value.hash
-            _t = True
-
-    assert hypergen(test_cache, (1, 2), (3, 4), cache_client=cache_client)\
-        == '<div data-hash="{}">1234</div>'.format(_h)
-    assert _t is True
-    assert hypergen(test_cache, (1, 2), (3, 4), cache_client=cache_client)\
-        == '<div data-hash="{}">1234</div>'.format(_h)
-    assert _t is False
-    assert hypergen(test_cache, (1, 2), (3, 5), cache_client=cache_client)\
-        == '<div data-hash="{}">1235</div>'.format(_h)
-    assert _t is True
 
     def test_div1():
         div("Hello, world!")
+
     assert hypergen(test_div1) == "<div>Hello, world!</div>"
 
     def test_div2(name):
-        div("Hello", name, class_="its-hyper", data_x=3.14, hidden=True,
-            selected=False, style={"height": 42, "display": "none"}, sep=" ",
+        div("Hello",
+            name,
+            class_="its-hyper",
+            data_x=3.14,
+            hidden=True,
+            selected=False,
+            style={"height": 42,
+                   "display": "none"},
+            sep=" ",
             _sort_attrs=True)
     assert hypergen(test_div2, "hypergen!") == '<div class="its-hyper" '\
         'data-x="3.14" hidden style="display:none;height:42">'\
         'Hello hypergen!</div>'
 
     def test_div3():
-        with div_cm("div", "cm", x=1, sep="_"):
-            div_o(1, 2, y=1, sep="-")
-            div_c(5, 6, sep=" ")
-    assert hypergen(test_div3) == '<div x="1">div_cm<div y="1">1-25 6</div>'\
-        '</div>'
+        with div.c("div", "c", x=1, sep="."):
+            div.s(1, 2, y=1, sep="-")
+            div.e(5, 6, sep=" ")
 
-    def test_div_4():
-        div(x=1)
-    assert hypergen(test_div_4) == ""
+    assert hypergen(test_div3) == '<div x="1">div.c<div y="1">1-25 6</div>'\
+        '</div>'
 
     def test_div_5():
         div(None, x=1)
+
     assert hypergen(test_div_5) == '<div x="1"></div>'
 
-
-    def test_unicorn_class1(x):
+    def test_context_manager(x):
         div("yo", blink="true")
-        with div():
+        with div.c():
             write(1, x)
-    assert hypergen(test_unicorn_class1, 2) == \
+    assert hypergen(test_context_manager, 2) == \
         '<div blink="true">yo</div><div>12</div>'
 
-    @div
-    def test_unicorn_class2(x):
+    @div.d()
+    def test_decorator(x):
         write(19, x)
-    assert hypergen(test_unicorn_class2, 1) == '<div>191</div>'
+
+    #state.html = []
+    #test_decorator(4)
+    #print(state.html)
+    print(333, hypergen(test_decorator, 1))
+    assert hypergen(test_decorator, 1) == '<div>191</div>'
 
     @div(id_=100)
     def test_unicorn_class3(x):
         write("hello", x)
+
     assert hypergen(test_unicorn_class3, 2) == '<div id="100">hello2</div>'
 
     def test_input():
@@ -589,6 +467,7 @@ if __name__ == "__main__":
     def test_liveview_events():
         def callback1(x):
             pass
+
         callback1.hypergen_url = "/hpg/cb1/"
         input_(value=91, onchange=(callback1, 9, [1], True, "foo"))
     assert hypergen(test_liveview_events, id_prefix="I", liveview=True,
