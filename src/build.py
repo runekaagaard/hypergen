@@ -1,5 +1,7 @@
 TEMPLATE = "### TEMPLATE-ELEMENT ###"
 RENDERED = "### RENDERED-ELEMENTS ###"
+TEMPLATE_VOID = "### TEMPLATE-VOID-ELEMENT ###"
+RENDERED_VOID = "### RENDERED-VOID-ELEMENTS ###"
 
 TAGS = [
     'a', 'abbr', 'address', 'article', 'aside', 'audio', 'b', 'bdi', 'bdo',
@@ -12,16 +14,13 @@ TAGS = [
     'q', 'rp', 'rt', 'ruby', 's', 'samp', 'section', 'select', 'small', 'span',
     'strong', 'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'textarea',
     'tfoot', 'th', 'thead', 'time', 'tr', 'u', 'ul', 'var', 'video', 'script',
-    'style', 'html', 'body', 'head', 'link'
+    'style', 'html', 'body', 'head'
 ]
 
 VOID_TAGS = [
-    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'link', 'meta', 'param',
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'meta', 'param',
     'source', 'track', 'wbr', 'command', 'keygen', 'menuitem'
 ]
-
-GLOBALS = globals()
-SUFFIXES = ("sta", "end", "ret", "con", "dec")
 
 code = open("_hypergen.py").read()
 template = code.split(TEMPLATE)[1]
@@ -30,5 +29,15 @@ s = ""
 for tag in TAGS:
     s += template.replace("div", tag)
 
-s = code.replace(RENDERED, s)
-open("hypergen.py", "w").write(s)
+code = code.replace(RENDERED, s)
+
+###
+
+template = code.split(TEMPLATE_VOID)[1]
+s = ""
+for tag in VOID_TAGS:
+    s += template.replace("link", tag)
+
+code = code.replace(RENDERED_VOID, s)
+
+open("hypergen.py", "w").write(code)

@@ -311,9 +311,27 @@ div.e = div_end
 div.r = div_ret
 div.c = div_con
 div.d = div_dec
+
+
 ### TEMPLATE-ELEMENT ###
+### TEMPLATE-VOID-ELEMENT ###
+def link(*children, **attrs):
+    return element("link", children, void=True, **attrs)
+
+
+def link_ret(*children, **attrs):
+    into = []
+    element("link", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+link.r = link_ret
+
+### TEMPLATE-VOID-ELEMENT ###
 
 ### RENDERED-ELEMENTS ###
+
+### RENDERED-VOID-ELEMENTS ###
 
 ### Tests ###
 

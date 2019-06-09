@@ -311,7 +311,23 @@ div.e = div_end
 div.r = div_ret
 div.c = div_con
 div.d = div_dec
+
+
 ### TEMPLATE-ELEMENT ###
+### TEMPLATE-VOID-ELEMENT ###
+def link(*children, **attrs):
+    return element("link", children, void=True, **attrs)
+
+
+def link_ret(*children, **attrs):
+    into = []
+    element("link", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+link.r = link_ret
+
+### TEMPLATE-VOID-ELEMENT ###
 
 
 def a_sta(*children, **attrs):
@@ -346,6 +362,8 @@ a.r = a_ret
 a.c = a_con
 a.d = a_dec
 
+
+
 def abbr_sta(*children, **attrs):
     return element_start("abbr", children, **attrs)
 
@@ -377,6 +395,8 @@ abbr.e = abbr_end
 abbr.r = abbr_ret
 abbr.c = abbr_con
 abbr.d = abbr_dec
+
+
 
 def address_sta(*children, **attrs):
     return element_start("address", children, **attrs)
@@ -410,6 +430,8 @@ address.r = address_ret
 address.c = address_con
 address.d = address_dec
 
+
+
 def article_sta(*children, **attrs):
     return element_start("article", children, **attrs)
 
@@ -441,6 +463,8 @@ article.e = article_end
 article.r = article_ret
 article.c = article_con
 article.d = article_dec
+
+
 
 def aside_sta(*children, **attrs):
     return element_start("aside", children, **attrs)
@@ -474,6 +498,8 @@ aside.r = aside_ret
 aside.c = aside_con
 aside.d = aside_dec
 
+
+
 def audio_sta(*children, **attrs):
     return element_start("audio", children, **attrs)
 
@@ -505,6 +531,8 @@ audio.e = audio_end
 audio.r = audio_ret
 audio.c = audio_con
 audio.d = audio_dec
+
+
 
 def b_sta(*children, **attrs):
     return element_start("b", children, **attrs)
@@ -538,6 +566,8 @@ b.r = b_ret
 b.c = b_con
 b.d = b_dec
 
+
+
 def bdi_sta(*children, **attrs):
     return element_start("bdi", children, **attrs)
 
@@ -569,6 +599,8 @@ bdi.e = bdi_end
 bdi.r = bdi_ret
 bdi.c = bdi_con
 bdi.d = bdi_dec
+
+
 
 def bdo_sta(*children, **attrs):
     return element_start("bdo", children, **attrs)
@@ -602,6 +634,8 @@ bdo.r = bdo_ret
 bdo.c = bdo_con
 bdo.d = bdo_dec
 
+
+
 def blockquote_sta(*children, **attrs):
     return element_start("blockquote", children, **attrs)
 
@@ -634,6 +668,8 @@ blockquote.r = blockquote_ret
 blockquote.c = blockquote_con
 blockquote.d = blockquote_dec
 
+
+
 def body_sta(*children, **attrs):
     return element_start("body", children, **attrs)
 
@@ -665,6 +701,8 @@ body.e = body_end
 body.r = body_ret
 body.c = body_con
 body.d = body_dec
+
+
 
 def button_sta(*children, **attrs):
     return element_start("button", children, **attrs)
@@ -698,6 +736,8 @@ button.r = button_ret
 button.c = button_con
 button.d = button_dec
 
+
+
 def canvas_sta(*children, **attrs):
     return element_start("canvas", children, **attrs)
 
@@ -729,6 +769,8 @@ canvas.e = canvas_end
 canvas.r = canvas_ret
 canvas.c = canvas_con
 canvas.d = canvas_dec
+
+
 
 def caption_sta(*children, **attrs):
     return element_start("caption", children, **attrs)
@@ -762,6 +804,8 @@ caption.r = caption_ret
 caption.c = caption_con
 caption.d = caption_dec
 
+
+
 def cite_sta(*children, **attrs):
     return element_start("cite", children, **attrs)
 
@@ -793,6 +837,8 @@ cite.e = cite_end
 cite.r = cite_ret
 cite.c = cite_con
 cite.d = cite_dec
+
+
 
 def code_sta(*children, **attrs):
     return element_start("code", children, **attrs)
@@ -826,6 +872,8 @@ code.r = code_ret
 code.c = code_con
 code.d = code_dec
 
+
+
 def colgroup_sta(*children, **attrs):
     return element_start("colgroup", children, **attrs)
 
@@ -857,6 +905,8 @@ colgroup.e = colgroup_end
 colgroup.r = colgroup_ret
 colgroup.c = colgroup_con
 colgroup.d = colgroup_dec
+
+
 
 def datalist_sta(*children, **attrs):
     return element_start("datalist", children, **attrs)
@@ -890,6 +940,8 @@ datalist.r = datalist_ret
 datalist.c = datalist_con
 datalist.d = datalist_dec
 
+
+
 def dd_sta(*children, **attrs):
     return element_start("dd", children, **attrs)
 
@@ -921,6 +973,8 @@ dd.e = dd_end
 dd.r = dd_ret
 dd.c = dd_con
 dd.d = dd_dec
+
+
 
 def del__sta(*children, **attrs):
     return element_start("del_", children, **attrs)
@@ -954,6 +1008,8 @@ del_.r = del__ret
 del_.c = del__con
 del_.d = del__dec
 
+
+
 def details_sta(*children, **attrs):
     return element_start("details", children, **attrs)
 
@@ -985,6 +1041,8 @@ details.e = details_end
 details.r = details_ret
 details.c = details_con
 details.d = details_dec
+
+
 
 def dfn_sta(*children, **attrs):
     return element_start("dfn", children, **attrs)
@@ -1018,6 +1076,8 @@ dfn.r = dfn_ret
 dfn.c = dfn_con
 dfn.d = dfn_dec
 
+
+
 def dl_sta(*children, **attrs):
     return element_start("dl", children, **attrs)
 
@@ -1049,6 +1109,8 @@ dl.e = dl_end
 dl.r = dl_ret
 dl.c = dl_con
 dl.d = dl_dec
+
+
 
 def dt_sta(*children, **attrs):
     return element_start("dt", children, **attrs)
@@ -1082,6 +1144,8 @@ dt.r = dt_ret
 dt.c = dt_con
 dt.d = dt_dec
 
+
+
 def em_sta(*children, **attrs):
     return element_start("em", children, **attrs)
 
@@ -1113,6 +1177,8 @@ em.e = em_end
 em.r = em_ret
 em.c = em_con
 em.d = em_dec
+
+
 
 def fieldset_sta(*children, **attrs):
     return element_start("fieldset", children, **attrs)
@@ -1146,6 +1212,8 @@ fieldset.r = fieldset_ret
 fieldset.c = fieldset_con
 fieldset.d = fieldset_dec
 
+
+
 def figcaption_sta(*children, **attrs):
     return element_start("figcaption", children, **attrs)
 
@@ -1177,6 +1245,8 @@ figcaption.e = figcaption_end
 figcaption.r = figcaption_ret
 figcaption.c = figcaption_con
 figcaption.d = figcaption_dec
+
+
 
 def figure_sta(*children, **attrs):
     return element_start("figure", children, **attrs)
@@ -1210,6 +1280,8 @@ figure.r = figure_ret
 figure.c = figure_con
 figure.d = figure_dec
 
+
+
 def footer_sta(*children, **attrs):
     return element_start("footer", children, **attrs)
 
@@ -1241,6 +1313,8 @@ footer.e = footer_end
 footer.r = footer_ret
 footer.c = footer_con
 footer.d = footer_dec
+
+
 
 def form_sta(*children, **attrs):
     return element_start("form", children, **attrs)
@@ -1274,6 +1348,8 @@ form.r = form_ret
 form.c = form_con
 form.d = form_dec
 
+
+
 def h1_sta(*children, **attrs):
     return element_start("h1", children, **attrs)
 
@@ -1305,6 +1381,8 @@ h1.e = h1_end
 h1.r = h1_ret
 h1.c = h1_con
 h1.d = h1_dec
+
+
 
 def h2_sta(*children, **attrs):
     return element_start("h2", children, **attrs)
@@ -1338,6 +1416,8 @@ h2.r = h2_ret
 h2.c = h2_con
 h2.d = h2_dec
 
+
+
 def h3_sta(*children, **attrs):
     return element_start("h3", children, **attrs)
 
@@ -1369,6 +1449,8 @@ h3.e = h3_end
 h3.r = h3_ret
 h3.c = h3_con
 h3.d = h3_dec
+
+
 
 def h4_sta(*children, **attrs):
     return element_start("h4", children, **attrs)
@@ -1402,6 +1484,8 @@ h4.r = h4_ret
 h4.c = h4_con
 h4.d = h4_dec
 
+
+
 def h5_sta(*children, **attrs):
     return element_start("h5", children, **attrs)
 
@@ -1433,6 +1517,8 @@ h5.e = h5_end
 h5.r = h5_ret
 h5.c = h5_con
 h5.d = h5_dec
+
+
 
 def h6_sta(*children, **attrs):
     return element_start("h6", children, **attrs)
@@ -1466,6 +1552,8 @@ h6.r = h6_ret
 h6.c = h6_con
 h6.d = h6_dec
 
+
+
 def header_sta(*children, **attrs):
     return element_start("header", children, **attrs)
 
@@ -1498,6 +1586,8 @@ header.r = header_ret
 header.c = header_con
 header.d = header_dec
 
+
+
 def html_sta(*children, **attrs):
     return element_start("html", children, **attrs)
 
@@ -1529,6 +1619,8 @@ html.e = html_end
 html.r = html_ret
 html.c = html_con
 html.d = html_dec
+
+
 
 def i_sta(*children, **attrs):
     return element_start("i", children, **attrs)
@@ -1562,6 +1654,8 @@ i.r = i_ret
 i.c = i_con
 i.d = i_dec
 
+
+
 def iframe_sta(*children, **attrs):
     return element_start("iframe", children, **attrs)
 
@@ -1593,6 +1687,8 @@ iframe.e = iframe_end
 iframe.r = iframe_ret
 iframe.c = iframe_con
 iframe.d = iframe_dec
+
+
 
 def ins_sta(*children, **attrs):
     return element_start("ins", children, **attrs)
@@ -1626,6 +1722,8 @@ ins.r = ins_ret
 ins.c = ins_con
 ins.d = ins_dec
 
+
+
 def kbd_sta(*children, **attrs):
     return element_start("kbd", children, **attrs)
 
@@ -1657,6 +1755,8 @@ kbd.e = kbd_end
 kbd.r = kbd_ret
 kbd.c = kbd_con
 kbd.d = kbd_dec
+
+
 
 def keygen_sta(*children, **attrs):
     return element_start("keygen", children, **attrs)
@@ -1690,6 +1790,8 @@ keygen.r = keygen_ret
 keygen.c = keygen_con
 keygen.d = keygen_dec
 
+
+
 def label_sta(*children, **attrs):
     return element_start("label", children, **attrs)
 
@@ -1721,6 +1823,8 @@ label.e = label_end
 label.r = label_ret
 label.c = label_con
 label.d = label_dec
+
+
 
 def legend_sta(*children, **attrs):
     return element_start("legend", children, **attrs)
@@ -1754,6 +1858,8 @@ legend.r = legend_ret
 legend.c = legend_con
 legend.d = legend_dec
 
+
+
 def li_sta(*children, **attrs):
     return element_start("li", children, **attrs)
 
@@ -1785,6 +1891,8 @@ li.e = li_end
 li.r = li_ret
 li.c = li_con
 li.d = li_dec
+
+
 
 def main_sta(*children, **attrs):
     return element_start("main", children, **attrs)
@@ -1818,6 +1926,8 @@ main.r = main_ret
 main.c = main_con
 main.d = main_dec
 
+
+
 def map_sta(*children, **attrs):
     return element_start("map", children, **attrs)
 
@@ -1849,6 +1959,8 @@ map.e = map_end
 map.r = map_ret
 map.c = map_con
 map.d = map_dec
+
+
 
 def mark_sta(*children, **attrs):
     return element_start("mark", children, **attrs)
@@ -1882,6 +1994,8 @@ mark.r = mark_ret
 mark.c = mark_con
 mark.d = mark_dec
 
+
+
 def menu_sta(*children, **attrs):
     return element_start("menu", children, **attrs)
 
@@ -1913,6 +2027,8 @@ menu.e = menu_end
 menu.r = menu_ret
 menu.c = menu_con
 menu.d = menu_dec
+
+
 
 def meter_sta(*children, **attrs):
     return element_start("meter", children, **attrs)
@@ -1946,6 +2062,8 @@ meter.r = meter_ret
 meter.c = meter_con
 meter.d = meter_dec
 
+
+
 def nav_sta(*children, **attrs):
     return element_start("nav", children, **attrs)
 
@@ -1977,6 +2095,8 @@ nav.e = nav_end
 nav.r = nav_ret
 nav.c = nav_con
 nav.d = nav_dec
+
+
 
 def object_sta(*children, **attrs):
     return element_start("object", children, **attrs)
@@ -2010,6 +2130,8 @@ object.r = object_ret
 object.c = object_con
 object.d = object_dec
 
+
+
 def ol_sta(*children, **attrs):
     return element_start("ol", children, **attrs)
 
@@ -2041,6 +2163,8 @@ ol.e = ol_end
 ol.r = ol_ret
 ol.c = ol_con
 ol.d = ol_dec
+
+
 
 def optgroup_sta(*children, **attrs):
     return element_start("optgroup", children, **attrs)
@@ -2074,6 +2198,8 @@ optgroup.r = optgroup_ret
 optgroup.c = optgroup_con
 optgroup.d = optgroup_dec
 
+
+
 def option_sta(*children, **attrs):
     return element_start("option", children, **attrs)
 
@@ -2105,6 +2231,8 @@ option.e = option_end
 option.r = option_ret
 option.c = option_con
 option.d = option_dec
+
+
 
 def output_sta(*children, **attrs):
     return element_start("output", children, **attrs)
@@ -2138,6 +2266,8 @@ output.r = output_ret
 output.c = output_con
 output.d = output_dec
 
+
+
 def p_sta(*children, **attrs):
     return element_start("p", children, **attrs)
 
@@ -2169,6 +2299,8 @@ p.e = p_end
 p.r = p_ret
 p.c = p_con
 p.d = p_dec
+
+
 
 def pre_sta(*children, **attrs):
     return element_start("pre", children, **attrs)
@@ -2202,6 +2334,8 @@ pre.r = pre_ret
 pre.c = pre_con
 pre.d = pre_dec
 
+
+
 def progress_sta(*children, **attrs):
     return element_start("progress", children, **attrs)
 
@@ -2233,6 +2367,8 @@ progress.e = progress_end
 progress.r = progress_ret
 progress.c = progress_con
 progress.d = progress_dec
+
+
 
 def q_sta(*children, **attrs):
     return element_start("q", children, **attrs)
@@ -2266,6 +2402,8 @@ q.r = q_ret
 q.c = q_con
 q.d = q_dec
 
+
+
 def rp_sta(*children, **attrs):
     return element_start("rp", children, **attrs)
 
@@ -2297,6 +2435,8 @@ rp.e = rp_end
 rp.r = rp_ret
 rp.c = rp_con
 rp.d = rp_dec
+
+
 
 def rt_sta(*children, **attrs):
     return element_start("rt", children, **attrs)
@@ -2330,6 +2470,8 @@ rt.r = rt_ret
 rt.c = rt_con
 rt.d = rt_dec
 
+
+
 def ruby_sta(*children, **attrs):
     return element_start("ruby", children, **attrs)
 
@@ -2361,6 +2503,8 @@ ruby.e = ruby_end
 ruby.r = ruby_ret
 ruby.c = ruby_con
 ruby.d = ruby_dec
+
+
 
 def s_sta(*children, **attrs):
     return element_start("s", children, **attrs)
@@ -2394,6 +2538,8 @@ s.r = s_ret
 s.c = s_con
 s.d = s_dec
 
+
+
 def samp_sta(*children, **attrs):
     return element_start("samp", children, **attrs)
 
@@ -2425,6 +2571,8 @@ samp.e = samp_end
 samp.r = samp_ret
 samp.c = samp_con
 samp.d = samp_dec
+
+
 
 def section_sta(*children, **attrs):
     return element_start("section", children, **attrs)
@@ -2458,6 +2606,8 @@ section.r = section_ret
 section.c = section_con
 section.d = section_dec
 
+
+
 def select_sta(*children, **attrs):
     return element_start("select", children, **attrs)
 
@@ -2489,6 +2639,8 @@ select.e = select_end
 select.r = select_ret
 select.c = select_con
 select.d = select_dec
+
+
 
 def small_sta(*children, **attrs):
     return element_start("small", children, **attrs)
@@ -2522,6 +2674,8 @@ small.r = small_ret
 small.c = small_con
 small.d = small_dec
 
+
+
 def span_sta(*children, **attrs):
     return element_start("span", children, **attrs)
 
@@ -2553,6 +2707,8 @@ span.e = span_end
 span.r = span_ret
 span.c = span_con
 span.d = span_dec
+
+
 
 def strong_sta(*children, **attrs):
     return element_start("strong", children, **attrs)
@@ -2586,6 +2742,8 @@ strong.r = strong_ret
 strong.c = strong_con
 strong.d = strong_dec
 
+
+
 def sub_sta(*children, **attrs):
     return element_start("sub", children, **attrs)
 
@@ -2617,6 +2775,8 @@ sub.e = sub_end
 sub.r = sub_ret
 sub.c = sub_con
 sub.d = sub_dec
+
+
 
 def summary_sta(*children, **attrs):
     return element_start("summary", children, **attrs)
@@ -2650,6 +2810,8 @@ summary.r = summary_ret
 summary.c = summary_con
 summary.d = summary_dec
 
+
+
 def sup_sta(*children, **attrs):
     return element_start("sup", children, **attrs)
 
@@ -2681,6 +2843,8 @@ sup.e = sup_end
 sup.r = sup_ret
 sup.c = sup_con
 sup.d = sup_dec
+
+
 
 def table_sta(*children, **attrs):
     return element_start("table", children, **attrs)
@@ -2714,6 +2878,8 @@ table.r = table_ret
 table.c = table_con
 table.d = table_dec
 
+
+
 def tbody_sta(*children, **attrs):
     return element_start("tbody", children, **attrs)
 
@@ -2745,6 +2911,8 @@ tbody.e = tbody_end
 tbody.r = tbody_ret
 tbody.c = tbody_con
 tbody.d = tbody_dec
+
+
 
 def td_sta(*children, **attrs):
     return element_start("td", children, **attrs)
@@ -2778,6 +2946,8 @@ td.r = td_ret
 td.c = td_con
 td.d = td_dec
 
+
+
 def textarea_sta(*children, **attrs):
     return element_start("textarea", children, **attrs)
 
@@ -2809,6 +2979,8 @@ textarea.e = textarea_end
 textarea.r = textarea_ret
 textarea.c = textarea_con
 textarea.d = textarea_dec
+
+
 
 def tfoot_sta(*children, **attrs):
     return element_start("tfoot", children, **attrs)
@@ -2842,6 +3014,8 @@ tfoot.r = tfoot_ret
 tfoot.c = tfoot_con
 tfoot.d = tfoot_dec
 
+
+
 def th_sta(*children, **attrs):
     return element_start("th", children, **attrs)
 
@@ -2873,6 +3047,8 @@ th.e = th_end
 th.r = th_ret
 th.c = th_con
 th.d = th_dec
+
+
 
 def thead_sta(*children, **attrs):
     return element_start("thead", children, **attrs)
@@ -2906,6 +3082,8 @@ thead.r = thead_ret
 thead.c = thead_con
 thead.d = thead_dec
 
+
+
 def time_sta(*children, **attrs):
     return element_start("time", children, **attrs)
 
@@ -2937,6 +3115,8 @@ time.e = time_end
 time.r = time_ret
 time.c = time_con
 time.d = time_dec
+
+
 
 def tr_sta(*children, **attrs):
     return element_start("tr", children, **attrs)
@@ -2970,6 +3150,8 @@ tr.r = tr_ret
 tr.c = tr_con
 tr.d = tr_dec
 
+
+
 def u_sta(*children, **attrs):
     return element_start("u", children, **attrs)
 
@@ -3001,6 +3183,8 @@ u.e = u_end
 u.r = u_ret
 u.c = u_con
 u.d = u_dec
+
+
 
 def ul_sta(*children, **attrs):
     return element_start("ul", children, **attrs)
@@ -3034,6 +3218,8 @@ ul.r = ul_ret
 ul.c = ul_con
 ul.d = ul_dec
 
+
+
 def var_sta(*children, **attrs):
     return element_start("var", children, **attrs)
 
@@ -3065,6 +3251,8 @@ var.e = var_end
 var.r = var_ret
 var.c = var_con
 var.d = var_dec
+
+
 
 def video_sta(*children, **attrs):
     return element_start("video", children, **attrs)
@@ -3098,6 +3286,8 @@ video.r = video_ret
 video.c = video_con
 video.d = video_dec
 
+
+
 def script_sta(*children, **attrs):
     return element_start("script", children, **attrs)
 
@@ -3129,6 +3319,8 @@ script.e = script_end
 script.r = script_ret
 script.c = script_con
 script.d = script_dec
+
+
 
 def style_sta(*children, **attrs):
     return element_start("style", children, **attrs)
@@ -3162,6 +3354,8 @@ style.r = style_ret
 style.c = style_con
 style.d = style_dec
 
+
+
 def html_sta(*children, **attrs):
     return element_start("html", children, **attrs)
 
@@ -3193,6 +3387,8 @@ html.e = html_end
 html.r = html_ret
 html.c = html_con
 html.d = html_dec
+
+
 
 def body_sta(*children, **attrs):
     return element_start("body", children, **attrs)
@@ -3226,6 +3422,8 @@ body.r = body_ret
 body.c = body_con
 body.d = body_dec
 
+
+
 def head_sta(*children, **attrs):
     return element_start("head", children, **attrs)
 
@@ -3258,37 +3456,204 @@ head.r = head_ret
 head.c = head_con
 head.d = head_dec
 
-def link_sta(*children, **attrs):
-    return element_start("link", children, **attrs)
 
 
-def link_end(*children, **kwargs):
-    return element_end("link", children, **kwargs)
 
 
-def link_ret(*children, **kwargs):
-    return element_ret("link", children, **kwargs)
+def area(*children, **attrs):
+    return element("area", children, void=True, **attrs)
 
 
-@contextmanager
-def link_con(*children, **attrs):
-    for x in element_con("link", children, **attrs):
-        yield x
+def area_ret(*children, **attrs):
+    into = []
+    element("area", children, void=True, into=into, **attrs)
+    return "".join(into)
 
 
-def link_dec(*children, **attrs):
-    return element_dec("link", children, **attrs)
+area.r = area_ret
 
 
-def link(*children, **attrs):
-    return element("link", children, **attrs)
+def base(*children, **attrs):
+    return element("base", children, void=True, **attrs)
 
 
-link.s = link_sta
-link.e = link_end
-link.r = link_ret
-link.c = link_con
-link.d = link_dec
+def base_ret(*children, **attrs):
+    into = []
+    element("base", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+base.r = base_ret
+
+
+def br(*children, **attrs):
+    return element("br", children, void=True, **attrs)
+
+
+def br_ret(*children, **attrs):
+    into = []
+    element("br", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+br.r = br_ret
+
+
+def col(*children, **attrs):
+    return element("col", children, void=True, **attrs)
+
+
+def col_ret(*children, **attrs):
+    into = []
+    element("col", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+col.r = col_ret
+
+
+def embed(*children, **attrs):
+    return element("embed", children, void=True, **attrs)
+
+
+def embed_ret(*children, **attrs):
+    into = []
+    element("embed", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+embed.r = embed_ret
+
+
+def hr(*children, **attrs):
+    return element("hr", children, void=True, **attrs)
+
+
+def hr_ret(*children, **attrs):
+    into = []
+    element("hr", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+hr.r = hr_ret
+
+
+def img(*children, **attrs):
+    return element("img", children, void=True, **attrs)
+
+
+def img_ret(*children, **attrs):
+    into = []
+    element("img", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+img.r = img_ret
+
+
+def meta(*children, **attrs):
+    return element("meta", children, void=True, **attrs)
+
+
+def meta_ret(*children, **attrs):
+    into = []
+    element("meta", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+meta.r = meta_ret
+
+
+def param(*children, **attrs):
+    return element("param", children, void=True, **attrs)
+
+
+def param_ret(*children, **attrs):
+    into = []
+    element("param", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+param.r = param_ret
+
+
+def source(*children, **attrs):
+    return element("source", children, void=True, **attrs)
+
+
+def source_ret(*children, **attrs):
+    into = []
+    element("source", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+source.r = source_ret
+
+
+def track(*children, **attrs):
+    return element("track", children, void=True, **attrs)
+
+
+def track_ret(*children, **attrs):
+    into = []
+    element("track", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+track.r = track_ret
+
+
+def wbr(*children, **attrs):
+    return element("wbr", children, void=True, **attrs)
+
+
+def wbr_ret(*children, **attrs):
+    into = []
+    element("wbr", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+wbr.r = wbr_ret
+
+
+def command(*children, **attrs):
+    return element("command", children, void=True, **attrs)
+
+
+def command_ret(*children, **attrs):
+    into = []
+    element("command", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+command.r = command_ret
+
+
+def keygen(*children, **attrs):
+    return element("keygen", children, void=True, **attrs)
+
+
+def keygen_ret(*children, **attrs):
+    into = []
+    element("keygen", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+keygen.r = keygen_ret
+
+
+def menuitem(*children, **attrs):
+    return element("menuitem", children, void=True, **attrs)
+
+
+def menuitem_ret(*children, **attrs):
+    into = []
+    element("menuitem", children, void=True, into=into, **attrs)
+    return "".join(into)
+
+
+menuitem.r = menuitem_ret
+
 
 
 ### Tests ###
