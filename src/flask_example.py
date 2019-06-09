@@ -21,8 +21,8 @@ def base_template(content_func):
     raw("<!DOCTYPE html>")
     with html.c():
         with head.c():
-            link(href=NORMALISE, rel="stylesheet", type_="text/css")
-            link(href=SAKURA, rel="stylesheet", type_="text/css")
+            #link(href=NORMALISE, rel="stylesheet", type_="text/css")
+            #link(href=SAKURA, rel="stylesheet", type_="text/css")
             script(src=JQUERY)
             with script.c(), open("hypergen.js") as f:
                 raw(f.read())

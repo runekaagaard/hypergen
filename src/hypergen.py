@@ -315,7 +315,8 @@ TAGS = [
     'nav', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'pre',
     'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'section', 'select',
     'small', 'span', 'strong', 'sub', 'summary', 'sup', 'table', 'tbody', 'td',
-    'textarea', 'tfoot', 'th', 'thead', 'time', 'tr', 'u', 'ul', 'var', 'video'
+    'textarea', 'tfoot', 'th', 'thead', 'time', 'tr', 'u', 'ul', 'var',
+    'video', 'script', 'style', 'html', 'body', 'head', 'link'
 ]
 
 VOID_TAGS = [
