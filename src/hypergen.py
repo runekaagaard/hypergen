@@ -1,21 +1,25 @@
 # coding=utf-8
 from __future__ import (absolute_import, division, unicode_literals)
+
 import string, sys, json
 from threading import local
 from contextlib import contextmanager
 from collections import OrderedDict
 from functools import wraps
+from copy import copy
 
 ### Python 2+3 compatibility ###
 
 if sys.version_info.major > 2:
     from html import escape
+    letters = string.ascii_letters
 
     def items(x):
         return x.items()
 
 else:
     from cgi import escape
+    letters = string.letters
     str = unicode
 
     def items(x):
@@ -31,6 +35,7 @@ UPDATE = 1
 
 
 def hypergen(func, *args, **kwargs):
+    kwargs = copy(kwargs)
     auto_id = kwargs.pop("auto_id", False)
     try:
         state.html = []
@@ -38,7 +43,7 @@ def hypergen(func, *args, **kwargs):
         state.id_counter = base65_counter() if auto_id else None
         state.id_prefix = (kwargs.pop("id_prefix") + "."
                            if "id_prefix" in kwargs else "")
-        state.auto_id = kwargs.pop("auto_id", False)
+        state.auto_id = auto_id
         state.target_id = target_id = kwargs.pop("target_id", False)
         state.liveview = kwargs.pop("liveview", False)
         as_deltas = kwargs.pop("as_deltas", False)
@@ -99,7 +104,7 @@ def element_start(tag,
 
     if into is None:
         into = state.html
-    attrs = sort_attrs(attrs)
+    attrs = sort_attrs(copy(attrs))
     e = into.extend
 
     e(("<", tag))
@@ -133,7 +138,8 @@ def element_end(tag, children, **kwargs):
 
 def element(tag, children, **attrs):
     element_start(tag, children, **attrs)
-    element_end(tag, [], **attrs)
+    if not attrs.get("void", False):
+        element_end(tag, [], **attrs)
 
 
 def element_ret(tag, children, **attrs):
@@ -151,6 +157,7 @@ def element_con(tag, children, **attrs):
 
 def element_dec(tag, children, **attrs):
     def _(f):
+        @wraps(f)
         def __(*args, **kwargs):
             element_start(tag, children, **attrs)
             f(*args, **kwargs)
@@ -222,7 +229,7 @@ class Safe(str):
 
 def base65_counter():
     # THX: https://stackoverflow.com/a/49710563/164449
-    abc = string.letters + string.digits + "-_:"
+    abc = letters + string.digits + "-_:"
     base = len(abc)
     i = -1
     while True:
@@ -253,19 +260,20 @@ def input_(**attrs):
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
     if state.liveview:
+        assert attrs.get("id_"), "Needs an id to use an input with liveview."
         type_ = attrs.get("type_", "text")
-        liveview_arg = attrs["liveview_arg"] = [
+        attrs["liveview_arg"] = [
             "H_", INPUT_TYPES.get(type_, "s"), attrs["id_"]
         ]
-    element_void("input", **attrs)
+    element("input", [], void=True, **attrs)
 
-    return Bunch({"liveview_arg": attrs["liveview_arg"]})
+    return Bunch(attrs)
 
 
 ### All the elements ###
 
 
-def div_start(*children, **attrs):
+def div_sta(*children, **attrs):
     return element_start("div", children, **attrs)
 
 
@@ -291,71 +299,39 @@ def div(*children, **attrs):
     return element("div", children, **attrs)
 
 
-div.s = div_start
+div.s = div_sta
 div.e = div_end
 div.r = div_ret
 div.c = div_con
 div.d = div_dec
 
-# class div(element):
-#     tag = "div"
+TAGS = [
+    'a', 'abbr', 'address', 'article', 'aside', 'audio', 'b', 'bdi', 'bdo',
+    'blockquote', 'body', 'button', 'canvas', 'caption', 'cite', 'code',
+    'colgroup', 'datalist', 'dd', 'del', 'details', 'dfn', 'div', 'dl', 'dt',
+    'em', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2',
+    'h3', 'h4', 'h5', 'h6', 'header', 'html', 'i', 'iframe', 'ins', 'kbd',
+    'keygen', 'label', 'legend', 'li', 'main', 'map', 'mark', 'menu', 'meter',
+    'nav', 'object', 'ol', 'optgroup', 'option', 'output', 'p', 'pre',
+    'progress', 'q', 'rp', 'rt', 'ruby', 's', 'samp', 'section', 'select',
+    'small', 'span', 'strong', 'sub', 'summary', 'sup', 'table', 'tbody', 'td',
+    'textarea', 'tfoot', 'th', 'thead', 'time', 'tr', 'u', 'ul', 'var', 'video'
+]
 
-# class p(element):
-#     tag = "p"
+VOID_TAGS = [
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta',
+    'param', 'source', 'track', 'wbr', 'command', 'keygen', 'menuitem'
+]
 
-# class h1(element):
-#     tag = "h1"
-
-# class ul(element):
-#     tag = "ul"
-
-# class li(element):
-#     tag = "li"
-
-# class code(element):
-#     tag = "code"
-
-# class pre(element):
-#     tag = "pre"
-
-# class table(element):
-#     tag = "table"
-
-# class tr(element):
-#     tag = "tr"
-
-# class th(element):
-#     tag = "th"
-
-# class td(element):
-#     tag = "td"
-
-# class a(element):
-#     tag = "a"
-
-# class label(element):
-#     tag = "label"
-
-# class html(element):
-#     tag = "html"
-
-# class head(element):
-#     tag = "head"
-
-# class body(element):
-#     tag = "body"
-
-# class script(element):
-#     tag = "script"
-#     attr_forces_eval = ("src", )
-
-# class style(element):
-#     tag = "style"
-#     attr_forces_eval = ("href", )
-
-# class link(element):
-#     tag = "link"
-#     attr_forces_eval = ("href", )
+GLOBALS = globals()
+FN_NAMES = ("sta", "end", "ret", "con", "dec")
+for tag in TAGS:
+    GLOBALS[tag] = div
+    for fn_name in FN_NAMES:
+        name1 = tag + "_" + fn_name
+        name2 = "div" + "_" + fn_name
+        GLOBALS[name1] = GLOBALS[name2]
+        setattr(GLOBALS[name1], fn_name[0], GLOBALS[name2])
 
 ### Tests ###
 
@@ -410,11 +386,13 @@ if __name__ == "__main__":
                     1) == '<div class="f">1<div y="4">23</div></div>'
 
     def test_input():
-        input_(value=1)
-        input_(value=2, id_="custom")
-        input_(value=3, type="number")
+        input_(value=1, _sort_attrs=True)
+        input_(value=2, id_="custom", _sort_attrs=True)
+        input_(value=3, type="number", _sort_attrs=True)
+
     assert hypergen(test_input, id_prefix="t9") == '<input value="1"/><input '\
         'id="t9.custom" value="2"/><input type="number" value="3"/>'
+
     assert hypergen(test_input, id_prefix="e", liveview=True,
                     auto_id=True) == '<input '\
         'id="e.a" value="1"/><input id="e.custom" value="2"/><input '\
@@ -425,7 +403,10 @@ if __name__ == "__main__":
             pass
 
         callback1.hypergen_url = "/hpg/cb1/"
-        input_(value=91, onchange=(callback1, 9, [1], True, "foo"))
+        input_(
+            value=91,
+            onchange=(callback1, 9, [1], True, "foo"),
+            _sort_attrs=True)
     assert hypergen(test_liveview_events, id_prefix="I", liveview=True,
                     auto_id=True) == \
         '<input id="I.a" onchange="H(&quot;/hpg/cb1/&quot;,9,[1],true,&quot;'\
