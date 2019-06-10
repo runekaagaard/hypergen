@@ -16,6 +16,8 @@ JQUERY = "https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"
 app = Flask(__name__)
 i = 0
 
+### Shared base ###
+
 
 def base_template(content_func):
     raw("<!DOCTYPE html>")
@@ -31,6 +33,23 @@ def base_template(content_func):
             div(a.r("Home", href=url_for("index")))
             with div.c(id_="content"):
                 content_func()
+
+
+### Home ###
+
+
+@app.route('/')
+def index():
+    def template():
+        h1("Browse the following examples")
+        ul(
+            li.r(a.r("Basic counter", href=url_for("counter"))),
+            li.r(a.r("Input fields", href=url_for("inputs"))), )
+
+    return hypergen(base_template, template)
+
+
+### Counter ###
 
 
 def counter_template(i, inc=1):
@@ -54,6 +73,8 @@ def increase_counter(inc):
 def counter():
     return hypergen(base_template, partial(counter_template, i))
 
+
+### Inputs ###
 
 INPUT_TYPES = [
     "button", "checkbox", "color", "date", "datetime", "datetime-local",
@@ -92,12 +113,15 @@ def inputs():
     return hypergen(base_template, template)
 
 
-@app.route('/')
-def index():
-    def template():
-        h1("Browse the following examples")
-        ul(
-            li.r(a.r("Basic counter", href=url_for("counter"))),
-            li.r(a.r("Input fields", href=url_for("inputs"))), )
+### Petals around the rose ###
+PETALS = {3: 2, 5: 4}
+RULES = """
+There are three rules:
+    1) The name of the game is "Petals Around the Rose, 
+       and the name of the game is the key to the game.
+    2) The answer is always zero or an even number.
+    3) Anyone who knows the game may give the answer to 
+       any roll, but they must not disclose the reasoning.
 
-    return hypergen(base_template, template)
+Get six correct answers in a row to become a Potentate of the Rose.
+"""
