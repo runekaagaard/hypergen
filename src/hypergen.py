@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from collections import OrderedDict
 from functools import wraps
 from copy import copy
+from types import GeneratorType
 
 ### Python 2+3 compatibility ###
 
@@ -173,10 +174,15 @@ def element_dec(tag, children, **attrs):
 
 def write(*children, **kwargs):
     into = kwargs.get("into", state.html)
-    into.extend((t(kwargs.get("sep", "")).join((t(x) if
-                                                not isinstance(x, Safe) else x)
-                                               for x in children
-                                               if x is not None), ))
+    items = []
+    for x in children:
+        if type(x) in (list, tuple, GeneratorType):
+            items.extend(t(y) for y in list(x))
+        elif x is None:
+            continue
+        else:
+            items.append(t(x))
+    into.extend(t(kwargs.get("sep", "")).join(x for x in items))
 
 
 def raw(*children, **kwargs):
@@ -220,7 +226,7 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
 
 
 def t(s, quote=True):
-    return escape(str(s), quote=quote)
+    return s if type(s) is Safe else escape(str(s), quote=quote)
 
 
 class Safe(str):
@@ -3734,3 +3740,10 @@ if __name__ == "__main__":
                     auto_id=True) == \
         '<input id="I.a" onchange="H(&quot;/hpg/cb1/&quot;,9,[1],true,&quot;'\
         'foo&quot;)" value="91"/>'
+
+    def test_collections_as_children():
+        div((div.r(x) for x in [3]), [1], (2, ))
+
+    print(hypergen(test_collections_as_children))
+    assert hypergen(
+        test_collections_as_children) == '<div><div>3</div>12</div>'
