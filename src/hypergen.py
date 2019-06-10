@@ -3744,6 +3744,5 @@ if __name__ == "__main__":
     def test_collections_as_children():
         div((div.r(x) for x in [3]), [1], (2, ))
 
-    print(hypergen(test_collections_as_children))
     assert hypergen(
         test_collections_as_children) == '<div><div>3</div>12</div>'
