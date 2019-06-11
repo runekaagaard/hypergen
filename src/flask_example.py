@@ -18,6 +18,7 @@ from itertools import takewhile
 NORMALISE = "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
 SAKURA = "https://unpkg.com/sakura.css/css/sakura.css"
 JQUERY = "https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"
+MORPHDOM = "https://cdn.jsdelivr.net/npm/morphdom@2.5.4/dist/morphdom.min.js"
 
 app = Flask(__name__)
 i = 0
@@ -31,6 +32,8 @@ def base_template(content_func):
             link(href=NORMALISE, rel="stylesheet", type_="text/css")
             link(href=SAKURA, rel="stylesheet", type_="text/css")
             script(src=JQUERY)
+            script("module = {}")
+            script(src=MORPHDOM)
             with script.c(), open("hypergen.js") as f:
                 raw(f.read())
 
@@ -38,6 +41,7 @@ def base_template(content_func):
             div(a.r("Home", href=url_for("index")))
             with div.c(id_="content"):
                 content_func()
+            div(id_="content2")
 
 
 ### Home ###
@@ -153,7 +157,7 @@ def petals_template():
 
     with p.c():
         label("Whats the answer?")
-        answer = input_(type_="number")
+        answer = input_(type_="number", name="answer", id_="petal-answer-input")
         button("Submit", onclick=(petal_answer, answer))
         span("Streak: ", streak, sep=" ", style="margin-left: 8px")
 

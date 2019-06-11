@@ -50,7 +50,11 @@ function H() {
       if (data === null) return
       for (let [cmd, target_id, html] of data) {
         if (cmd === UPDATE) {
-          $("#" + target_id).html(html)
+          var el1 = document.getElementById("conent")
+          var el2 = document.getElementById("content2")
+          el2.innerHTML = html
+          morphdom(el1, el2, {childrenOnly: true})
+          el2.innerHTML = ""
         } else {
           throw("Unknown command: " + cmd)
         }
