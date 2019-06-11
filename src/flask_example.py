@@ -11,7 +11,7 @@ from hypergen import (flask_liveview_hypergen as hypergen,
                       flask_liveview_callback_route as callback_route, div,
                       input_, script, raw, label, p, h1, ul, li, a, html, head,
                       body, link, table, tr, th, td, THIS, pre, section, ol,
-                      write, span, button, b)
+                      write, span, button, b, skippable)
 from random import randint
 from itertools import takewhile
 
@@ -23,7 +23,6 @@ app = Flask(__name__)
 i = 0
 
 ### Shared base ###
-
 
 def base_template(content_func):
     raw("<!DOCTYPE html>")
@@ -43,7 +42,6 @@ def base_template(content_func):
 
 ### Home ###
 
-
 @app.route('/')
 def index():
     def template():
@@ -57,7 +55,6 @@ def index():
 
 
 ### Counter ###
-
 
 def counter_template(i, inc=1):
     h1("The counter is: ", i)
@@ -121,6 +118,7 @@ def inputs():
 
 
 ### Petals around the rose ###
+
 PETALS = {3: 2, 5: 4}
 DIES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"]
 RULES = (
@@ -150,7 +148,7 @@ def petals_template():
 
     write(DESCRIPTION)
     if streak > 5:
-        p(b("Congrats. You are now a potentiate of the rose! Hush, it's a secret."))
+        p(b("Congrats! You are now a Potentate of the Rose. Hush."))
     p(dies(QUESTIONS[0]))
 
     with p.c():
@@ -159,8 +157,8 @@ def petals_template():
         button("Submit", onclick=(petal_answer, answer))
         span("Streak: ", streak, sep=" ", style="margin-left: 8px")
 
-    with table.c():
-        tr(th.r(x) for x in ("Throw", "Answer", "Correct answer"))
+    with skippable(), table.c(when=len(ANSWERS) > 1):
+        tr(th.r(x) for x in ("Throw", "Your answer", "Correct answer"))
         for question, answer in zip(QUESTIONS[1:], ANSWERS[1:]):
             tr(td.r(x) for x in (dies(question, "30px"), answer, facit(question)))
 

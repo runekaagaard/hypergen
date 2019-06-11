@@ -67,6 +67,19 @@ def hypergen(func, *args, **kwargs):
 
 hypergen(lambda: None)
 
+
+class SkipException(Exception):
+    pass
+
+
+@contextmanager
+def skippable():
+    try:
+        yield
+    except SkipException:
+        pass
+
+
 ### Building HTML, internal API ###
 
 
@@ -77,6 +90,7 @@ def element_start(tag,
                   void=False,
                   liveview=None,
                   liveview_arg=None,
+                  when=True,
                   **attrs):
     def get_liveview_arg(x, liveview_arg):
         if x == THIS:
@@ -99,6 +113,9 @@ def element_start(tag,
                     for k in sorted(attrs["style"].keys()))
 
         return attrs
+
+    if when is False:
+        raise SkipException()
 
     if liveview is None:
         liveview = state.liveview
