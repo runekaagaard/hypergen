@@ -149,7 +149,7 @@ def petals_template():
                                 zip(QUESTIONS[1:], ANSWERS[1:]))))
 
     write(DESCRIPTION)
-    if streak < 5:
+    if streak > 5:
         p(b("Congrats. You are now a potentiate of the rose! Hush, it's a secret."))
     p(dies(QUESTIONS[0]))
 
@@ -162,7 +162,7 @@ def petals_template():
     with table.c():
         tr(th.r(x) for x in ("Throw", "Answer", "Correct answer"))
         for question, answer in zip(QUESTIONS[1:], ANSWERS[1:]):
-            tr(td.r(x) for x in (dies(question, 25), answer, facit(question)))
+            tr(td.r(x) for x in (dies(question, "30px"), answer, facit(question)))
 
 
 def roll():
