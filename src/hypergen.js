@@ -50,7 +50,7 @@ function H() {
       if (data === null) return
       for (let [cmd, target_id, html] of data) {
         if (cmd === UPDATE) {
-          var el1 = document.getElementById("content")
+          var el1 = document.getElementById(target_id)
           var el2 = document.createElement('div');
           el2.innerHTML = html
           morphdom(el1, el2, {childrenOnly: true})
