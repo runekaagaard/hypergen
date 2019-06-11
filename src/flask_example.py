@@ -1,5 +1,6 @@
 # coding=utf-8
 from __future__ import (absolute_import, division, unicode_literals)
+# yapf: disable
 # To run, pip install flask, and then
 #     FLASK_ENV=development FLASK_APP=flask_example flask run
 
@@ -10,8 +11,9 @@ from hypergen import (flask_liveview_hypergen as hypergen,
                       flask_liveview_callback_route as callback_route, div,
                       input_, script, raw, label, p, h1, ul, li, a, html, head,
                       body, link, table, tr, th, td, THIS, pre, section, ol,
-                      write, span, button)
+                      write, span, button, b)
 from random import randint
+from itertools import takewhile
 
 NORMALISE = "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
 SAKURA = "https://unpkg.com/sakura.css/css/sakura.css"
@@ -121,59 +123,62 @@ def inputs():
 ### Petals around the rose ###
 PETALS = {3: 2, 5: 4}
 DIES = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"]
-R1 = ("The name of the game is Petals Around the Rose, and the name of the "
-      "game is the key to the game.")
-R2 = "The answer is always zero or an even number."
-R3 = ("Anyone who knows the game may give the answer to any roll, but they "
-      "must not disclose the reasoning.")
-RULES = section.r(
-    p.r("There are three rules:", ol.r(li.r(x) for x in [R1, R2, R3])),
+RULES = (
+    ("The name of the game is Petals Around the Rose, and the name of the "
+     "game is the key to the game."),
+    "The answer is always zero or an even number.",
+    ("Anyone who knows the game may give the answer to any roll, but they "
+     "must not disclose the reasoning."))
+DESCRIPTION = section.r(
+    p.r("There are three rules:", ol.r(li.r(x) for x in RULES)),
     p.r("Get six correct answers in a row to become a Potentate of the Rose."))
 QUESTIONS = []
 ANSWERS = []
 
-
 def petals_template():
-    write(RULES)
+    def dies(question, font_size="50px"):
+        return span.r(
+            (DIES[x - 1] for x in question),
+            sep=" ",
+            style={"font-size": font_size})
 
-    def question_template(question, show_answer=True):
-        p(
-            span.r(
-                (DIES[x - 1] for x in question),
-                sep=" ",
-                style={"font-size": "50px"}), )
-        with p.c():
-            label.r("Whats the answer?")
-            answer = input_(type_="number")
-            button("Submit", onclick=(petal_answer, answer))
+    def facit(question):
+        return sum(PETALS.get(x, 0) for x in question)
 
-    question_template(QUESTIONS[-1], False)
+    streak = len(list(takewhile(lambda x: facit(x[0]) == x[1],
+                                zip(QUESTIONS[1:], ANSWERS[1:]))))
+
+    write(DESCRIPTION)
+    if streak < 5:
+        p(b("Congrats. You are now a potentiate of the rose! Hush, it's a secret."))
+    p(dies(QUESTIONS[0]))
+
+    with p.c():
+        label("Whats the answer?")
+        answer = input_(type_="number")
+        button("Submit", onclick=(petal_answer, answer))
+        span("Streak: ", streak, sep=" ", style="margin-left: 8px")
+
     with table.c():
-        tr(th.r(x.capitalize()) for x in ("throw", "answer", "correct answer"))
-        for question, answer in zip(reversed(QUESTIONS), reversed(ANSWERS)):
-            tr(
-                td.r(x)
-                for x in ((DIES[x - 1]
-                           for x in question), answer, result(question)))
-
-
-def result(question):
-    return sum(PETALS.get(x, 0) for x in question)
+        tr(th.r(x) for x in ("Throw", "Answer", "Correct answer"))
+        for question, answer in zip(QUESTIONS[1:], ANSWERS[1:]):
+            tr(td.r(x) for x in (dies(question, 25), answer, facit(question)))
 
 
 def roll():
-    QUESTIONS.append([randint(1, 6) for _ in range(5)])
-
+    QUESTIONS.insert(0, [randint(1, 6) for _ in range(5)])
+    ANSWERS.insert(0, None)
+roll()
 
 @callback_route(app, '/petal-answer/')
 def petal_answer(answer):
-    ANSWERS.append(answer)
-    html = hypergen(base_template, petals_template, target_id="content")
+    if answer is None:
+        return None
+    ANSWERS[0] = answer
     roll()
-    return html
+    return hypergen(petals_template, target_id="content")
 
 
 @app.route('/petals/')
 def petals():
-    roll()
     return hypergen(base_template, petals_template)

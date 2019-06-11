@@ -47,6 +47,7 @@ function H() {
     success: function(data) {
       console.log("RESPONSE", data)
       console.log("")
+      if (data === null) return
       for (let [cmd, target_id, html] of data) {
         if (cmd === UPDATE) {
           $("#" + target_id).html(html)
