@@ -152,12 +152,13 @@ def petals_template():
 
     write(DESCRIPTION)
     if streak > 5:
-        p(b("Congrats! You are now a Potentate of the Rose. Hush."))
+        p(b.r("Congrats! You are now a Potentate of the Rose. Hush."))
+
     p(dies(QUESTIONS[0]))
 
     with p.c():
         label("Whats the answer?")
-        answer = input_(type_="number", name="answer", id_="petal-answer-input")
+        answer = input_(type_="number", name="answer")
         button("Submit", onclick=(petal_answer, answer))
         span("Streak: ", streak, sep=" ", style="margin-left: 8px")
 
