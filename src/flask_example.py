@@ -11,7 +11,8 @@ from hypergen import (flask_liveview_hypergen as hypergen,
                       flask_liveview_callback_route as callback_route, div,
                       input_, script, raw, label, p, h1, ul, li, a, html, head,
                       body, link, table, tr, th, td, THIS, pre, section, ol,
-                      write, span, button, b, skippable)
+                      write, span, button, b, skippable, fieldset, legend,
+                      style, form)
 from random import randint
 from itertools import takewhile
 
@@ -41,8 +42,6 @@ def base_template(content_func):
             div(a.r("Home", href=url_for("index")))
             with div.c(id_="content"):
                 content_func()
-            div(id_="content2")
-
 
 ### Home ###
 
@@ -53,7 +52,9 @@ def index():
         ul(
             li.r(a.r("Basic counter", href=url_for("counter"))),
             li.r(a.r("Input fields", href=url_for("inputs"))),
-            li.r(a.r("Petals around the rose", href=url_for("petals"))), )
+            li.r(a.r("Petals around the rose", href=url_for("petals"))),
+            li.r(a.r("A basic form", href=url_for("a_basic_form"))),
+        )
 
     return hypergen(base_template, template)
 
@@ -185,3 +186,30 @@ def petal_answer(answer):
 @app.route('/petals/')
 def petals():
     return hypergen(base_template, petals_template)
+
+
+### A basic form ###
+
+GRID = ("")
+CSS = """
+form { display: grid;grid-template-columns: repeat(2,1fr);grid-column-gap: 10px;
+    grid-row-gap: 10px; }
+input { width: 90% }
+"""
+VEHICLES = ()
+def a_basic_form_template():
+    style(CSS)
+    with fieldset.c(legend.r("Garage")):
+        with form.c():
+            div(label.r("Name"), input_.r())
+            div(label.r("Address"), input_.r())
+            div(label.r("Number of employees"), input_.r(type_="number"))
+
+    with fieldset.c(legend.r("Vehicles")):
+        with table.c(tr.r(th.r(x) for x in ("Type", "Registration", "Notes"))):
+            pass
+
+
+@app.route('/a-basic-form/')
+def a_basic_form():
+    return hypergen(base_template, a_basic_form_template)
