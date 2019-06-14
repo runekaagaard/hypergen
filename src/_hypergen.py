@@ -89,12 +89,12 @@ def element_start(tag,
                   sep="",
                   void=False,
                   liveview=None,
-                  liveview_arg=None,
                   when=True,
+                  is_form_element=False,
                   **attrs):
-    def get_liveview_arg(x, liveview_arg):
+    def get_liveview_arg(x, attrs):
         if x == THIS:
-            return json.dumps(liveview_arg)
+            return json.dumps(attrs["liveview_arg"])
         else:
             arg = getattr(x, "liveview_arg", None)
             if arg:
@@ -114,6 +114,22 @@ def element_start(tag,
 
         return attrs
 
+    def form_element(liveview, attrs):
+        if state.auto_id and "id_" not in attrs:
+            attrs["id_"] = next(state.id_counter)
+        if "id_" in attrs:
+            attrs["id_"] = state.id_prefix + attrs["id_"]
+        if liveview:
+            assert attrs.get(
+                "id_"), "Needs an id to use an input with liveview."
+            type_ = attrs.get("type_", "text")
+
+            attrs["liveview_arg"] = [
+                "H_", INPUT_TYPES.get(type_, "s"), attrs["id_"]
+            ]
+
+        return attrs
+
     if when is False:
         raise SkipException()
 
@@ -122,16 +138,23 @@ def element_start(tag,
 
     if into is None:
         into = state.html
-    attrs = sort_attrs(copy(attrs))
+
+    attrs = copy(attrs)
+    if is_form_element is True:
+        attrs = form_element(liveview, attrs)
+
+    attrs = sort_attrs(attrs)
+
     e = into.extend
 
     e(("<", tag))
     for k, v in items(attrs):
+        if k == "liveview_arg": continue
         k = t(k).rstrip("_").replace("_", "-")
         if liveview and k.startswith("on") and type(v) in (list, tuple):
             assert callable(v[0]), "First arg must be a callable."
             v = "H({})".format(",".join(
-                get_liveview_arg(x, liveview_arg)
+                get_liveview_arg(x, attrs)
                 for x in [v[0].hypergen_url] + list(v[1:])))
             e((" ", k, '="', t(v), '"'))
         elif type(v) is bool:
@@ -148,6 +171,8 @@ def element_start(tag,
 
     write(*children, into=into, sep=sep)
 
+    return attrs
+
 
 def element_end(tag, children, **kwargs):
     write(*children, **kwargs)
@@ -155,9 +180,11 @@ def element_end(tag, children, **kwargs):
 
 
 def element(tag, children, **attrs):
-    element_start(tag, children, **attrs)
+    attrs2 = element_start(tag, children, **attrs)
     if not attrs.get("void", False):
         element_end(tag, [], **attrs)
+
+    return Bunch(attrs2)
 
 
 def element_ret(tag, children, **attrs):
@@ -278,19 +305,7 @@ INPUT_TYPES = dict(checkbox="c", month="i", number="i", range="f", week="i")
 
 
 def input_(**attrs):
-    if state.auto_id and "id_" not in attrs:
-        attrs["id_"] = next(state.id_counter)
-    if "id_" in attrs:
-        attrs["id_"] = state.id_prefix + attrs["id_"]
-    if state.liveview:
-        assert attrs.get("id_"), "Needs an id to use an input with liveview."
-        type_ = attrs.get("type_", "text")
-        attrs["liveview_arg"] = [
-            "H_", INPUT_TYPES.get(type_, "s"), attrs["id_"]
-        ]
-    element("input", [], void=True, **attrs)
-
-    return Bunch(attrs)
+    return element("input", [], void=True, is_form_element=True, **attrs)
 
 
 def input_ret(**attrs):
@@ -300,6 +315,41 @@ def input_ret(**attrs):
 
 
 input_.r = input_ret
+
+### Select ###
+
+
+def select_sta(*children, **attrs):
+    return element_start("select", children, is_form_element=True, **attrs)
+
+
+def select_end(*children, **kwargs):
+    return element_end("select", children, is_form_element=True, **kwargs)
+
+
+def select_ret(*children, **kwargs):
+    return element_ret("select", children, is_form_element=True, **kwargs)
+
+
+@contextmanager
+def select_con(*children, **attrs):
+    for x in element_con("select", children, is_form_element=True, **attrs):
+        yield x
+
+
+def select_dec(*children, **attrs):
+    return element_dec("select", children, is_form_element=True, **attrs)
+
+
+def select(*children, **attrs):
+    return element("select", children, is_form_element=True, **attrs)
+
+
+select.s = select_sta
+select.e = select_end
+select.r = select_ret
+select.c = select_con
+select.d = select_dec
 
 
 ### TEMPLATE-ELEMENT ###

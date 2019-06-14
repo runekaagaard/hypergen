@@ -12,7 +12,7 @@ from hypergen import (flask_liveview_hypergen as hypergen,
                       input_, script, raw, label, p, h1, ul, li, a, html, head,
                       body, link, table, tr, th, td, THIS, pre, section, ol,
                       write, span, button, b, skippable, fieldset, legend,
-                      style, form)
+                      style, form, select, option)
 from random import randint
 from itertools import takewhile
 
@@ -196,7 +196,25 @@ form { display: grid;grid-template-columns: repeat(2,1fr);grid-column-gap: 10px;
     grid-row-gap: 10px; }
 input { width: 90% }
 """
-VEHICLES = ()
+COLORS = ("Red", "Black", "Silver")
+RED, BLACK, SILVER = range(len(COLORS))
+VEHICLES = [
+    ("Bugatti Chiron Sport", 261, RED),
+    ("Mercedes-AMG Project One", 261, SILVER),
+    ("Lamborghini Aventador SVJ", 217, BLACK)
+]
+@callback_route(app, '/add-vehicle/')
+def add_vehicle():
+    VEHICLES.append(("", "", ""))
+
+    return hypergen(a_basic_form_template, target_id="content")
+
+@callback_route(app, '/remove-vehicle/')
+def remove_vehicle(i):
+    VEHICLES.pop(i)
+
+    return hypergen(a_basic_form_template, target_id="content")
+
 def a_basic_form_template():
     style(CSS)
     with fieldset.c(legend.r("Garage")):
@@ -206,9 +224,21 @@ def a_basic_form_template():
             div(label.r("Number of employees"), input_.r(type_="number"))
 
     with fieldset.c(legend.r("Vehicles")):
-        with table.c(tr.r(th.r(x) for x in ("Type", "Registration", "Notes"))):
-            pass
+        with table.c(tr.r(th.r(x) for x in ("Model", "MPH", "Color", ""))):
+            i = -1
+            for model, mph, color in VEHICLES:
+                i += 1
+                with tr.c():
+                    td(input_.r(value=model))
+                    td(input_.r(value=mph, type_="number"))
+                    td(select.r(option.r("-----"),
+                        (option.r(x, value=j, selected=j==color)
+                                for j, x in enumerate(COLORS))))
+                    td(input_.r(type_="button", value="X",
+                                onclick=(remove_vehicle, i)))
 
+        input_(type_="button", value="+", style={"width": "50px"},
+               onclick=[add_vehicle])
 
 @app.route('/a-basic-form/')
 def a_basic_form():
