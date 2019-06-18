@@ -98,7 +98,10 @@ def element_start(tag,
         else:
             arg = getattr(x, "liveview_arg", None)
             if arg:
-                return json.dumps(arg)
+                if arg.startswith("H."):
+                    return arg
+                else:
+                    return json.dumps(arg)
             else:
                 return json.dumps(x)
 
@@ -124,9 +127,8 @@ def element_start(tag,
                 "id_"), "Needs an id to use an input with liveview."
             type_ = attrs.get("type_", "text")
 
-            attrs["liveview_arg"] = [
-                "H_", INPUT_TYPES.get(type_, "s"), attrs["id_"]
-            ]
+            attrs["liveview_arg"] = "H.cbs.{}('{}')".format(
+                INPUT_TYPES.get(type_, "s"), attrs["id_"])
 
         return attrs
 
@@ -153,7 +155,7 @@ def element_start(tag,
         k = t(k).rstrip("_").replace("_", "-")
         if liveview and k.startswith("on") and type(v) in (list, tuple):
             assert callable(v[0]), "First arg must be a callable."
-            v = "H({})".format(",".join(
+            v = "H.cb({})".format(",".join(
                 get_liveview_arg(x, attrs)
                 for x in [v[0].hypergen_url] + list(v[1:])))
             e((" ", k, '="', t(v), '"'))
@@ -3771,7 +3773,7 @@ if __name__ == "__main__":
             _sort_attrs=True)
     assert hypergen(test_liveview_events, id_prefix="I", liveview=True,
                     auto_id=True) == \
-        '<input id="I.a" onchange="H(&quot;/hpg/cb1/&quot;,9,[1],true,&quot;'\
+        '<input id="I.a" onchange="H.cb(&quot;/hpg/cb1/&quot;,9,[1],true,&quot;'\
         'foo&quot;)" value="91"/>'
 
     def test_collections_as_children():
