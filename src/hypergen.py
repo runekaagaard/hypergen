@@ -234,7 +234,7 @@ class Bunch(dict):
         return self[k]
 
 
-class Node(Bunch):
+class Node(object):
     def __init__(self, html, meta=None):
         self.html = html
         self.meta = meta if meta is not None else {}
