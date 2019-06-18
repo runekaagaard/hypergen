@@ -140,12 +140,14 @@ def element(tag, children, **attrs):
     if not attrs.get("void", False):
         element_end(tag, [], **attrs)
 
+    return Node(None, attrs.get("meta", {}))
+
 
 def element_ret(tag, children, **attrs):
     into = []
     element(tag, children, into=into, **attrs)
 
-    return Safe("".join(into))
+    return Node("".join(into), attrs.get("meta", {}))
 
 
 def element_con(tag, children, **attrs):
@@ -229,11 +231,6 @@ class Safe(str):
     pass
 
 
-class Bunch(dict):
-    def __getattr__(self, k):
-        return self[k]
-
-
 class Node(object):
     def __init__(self, html, meta=None):
         self.html = html
@@ -274,12 +271,12 @@ class Callback(object):
         self.args = args
         self.debounce = debounce
 
-    def render_arg(self, arg, as_callback_argument):
+    def render_arg(self, arg, callback_argument):
         if arg == THIS:
-            return as_callback_argument
+            return callback_argument
         else:
             try:
-                return arg.meta["as_callback_argument"]
+                return arg.meta["callback_argument"]
             except (TypeError, KeyError, AttributeError):
                 return json.dumps(arg)
 
@@ -295,14 +292,14 @@ def control_element(tag, children, **attrs):
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
-
+    meta = attrs.get("meta", {})
     updates = {}
-    as_callback_argument = None
 
     if state.liveview is True:
         assert attrs.get("id_"), "Needs an id to use an input with liveview."
-        as_callback_argument = "H.cbs.{}('{}')".format(
+        callback_argument = "H.cbs.{}('{}')".format(
             INPUT_TYPES.get(attrs.get("type_", "text"), "s"), attrs["id_"])
+        meta["callback_argument"] = callback_argument
         for k, v in items(attrs):
             k = t(k).rstrip("_").replace("_", "-")
             if k == "meta":
@@ -310,12 +307,11 @@ def control_element(tag, children, **attrs):
             elif k.startswith("on") and type(v) in (list, tuple, Callback):
                 callback = Callback(v[0], v[1:]) if type(v) in (list,
                                                                 tuple) else v
-                updates[k] = callback.render(as_callback_argument)
+                updates[k] = callback.render(callback_argument)
     attrs.update(updates)
     element(tag, children, **attrs)
 
-    return Node(None, {"as_callback_argument": as_callback_argument}
-                if as_callback_argument else {})
+    return Node(None, meta)
 
 
 ### Input ###
@@ -412,9 +408,7 @@ def link(*children, **attrs):
 
 
 def link_ret(*children, **attrs):
-    into = []
-    element("link", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("link", children, void=True, **attrs)
 
 
 link.r = link_ret
@@ -3523,9 +3517,7 @@ def area(*children, **attrs):
 
 
 def area_ret(*children, **attrs):
-    into = []
-    element("area", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("area", children, void=True, **attrs)
 
 
 area.r = area_ret
@@ -3536,9 +3528,7 @@ def base(*children, **attrs):
 
 
 def base_ret(*children, **attrs):
-    into = []
-    element("base", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("base", children, void=True, **attrs)
 
 
 base.r = base_ret
@@ -3549,9 +3539,7 @@ def br(*children, **attrs):
 
 
 def br_ret(*children, **attrs):
-    into = []
-    element("br", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("br", children, void=True, **attrs)
 
 
 br.r = br_ret
@@ -3562,9 +3550,7 @@ def col(*children, **attrs):
 
 
 def col_ret(*children, **attrs):
-    into = []
-    element("col", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("col", children, void=True, **attrs)
 
 
 col.r = col_ret
@@ -3575,9 +3561,7 @@ def embed(*children, **attrs):
 
 
 def embed_ret(*children, **attrs):
-    into = []
-    element("embed", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("embed", children, void=True, **attrs)
 
 
 embed.r = embed_ret
@@ -3588,9 +3572,7 @@ def hr(*children, **attrs):
 
 
 def hr_ret(*children, **attrs):
-    into = []
-    element("hr", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("hr", children, void=True, **attrs)
 
 
 hr.r = hr_ret
@@ -3601,9 +3583,7 @@ def img(*children, **attrs):
 
 
 def img_ret(*children, **attrs):
-    into = []
-    element("img", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("img", children, void=True, **attrs)
 
 
 img.r = img_ret
@@ -3614,9 +3594,7 @@ def meta(*children, **attrs):
 
 
 def meta_ret(*children, **attrs):
-    into = []
-    element("meta", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("meta", children, void=True, **attrs)
 
 
 meta.r = meta_ret
@@ -3627,9 +3605,7 @@ def param(*children, **attrs):
 
 
 def param_ret(*children, **attrs):
-    into = []
-    element("param", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("param", children, void=True, **attrs)
 
 
 param.r = param_ret
@@ -3640,9 +3616,7 @@ def source(*children, **attrs):
 
 
 def source_ret(*children, **attrs):
-    into = []
-    element("source", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("source", children, void=True, **attrs)
 
 
 source.r = source_ret
@@ -3653,9 +3627,7 @@ def track(*children, **attrs):
 
 
 def track_ret(*children, **attrs):
-    into = []
-    element("track", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("track", children, void=True, **attrs)
 
 
 track.r = track_ret
@@ -3666,9 +3638,7 @@ def wbr(*children, **attrs):
 
 
 def wbr_ret(*children, **attrs):
-    into = []
-    element("wbr", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("wbr", children, void=True, **attrs)
 
 
 wbr.r = wbr_ret
@@ -3679,9 +3649,7 @@ def command(*children, **attrs):
 
 
 def command_ret(*children, **attrs):
-    into = []
-    element("command", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("command", children, void=True, **attrs)
 
 
 command.r = command_ret
@@ -3692,9 +3660,7 @@ def keygen(*children, **attrs):
 
 
 def keygen_ret(*children, **attrs):
-    into = []
-    element("keygen", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("keygen", children, void=True, **attrs)
 
 
 keygen.r = keygen_ret
@@ -3705,9 +3671,7 @@ def menuitem(*children, **attrs):
 
 
 def menuitem_ret(*children, **attrs):
-    into = []
-    element("menuitem", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("menuitem", children, void=True, **attrs)
 
 
 menuitem.r = menuitem_ret

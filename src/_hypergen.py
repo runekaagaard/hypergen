@@ -140,12 +140,14 @@ def element(tag, children, **attrs):
     if not attrs.get("void", False):
         element_end(tag, [], **attrs)
 
+    return Node(None, attrs.get("meta", {}))
+
 
 def element_ret(tag, children, **attrs):
     into = []
     element(tag, children, into=into, **attrs)
 
-    return Safe("".join(into))
+    return Node("".join(into), attrs.get("meta", {}))
 
 
 def element_con(tag, children, **attrs):
@@ -269,12 +271,12 @@ class Callback(object):
         self.args = args
         self.debounce = debounce
 
-    def render_arg(self, arg, as_callback_argument):
+    def render_arg(self, arg, callback_argument):
         if arg == THIS:
-            return as_callback_argument
+            return callback_argument
         else:
             try:
-                return arg.meta["as_callback_argument"]
+                return arg.meta["callback_argument"]
             except (TypeError, KeyError, AttributeError):
                 return json.dumps(arg)
 
@@ -290,14 +292,14 @@ def control_element(tag, children, **attrs):
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
-
+    meta = attrs.get("meta", {})
     updates = {}
-    as_callback_argument = None
 
     if state.liveview is True:
         assert attrs.get("id_"), "Needs an id to use an input with liveview."
-        as_callback_argument = "H.cbs.{}('{}')".format(
+        callback_argument = "H.cbs.{}('{}')".format(
             INPUT_TYPES.get(attrs.get("type_", "text"), "s"), attrs["id_"])
+        meta["callback_argument"] = callback_argument
         for k, v in items(attrs):
             k = t(k).rstrip("_").replace("_", "-")
             if k == "meta":
@@ -305,12 +307,11 @@ def control_element(tag, children, **attrs):
             elif k.startswith("on") and type(v) in (list, tuple, Callback):
                 callback = Callback(v[0], v[1:]) if type(v) in (list,
                                                                 tuple) else v
-                updates[k] = callback.render(as_callback_argument)
+                updates[k] = callback.render(callback_argument)
     attrs.update(updates)
     element(tag, children, **attrs)
 
-    return Node(None, {"as_callback_argument": as_callback_argument}
-                if as_callback_argument else {})
+    return Node(None, meta)
 
 
 ### Input ###
@@ -407,9 +408,7 @@ def link(*children, **attrs):
 
 
 def link_ret(*children, **attrs):
-    into = []
-    element("link", children, void=True, into=into, **attrs)
-    return "".join(into)
+    return element_ret("link", children, void=True, **attrs)
 
 
 link.r = link_ret
