@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, unicode_literals)
 import string, sys, json
 from threading import local
 from contextlib import contextmanager
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from functools import wraps
 from copy import copy
 from types import GeneratorType
@@ -90,21 +90,7 @@ def element_start(tag,
                   void=False,
                   liveview=None,
                   when=True,
-                  is_form_element=False,
                   **attrs):
-    def get_liveview_arg(x, attrs):
-        if x == THIS:
-            return json.dumps(attrs["liveview_arg"])
-        else:
-            arg = getattr(x, "liveview_arg", None)
-            if arg:
-                if arg.startswith("H."):
-                    return arg
-                else:
-                    return json.dumps(arg)
-            else:
-                return json.dumps(x)
-
     def sort_attrs(attrs):
         # For testing only, subject to change.
         sort_attrs = attrs.pop("_sort_attrs", False)
@@ -117,48 +103,18 @@ def element_start(tag,
 
         return attrs
 
-    def form_element(liveview, attrs):
-        if state.auto_id and "id_" not in attrs:
-            attrs["id_"] = next(state.id_counter)
-        if "id_" in attrs:
-            attrs["id_"] = state.id_prefix + attrs["id_"]
-        if liveview:
-            assert attrs.get(
-                "id_"), "Needs an id to use an input with liveview."
-            type_ = attrs.get("type_", "text")
-
-            attrs["liveview_arg"] = "H.cbs.{}('{}')".format(
-                INPUT_TYPES.get(type_, "s"), attrs["id_"])
-
-        return attrs
-
     if when is False:
         raise SkipException()
-
-    if liveview is None:
-        liveview = state.liveview
-
     if into is None:
         into = state.html
-
-    attrs = copy(attrs)
-    if is_form_element is True:
-        attrs = form_element(liveview, attrs)
-
-    attrs = sort_attrs(attrs)
-
+    attrs = sort_attrs(copy(attrs))
     e = into.extend
 
     e(("<", tag))
     for k, v in items(attrs):
-        if k == "liveview_arg": continue
         k = t(k).rstrip("_").replace("_", "-")
-        if liveview and k.startswith("on") and type(v) in (list, tuple):
-            assert callable(v[0]), "First arg must be a callable."
-            v = "H.cb({})".format(",".join(
-                get_liveview_arg(x, attrs)
-                for x in [v[0].hypergen_url] + list(v[1:])))
-            e((" ", k, '="', t(v), '"'))
+        if k == "meta":
+            continue
         elif type(v) is bool:
             if v is True:
                 e((" ", k))
@@ -172,7 +128,6 @@ def element_start(tag,
     e(('>', ))
 
     write(*children, into=into, sep=sep)
-
     return attrs
 
 
@@ -236,9 +191,7 @@ def raw(*children, **kwargs):
                                                       "").join(children), ))
 
 
-### LIVEVIEW ###
-
-THIS = "THIS_"
+### Flask helpers ###
 
 
 def flask_liveview_hypergen(func, *args, **kwargs):
@@ -262,7 +215,7 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
             with app.app_context():
                 return jsonify(f(*request.get_json()))
 
-        __.hypergen_url = path
+        __.hypergen_callback_url = path
         return __
 
     return _
@@ -272,11 +225,13 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
 
 
 def t(s, quote=True):
-    return s if type(s) is Safe else escape(str(s), quote=quote)
+    return s.value if type(s) is Safe else escape(str(s), quote=quote)
 
 
-class Safe(str):
-    pass
+class Safe(object):
+    def __init__(self, value, meta=None):
+        self.value = value
+        self.meta = meta if meta is not None else {}
 
 
 class ClientArgument(str):
@@ -305,19 +260,71 @@ class Bunch(dict):
         return self[k]
 
 
+### Form elements and liveview ###
+
+THIS = "THIS_"
+
+
+class Callback(object):
+    def __init__(self, func, args=None, debounce=0):
+        self.func = func
+        self.args = args
+        self.debounce = debounce
+
+    def render_arg(self, arg, meta):
+        if arg == THIS:
+            return meta["as_callback_argument"]
+        else:
+            try:
+                return arg["meta"]["as_callback_argument"]
+            except (TypeError, KeyError):
+                return json.dumps(arg)
+
+    def render(self, meta):
+        liveview_args = [json.dumps(self.func.hypergen_callback_url)]
+        for arg in self.args:
+            liveview_args.append(self.render_arg(arg, meta))
+        return "H.cb({})".format(",".join(liveview_args))
+
+
+def control_element(tag, children, **attrs):
+    if state.auto_id and "id_" not in attrs:
+        attrs["id_"] = next(state.id_counter)
+    if "id_" in attrs:
+        attrs["id_"] = state.id_prefix + attrs["id_"]
+    if "meta" not in attrs:
+        attrs["meta"] = {}
+
+    updates = {}
+    if state.liveview is True:
+        assert attrs.get("id_"), "Needs an id to use an input with liveview."
+        attrs["meta"]["as_callback_argument"] = "H.cbs.{}('{}')".format(
+            INPUT_TYPES.get(attrs.get("type_", "text"), "s"), attrs["id_"])
+        for k, v in items(attrs):
+            k = t(k).rstrip("_").replace("_", "-")
+            if k.startswith("on") and type(v) in (list, tuple, Callback):
+                callback = Callback(v[0], v[1:]) if type(v) in (list,
+                                                                tuple) else v
+                updates[k] = callback.render(attrs["meta"])
+    attrs.update(updates)
+    element(tag, children, **attrs)
+
+    return Bunch(**attrs)
+
+
 ### Input ###
 
 INPUT_TYPES = dict(checkbox="c", month="i", number="i", range="f", week="i")
 
 
 def input_(**attrs):
-    return element("input", [], void=True, is_form_element=True, **attrs)
+    return control_element("input", [], void=True, **attrs)
 
 
 def input_ret(**attrs):
     into = []
-    input_(into=into, **attrs)
-    return Safe("".join(into))
+    meta = input_(into=into, **attrs)
+    return Safe("".join(into), meta)
 
 
 input_.r = input_ret
@@ -326,29 +333,29 @@ input_.r = input_ret
 
 
 def select_sta(*children, **attrs):
-    return element_start("select", children, is_form_element=True, **attrs)
+    return element_start("select", children, **attrs)
 
 
 def select_end(*children, **kwargs):
-    return element_end("select", children, is_form_element=True, **kwargs)
+    return element_end("select", children, **kwargs)
 
 
 def select_ret(*children, **kwargs):
-    return element_ret("select", children, is_form_element=True, **kwargs)
+    return element_ret("select", children, **kwargs)
 
 
 @contextmanager
 def select_con(*children, **attrs):
-    for x in element_con("select", children, is_form_element=True, **attrs):
+    for x in element_con("select", children, **attrs):
         yield x
 
 
 def select_dec(*children, **attrs):
-    return element_dec("select", children, is_form_element=True, **attrs)
+    return element_dec("select", children, **attrs)
 
 
 def select(*children, **attrs):
-    return element("select", children, is_form_element=True, **attrs)
+    return element("select", children, **attrs)
 
 
 select.s = select_sta
@@ -432,6 +439,7 @@ if __name__ == "__main__":
                    "display": "none"},
             sep=" ",
             _sort_attrs=True)
+
     assert hypergen(test_div2, "hypergen!") == '<div class="its-hyper" '\
         'data-x="3.14" hidden style="display:none;height:42">'\
         'Hello hypergen!</div>'
@@ -481,11 +489,12 @@ if __name__ == "__main__":
         def callback1(x):
             pass
 
-        callback1.hypergen_url = "/hpg/cb1/"
+        callback1.hypergen_callback_url = "/hpg/cb1/"
         input_(
             value=91,
             onchange=(callback1, 9, [1], True, "foo"),
             _sort_attrs=True)
+
     assert hypergen(test_liveview_events, id_prefix="I", liveview=True,
                     auto_id=True) == \
         '<input id="I.a" onchange="H.cb(&quot;/hpg/cb1/&quot;,9,[1],true,&quot;'\

@@ -160,7 +160,7 @@ def petals_template():
     with p.c():
         label("Whats the answer?")
         answer = input_(type_="number", name="answer")
-        button("Submit", onclick=(petal_answer, answer))
+        input_(type="button", value="Submit", onclick=(petal_answer, answer))
         span("Streak: ", streak, sep=" ", style="margin-left: 8px")
 
     with skippable(), table.c(when=len(ANSWERS) > 1):
