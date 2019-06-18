@@ -229,11 +229,6 @@ class Safe(str):
     pass
 
 
-class Bunch(dict):
-    def __getattr__(self, k):
-        return self[k]
-
-
 class Node(object):
     def __init__(self, html, meta=None):
         self.html = html
