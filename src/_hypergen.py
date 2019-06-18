@@ -128,7 +128,6 @@ def element_start(tag,
     e(('>', ))
 
     write(*children, into=into, sep=sep)
-    return attrs
 
 
 def element_end(tag, children, **kwargs):
@@ -137,11 +136,9 @@ def element_end(tag, children, **kwargs):
 
 
 def element(tag, children, **attrs):
-    attrs2 = element_start(tag, children, **attrs)
+    element_start(tag, children, **attrs)
     if not attrs.get("void", False):
         element_end(tag, [], **attrs)
-
-    return Bunch(attrs2)
 
 
 def element_ret(tag, children, **attrs):
@@ -225,17 +222,28 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
 
 
 def t(s, quote=True):
-    return s.value if type(s) is Safe else escape(str(s), quote=quote)
+    return str(s) if type(s) in (Safe, Node) else escape(str(s), quote=quote)
 
 
-class Safe(object):
-    def __init__(self, value, meta=None):
-        self.value = value
+class Safe(str):
+    pass
+
+
+class Bunch(dict):
+    def __getattr__(self, k):
+        return self[k]
+
+
+class Node(Bunch):
+    def __init__(self, html, meta=None):
+        self.html = html
         self.meta = meta if meta is not None else {}
 
+    def __str__(self):
+        return self.html
 
-class ClientArgument(str):
-    pass
+    def __unicode__(self):
+        return self.html
 
 
 def base65_counter():
@@ -255,11 +263,6 @@ def base65_counter():
         yield output
 
 
-class Bunch(dict):
-    def __getattr__(self, k):
-        return self[k]
-
-
 ### Form elements and liveview ###
 
 THIS = "THIS_"
@@ -271,13 +274,13 @@ class Callback(object):
         self.args = args
         self.debounce = debounce
 
-    def render_arg(self, arg, meta):
+    def render_arg(self, arg, as_callback_argument):
         if arg == THIS:
-            return meta["as_callback_argument"]
+            return as_callback_argument
         else:
             try:
-                return arg["meta"]["as_callback_argument"]
-            except (TypeError, KeyError):
+                return arg.meta["as_callback_argument"]
+            except (TypeError, KeyError, AttributeError):
                 return json.dumps(arg)
 
     def render(self, meta):
@@ -292,24 +295,27 @@ def control_element(tag, children, **attrs):
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
-    if "meta" not in attrs:
-        attrs["meta"] = {}
 
     updates = {}
+    as_callback_argument = None
+
     if state.liveview is True:
         assert attrs.get("id_"), "Needs an id to use an input with liveview."
-        attrs["meta"]["as_callback_argument"] = "H.cbs.{}('{}')".format(
+        as_callback_argument = "H.cbs.{}('{}')".format(
             INPUT_TYPES.get(attrs.get("type_", "text"), "s"), attrs["id_"])
         for k, v in items(attrs):
             k = t(k).rstrip("_").replace("_", "-")
-            if k.startswith("on") and type(v) in (list, tuple, Callback):
+            if k == "meta":
+                continue
+            elif k.startswith("on") and type(v) in (list, tuple, Callback):
                 callback = Callback(v[0], v[1:]) if type(v) in (list,
                                                                 tuple) else v
-                updates[k] = callback.render(attrs["meta"])
+                updates[k] = callback.render(as_callback_argument)
     attrs.update(updates)
     element(tag, children, **attrs)
 
-    return Bunch(**attrs)
+    return Node(None, {"as_callback_argument": as_callback_argument}
+                if as_callback_argument else {})
 
 
 ### Input ###
@@ -323,8 +329,8 @@ def input_(**attrs):
 
 def input_ret(**attrs):
     into = []
-    meta = input_(into=into, **attrs)
-    return Safe("".join(into), meta)
+    node = input_(into=into, **attrs)
+    return Node("".join(into), meta=node.meta)
 
 
 input_.r = input_ret
