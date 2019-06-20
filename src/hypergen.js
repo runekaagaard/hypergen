@@ -3,6 +3,14 @@
 
 
 var H = (function() {
+  // Shims
+  if (typeof Array.isArray === 'undefined') {
+    Array.isArray = function(obj) {
+      return Object.prototype.toString.call(obj) === '[object Array]';
+    }
+  };
+
+  // Callback handlers.
   console.log("RECEIVING", arguments)
   var cbs = {}
   cbs.i = function(id) { return function() {
@@ -17,22 +25,34 @@ var H = (function() {
   cbs.c = function(id) { return function() {
     return document.getElementById(id).checked
   }}
+
+  function parseArgs(args, data) {
+    for (var i=0; i<args.length; i++) {
+      var x = args[i]
+      if (typeof x === "function") {
+        data.push(x())  
+      } else if (Array.isArray(x)) {
+        var tmp = []
+        parseArgs(x, tmp)
+        data.push(tmp)
+      } else {
+        data.push(x)
+      }
+    }
+  }
   
   function cb() {
     var
       UPDATE = 1,
       url = arguments[0],
+      args = [],
       data = []
-  
-    for (var i=1; i<arguments.length; i++) {
-      var x = arguments[i]
-      if (typeof x === "function") {
-        data.push(x())
-      } else {
-        data.push(x)
-      }
-    }
 
+    for (var i=1; i<arguments.length; i++) {
+      args.push(arguments[i])
+    }
+    
+    parseArgs(args, data)
     console.log("REQUEST", data)
     $.ajax({
       url: url,

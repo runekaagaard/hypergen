@@ -210,14 +210,17 @@ def add_vehicle():
     return hypergen(a_basic_form_template, target_id="content")
 
 @callback_route(app, '/remove-vehicle/')
-def remove_vehicle(i):
+def remove_vehicle(i, vehicles):
+    global VEHICLES
+    VEHICLES = vehicles
     VEHICLES.pop(i)
 
     return hypergen(a_basic_form_template, target_id="content")
 
 @callback_route(app, '/save/')
-def save(fields):
-    print fields
+def save(vehicles):
+    global VEHICLES
+    VEHICLES = vehicles
     return hypergen(a_basic_form_template, target_id="content")
 
 
@@ -239,14 +242,14 @@ def a_basic_form_template():
                 with tr.c():
                     a = f[-1][0] = input_.r(value=model)
                     b = f[-1][1] = input_.r(value=mph, type_="number")
-                    c = f[-1][2] = input_.r(type_="button", value="X",
-                                onclick=(remove_vehicle, i))
+                    f[-1][2] = RED
                     td(a)
                     td(b)
                     td(select.r(option.r("-----"),
                         (option.r(x, value=j, selected=j==color)
                                 for j, x in enumerate(COLORS))))
-                    td(c)
+                    td(input_.r(type_="button", value="X",
+                                onclick=(remove_vehicle, i, f)))
 
         input_(type_="button", value="+", style={"width": "50px"},
                onclick=[add_vehicle])

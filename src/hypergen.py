@@ -270,7 +270,7 @@ THIS = "THIS_"
 
 def encoder(obj):
     if type(obj) is Node:
-        return obj.serialize()
+        return "H_" + obj.serialize() + "_H"
     else:
         raise TypeError(repr(obj) + " is not JSON serializable")
 
@@ -291,7 +291,7 @@ class Callback(object):
         return "H.cb({})".format(
             json.dumps(
                 [self.func.hypergen_callback_url] + list(self.args),
-                default=encoder))
+                default=encoder).replace('"H_', "").replace('_H"', "")[1:-1])
 
 
 def control_element(tag, children, **attrs):
