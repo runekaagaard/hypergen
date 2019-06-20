@@ -204,7 +204,9 @@ VEHICLES = [
     ["Lamborghini Aventador SVJ", 217, BLACK],
 ]
 @callback_route(app, '/add-vehicle/')
-def add_vehicle():
+def add_vehicle(vehicles):
+    global VEHICLES
+    VEHICLES = vehicles
     VEHICLES.append(("", "", ""))
 
     return hypergen(a_basic_form_template, target_id="content")
@@ -253,10 +255,10 @@ def a_basic_form_template():
                                onclick=(remove_vehicle, i, f), lazy=True)
 
         input_(type_="button", value="+", style={"width": "50px"},
-               onclick=[add_vehicle])
+               onclick=[add_vehicle, f])
 
     with div.c():
-        input_(type_="button", value="Save", onclick=(save, f))
+        input_(type_="button", value="Save", onclick=(save, f), lazy=True)
 
 @app.route('/a-basic-form/')
 def a_basic_form():
