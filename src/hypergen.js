@@ -73,6 +73,11 @@ var H = (function() {
           if (cmd === UPDATE) {
             morphdom(
               document.getElementById(target_id),
+              "<div>" + "</div>",
+              {childrenOnly: true}
+            )
+            morphdom(
+              document.getElementById(target_id),
               "<div>" + html + "</div>",
               {childrenOnly: true}
             )

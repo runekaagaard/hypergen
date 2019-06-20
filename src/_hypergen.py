@@ -49,7 +49,7 @@ def hypergen(func, *args, **kwargs):
         state.liveview = kwargs.pop("liveview", False)
         as_deltas = kwargs.pop("as_deltas", False)
         func(*args, **kwargs)
-        html = "".join(state.html)
+        html = "".join(str(x()) if callable(x) else str(x) for x in state.html)
     finally:
         state.html = []
         state.cache_client = None
@@ -296,7 +296,7 @@ class Callback(object):
                     1:-1])
 
 
-def control_element(tag, children, **attrs):
+def control_element(tag, children, lazy=False, **attrs):
     if state.auto_id and "id_" not in attrs:
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
@@ -318,7 +318,8 @@ def control_element(tag, children, **attrs):
                                                                 tuple) else v
                 updates[k] = callback.render(callback_argument)
     attrs.update(updates)
-    element(tag, children, **attrs)
+    if not lazy:
+        element(tag, children, **attrs)
 
     return Node(None, meta)
 
@@ -329,7 +330,18 @@ INPUT_TYPES = dict(checkbox="c", month="i", number="i", range="f", week="i")
 
 
 def input_(**attrs):
-    return control_element("input", [], void=True, **attrs)
+    def lazy_promise():
+        into = []
+        node = control_element("input", [], void=True, into=into, **attrs)
+        return Node("".join(into), node.meta)
+
+    lazy = attrs.pop("lazy", False)
+    node = control_element("input", [], void=True, lazy=lazy, **attrs)
+
+    if lazy:
+        state.html.append(lazy_promise)
+
+    return node
 
 
 def input_ret(**attrs):

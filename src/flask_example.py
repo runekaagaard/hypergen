@@ -199,9 +199,9 @@ input { width: 90% }
 COLORS = ("Red", "Black", "Silver")
 RED, BLACK, SILVER = range(len(COLORS))
 VEHICLES = [
-    ("Bugatti Chiron Sport", 261, RED),
-    ("Mercedes-AMG Project One", 261, SILVER),
-    ("Lamborghini Aventador SVJ", 217, BLACK)
+    ["Bugatti Chiron Sport", 261, RED],
+    ["Mercedes-AMG Project One", 261, SILVER],
+    ["Lamborghini Aventador SVJ", 217, BLACK],
 ]
 @callback_route(app, '/add-vehicle/')
 def add_vehicle():
@@ -212,8 +212,8 @@ def add_vehicle():
 @callback_route(app, '/remove-vehicle/')
 def remove_vehicle(i, vehicles):
     global VEHICLES
+    del vehicles[i]
     VEHICLES = vehicles
-    VEHICLES.pop(i)
 
     return hypergen(a_basic_form_template, target_id="content")
 
@@ -240,16 +240,17 @@ def a_basic_form_template():
                 f.append([None] * 3)
                 i += 1
                 with tr.c():
-                    a = f[-1][0] = input_.r(value=model)
-                    b = f[-1][1] = input_.r(value=mph, type_="number")
+                    with td.c():
+                        f[-1][0] = input_(value=model)
+                    with td.c():
+                        f[-1][1] = input_(value=mph, type_="number")
                     f[-1][2] = RED
-                    td(a)
-                    td(b)
                     td(select.r(option.r("-----"),
                         (option.r(x, value=j, selected=j==color)
                                 for j, x in enumerate(COLORS))))
-                    td(input_.r(type_="button", value="X",
-                                onclick=(remove_vehicle, i, f)))
+                    with td.c():
+                        input_(type_="button", value="X",
+                               onclick=(remove_vehicle, i, f), lazy=True)
 
         input_(type_="button", value="+", style={"width": "50px"},
                onclick=[add_vehicle])
