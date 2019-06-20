@@ -2191,37 +2191,37 @@ nav.d = nav_dec
 
 
 
-def object_sta(*children, **attrs):
-    return element_start("object", children, **attrs)
+def object__sta(*children, **attrs):
+    return element_start("object_", children, **attrs)
 
 
-def object_end(*children, **kwargs):
-    return element_end("object", children, **kwargs)
+def object__end(*children, **kwargs):
+    return element_end("object_", children, **kwargs)
 
 
-def object_ret(*children, **kwargs):
-    return element_ret("object", children, **kwargs)
+def object__ret(*children, **kwargs):
+    return element_ret("object_", children, **kwargs)
 
 
 @contextmanager
-def object_con(*children, **attrs):
-    for x in element_con("object", children, **attrs):
+def object__con(*children, **attrs):
+    for x in element_con("object_", children, **attrs):
         yield x
 
 
-def object_dec(*children, **attrs):
-    return element_dec("object", children, **attrs)
+def object__dec(*children, **attrs):
+    return element_dec("object_", children, **attrs)
 
 
-def object(*children, **attrs):
-    return element("object", children, **attrs)
+def object_(*children, **attrs):
+    return element("object_", children, **attrs)
 
 
-object.s = object_sta
-object.e = object_end
-object.r = object_ret
-object.c = object_con
-object.d = object_dec
+object_.s = object__sta
+object_.e = object__end
+object_.r = object__ret
+object_.c = object__con
+object_.d = object__dec
 
 
 

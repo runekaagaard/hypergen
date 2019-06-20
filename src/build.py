@@ -10,7 +10,7 @@ TAGS = [
     'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3',
     'h4', 'h5', 'h6', 'header', 'html', 'i', 'iframe', 'ins', 'kbd', 'keygen',
     'label', 'legend', 'li', 'main', 'map', 'mark', 'menu', 'meter', 'nav',
-    'object', 'ol', 'optgroup', 'option', 'output', 'p', 'pre', 'progress',
+    'object_', 'ol', 'optgroup', 'option', 'output', 'p', 'pre', 'progress',
     'q', 'rp', 'rt', 'ruby', 's', 'samp', 'section', 'small', 'span', 'strong',
     'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th',
     'thead', 'time', 'tr', 'u', 'ul', 'var', 'video', 'script', 'style',
