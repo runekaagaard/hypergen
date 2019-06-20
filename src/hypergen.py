@@ -285,13 +285,15 @@ class Callback(object):
         if arg == THIS:
             return callback_argument
         else:
-            return json.dumps(arg, default=encoder)
+            return json.dumps(arg, default=encoder, separators=(',', ':'))
 
     def render(self, meta):
         return "H.cb({})".format(
             json.dumps(
                 [self.func.hypergen_callback_url] + list(self.args),
-                default=encoder).replace('"H_', "").replace('_H"', "")[1:-1])
+                default=encoder,
+                separators=(',', ':')).replace('"H_', "").replace('_H"', "")[
+                    1:-1])
 
 
 def control_element(tag, children, **attrs):
