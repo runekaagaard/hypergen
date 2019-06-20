@@ -215,6 +215,12 @@ def remove_vehicle(i):
 
     return hypergen(a_basic_form_template, target_id="content")
 
+@callback_route(app, '/save/')
+def save(fields):
+    print fields
+    return hypergen(a_basic_form_template, target_id="content")
+
+
 def a_basic_form_template():
     style(CSS)
     with fieldset.c(legend.r("Garage")):
@@ -224,21 +230,29 @@ def a_basic_form_template():
             div(label.r("Number of employees"), input_.r(type_="number"))
 
     with fieldset.c(legend.r("Vehicles")):
+        f = []
         with table.c(tr.r(th.r(x) for x in ("Model", "MPH", "Color", ""))):
             i = -1
             for model, mph, color in VEHICLES:
+                f.append([None] * 3)
                 i += 1
                 with tr.c():
-                    td(input_.r(value=model))
-                    td(input_.r(value=mph, type_="number"))
+                    a = f[-1][0] = input_.r(value=model)
+                    b = f[-1][1] = input_.r(value=mph, type_="number")
+                    c = f[-1][2] = input_.r(type_="button", value="X",
+                                onclick=(remove_vehicle, i))
+                    td(a)
+                    td(b)
                     td(select.r(option.r("-----"),
                         (option.r(x, value=j, selected=j==color)
                                 for j, x in enumerate(COLORS))))
-                    td(input_.r(type_="button", value="X",
-                                onclick=(remove_vehicle, i)))
+                    td(c)
 
         input_(type_="button", value="+", style={"width": "50px"},
                onclick=[add_vehicle])
+
+    with div.c():
+        input_(type_="button", value="Save", onclick=(save, f))
 
 @app.route('/a-basic-form/')
 def a_basic_form():

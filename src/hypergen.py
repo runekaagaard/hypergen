@@ -242,6 +242,9 @@ class Node(object):
     def __unicode__(self):
         return self.html
 
+    def serialize(self):
+        return self.meta["callback_argument"]
+
 
 def base65_counter():
     # THX: https://stackoverflow.com/a/49710563/164449
@@ -265,6 +268,13 @@ def base65_counter():
 THIS = "THIS_"
 
 
+def encoder(obj):
+    if type(obj) is Node:
+        return obj.serialize()
+    else:
+        raise TypeError(repr(obj) + " is not JSON serializable")
+
+
 class Callback(object):
     def __init__(self, func, args=None, debounce=0):
         self.func = func
@@ -275,16 +285,13 @@ class Callback(object):
         if arg == THIS:
             return callback_argument
         else:
-            try:
-                return arg.meta["callback_argument"]
-            except (TypeError, KeyError, AttributeError):
-                return json.dumps(arg)
+            return json.dumps(arg, default=encoder)
 
     def render(self, meta):
-        liveview_args = [json.dumps(self.func.hypergen_callback_url)]
-        for arg in self.args:
-            liveview_args.append(self.render_arg(arg, meta))
-        return "H.cb({})".format(",".join(liveview_args))
+        return "H.cb({})".format(
+            json.dumps(
+                [self.func.hypergen_callback_url] + list(self.args),
+                default=encoder))
 
 
 def control_element(tag, children, **attrs):
