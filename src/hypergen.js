@@ -26,8 +26,6 @@ var H = (function() {
     return document.getElementById(id).checked
   }}
 
-  var idPrefix = 0
-
   function parseArgs(args, data) {
     for (var i=0; i<args.length; i++) {
       var x = args[i]
@@ -43,12 +41,14 @@ var H = (function() {
     }
   }
   
-  function cb() {
+  var cb = function() {
+    H.i++
     var
       UPDATE = 1,
       url = arguments[0],
       args = [],
-      data = ["p"+++idPrefix]
+      data = [],
+      idPrefix = "h-" + H.i
 
     for (var i=1; i<arguments.length; i++) {
       args.push(arguments[i])
@@ -59,7 +59,10 @@ var H = (function() {
     $.ajax({
       url: url,
       type: 'POST',
-      data: JSON.stringify(data),
+      data: JSON.stringify({
+        args: data,
+        id_prefix: idPrefix,
+      }),
       contentType: 'application/json; charset=utf-8',
       dataType: 'json',
       success: function(data) {
@@ -85,9 +88,11 @@ var H = (function() {
       }
     })
   }
+  cb.i = 0
 
   return {
     cb: cb,
     cbs: cbs,
+    i: 0,
   }
 })()

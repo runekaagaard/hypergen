@@ -224,10 +224,6 @@ def add_vehicle(vehicles):
 
 @callback_route(app, '/remove-vehicle/')
 def remove_vehicle(id_, vehicles):
-    print "ID", id_
-    print vehicles
-    print [x for x in vehicles if x[0] != id_]
-    print
     Db.vehicles = [x for x in vehicles if x[0] != id_]
 
     return hypergen(a_basic_form_template, target_id="content")

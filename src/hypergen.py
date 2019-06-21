@@ -42,8 +42,7 @@ def hypergen(func, *args, **kwargs):
         state.html = []
         state.cache_client = kwargs.pop("cache_client", None)
         state.id_counter = base65_counter() if auto_id else None
-        state.id_prefix = (kwargs.pop("id_prefix") + "."
-                           if "id_prefix" in kwargs else "")
+        state.id_prefix = kwargs.pop("id_prefix", "")
         state.auto_id = auto_id
         state.target_id = target_id = kwargs.pop("target_id", False)
         state.liveview = kwargs.pop("liveview", False)
@@ -200,6 +199,7 @@ def flask_liveview_hypergen(func, *args, **kwargs):
         *args,
         as_deltas=request.is_xhr,
         auto_id=True,
+        id_prefix=request.get_json()["id_prefix"] if request.is_xhr else "",
         liveview=True,
         **kwargs)
 
@@ -212,7 +212,7 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
         @wraps(f)
         def __():
             with app.app_context():
-                return jsonify(f(*request.get_json()))
+                return jsonify(f(*request.get_json()["args"]))
 
         __.hypergen_callback_url = path
         return __
@@ -247,9 +247,6 @@ class Node(object):
 
 
 def base65_counter():
-    import uuid
-    while True:
-        yield str(uuid.uuid4())
     # THX: https://stackoverflow.com/a/49710563/164449
     abc = letters + string.digits + "-_:"
     base = len(abc)
