@@ -247,6 +247,9 @@ class Node(object):
 
 
 def base65_counter():
+    import uuid
+    while True:
+        yield str(uuid.uuid4())
     # THX: https://stackoverflow.com/a/49710563/164449
     abc = letters + string.digits + "-_:"
     base = len(abc)

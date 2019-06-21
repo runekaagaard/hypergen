@@ -255,10 +255,10 @@ def a_basic_form_template():
                 i += 1
                 with tr.c():
                     with td.c():
-                        f[-1][1] = input_(value=model, id_=id_+"a")
+                        f[-1][1] = input_(value=model)
                     with td.c():
                         f[-1][2] = input_(value=mph, type_="number",
-                                          id_=id_+"b")
+                                          )
                     f[-1][3] = RED
                     td(select.r(option.r("-----"),
                         (option.r(x, value=j, selected=j==color)
@@ -266,7 +266,7 @@ def a_basic_form_template():
                     with td.c():
                         input_(type_="button", value="X",
                                onclick=(remove_vehicle, id_, f), lazy=True,
-                               id_=id_+"c")
+                               )
 
         input_(type_="button", value="+", style={"width": "50px"},
                onclick=[add_vehicle, f])

@@ -26,6 +26,8 @@ var H = (function() {
     return document.getElementById(id).checked
   }}
 
+  var idPrefix = 0
+
   function parseArgs(args, data) {
     for (var i=0; i<args.length; i++) {
       var x = args[i]
@@ -46,7 +48,7 @@ var H = (function() {
       UPDATE = 1,
       url = arguments[0],
       args = [],
-      data = []
+      data = ["p"+++idPrefix]
 
     for (var i=1; i<arguments.length; i++) {
       args.push(arguments[i])
