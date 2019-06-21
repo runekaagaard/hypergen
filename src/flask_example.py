@@ -199,13 +199,7 @@ input { width: 90% }
 COLORS = ("Red", "Black", "Silver")
 RED, BLACK, SILVER = range(len(COLORS))
 class Db:
-    i = 3
-    vehicles = [
-        ["veh1", "Bugatti Chiron Sport", 261, RED],
-        ["veh2", "Mercedes-AMG Project One", 261, SILVER],
-        ["veh3", "Lamborghini Aventador SVJ", 217, BLACK],
-    ]
-
+    i = 0
     @staticmethod
     def new_id():
         Db.i += 1
@@ -214,6 +208,12 @@ class Db:
     @staticmethod
     def empty_row():
         return [Db.new_id(), "", "", ""]
+
+Db.vehicles = [
+    [Db.new_id(), "Bugatti Chiron Sport", 261, RED],
+    [Db.new_id(), "Mercedes-AMG Project One", 261, SILVER],
+    [Db.new_id(), "Lamborghini Aventador SVJ", 217, BLACK],
+]
 
 @callback_route(app, '/add-vehicle/')
 def add_vehicle(vehicles):
@@ -242,33 +242,27 @@ def a_basic_form_template():
             div(label.r("Address"), input_.r())
             div(label.r("Number of employees"), input_.r(type_="number"))
 
+    fields = []
     with fieldset.c(legend.r("Vehicles")):
-        f = []
         with table.c(tr.r(th.r(x) for x in ("Model", "MPH", "Color", ""))):
-            i = -1
             for id_, model, mph, color in Db.vehicles:
-                f.append([id_, "", "", ""])
-                i += 1
-                with tr.c():
-                    with td.c():
-                        f[-1][1] = input_(value=model)
-                    with td.c():
-                        f[-1][2] = input_(value=mph, type_="number",
-                                          )
-                    f[-1][3] = RED
-                    td(select.r(option.r("-----"),
+                row = [id_]
+                tr(
+                    td.r(input_.r(value=model, add_to=row)),
+                    td.r(input_.r(value=mph, type_="number", add_to=row)),
+                    td.r(select.r(option.r("-----"),
                         (option.r(x, value=j, selected=j==color)
-                                for j, x in enumerate(COLORS))))
-                    with td.c():
-                        input_(type_="button", value="X",
-                               onclick=(remove_vehicle, id_, f), lazy=True,
-                               )
+                         for j, x in enumerate(COLORS))), add_to=row),
+                    td.r(input_.r(type_="button", value="X", onclick=(
+                        remove_vehicle, id_, fields), lazy=True))
+                )
+                fields.append(row)
 
         input_(type_="button", value="+", style={"width": "50px"},
-               onclick=[add_vehicle, f])
+               onclick=[add_vehicle, fields])
 
     with div.c():
-        input_(type_="button", value="Save", onclick=(save, f), lazy=True)
+        input_(type_="button", value="Save", onclick=(save, fields), lazy=True)
 
 @app.route('/a-basic-form/')
 def a_basic_form():

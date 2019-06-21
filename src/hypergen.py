@@ -173,15 +173,19 @@ def element_dec(tag, children, **attrs):
 
 def write(*children, **kwargs):
     into = kwargs.get("into", state.html)
-    items = []
+    sep = t(kwargs.get("sep", ""))
     for x in children:
-        if type(x) in (list, tuple, GeneratorType):
-            items.extend(t(y) for y in list(x))
-        elif x is None:
+        if x is None:
             continue
+        elif type(x) in (list, tuple, GeneratorType):
+            into.extend(t(y) for y in list(x))
+        elif callable(x):
+            into.append(x)
         else:
-            items.append(t(x))
-    into.extend(t(kwargs.get("sep", "")).join(x for x in items))
+            into.append(t(x))
+        into.append(sep)
+    if children:
+        into.pop()
 
 
 def raw(*children, **kwargs):
@@ -335,11 +339,15 @@ def input_(**attrs):
         node = control_element("input", [], void=True, into=into, **attrs)
         return Node("".join(into), node.meta)
 
+    into = attrs.pop("into", state.html)
+    add_to = attrs.pop("add_to", False)
     lazy = attrs.pop("lazy", False)
     node = control_element("input", [], void=True, lazy=lazy, **attrs)
 
     if lazy:
-        state.html.append(lazy_promise)
+        into.append(lazy_promise)
+    if add_to is not False:
+        add_to.append(node)
 
     return node
 
