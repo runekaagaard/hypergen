@@ -198,31 +198,43 @@ input { width: 90% }
 """
 COLORS = ("Red", "Black", "Silver")
 RED, BLACK, SILVER = range(len(COLORS))
-VEHICLES = [
-    ["Bugatti Chiron Sport", 261, RED],
-    ["Mercedes-AMG Project One", 261, SILVER],
-    ["Lamborghini Aventador SVJ", 217, BLACK],
-]
+class Db:
+    i = 3
+    vehicles = [
+        ["veh1", "Bugatti Chiron Sport", 261, RED],
+        ["veh2", "Mercedes-AMG Project One", 261, SILVER],
+        ["veh3", "Lamborghini Aventador SVJ", 217, BLACK],
+    ]
+
+    @staticmethod
+    def new_id():
+        Db.i += 1
+        return "veh{}".format(Db.i)
+
+    @staticmethod
+    def empty_row():
+        return [Db.new_id(), "", "", ""]
+
 @callback_route(app, '/add-vehicle/')
 def add_vehicle(vehicles):
-    global VEHICLES
-    VEHICLES = vehicles
-    VEHICLES.append(("", "", ""))
+    Db.vehicles = vehicles
+    Db.vehicles.append(Db.empty_row())
 
     return hypergen(a_basic_form_template, target_id="content")
 
 @callback_route(app, '/remove-vehicle/')
-def remove_vehicle(i, vehicles):
-    global VEHICLES
-    del vehicles[i]
-    VEHICLES = vehicles
+def remove_vehicle(id_, vehicles):
+    print "ID", id_
+    print vehicles
+    print [x for x in vehicles if x[0] != id_]
+    print
+    Db.vehicles = [x for x in vehicles if x[0] != id_]
 
     return hypergen(a_basic_form_template, target_id="content")
 
 @callback_route(app, '/save/')
 def save(vehicles):
-    global VEHICLES
-    VEHICLES = vehicles
+    Db.vehicles = vehicles
     return hypergen(a_basic_form_template, target_id="content")
 
 
@@ -238,21 +250,23 @@ def a_basic_form_template():
         f = []
         with table.c(tr.r(th.r(x) for x in ("Model", "MPH", "Color", ""))):
             i = -1
-            for model, mph, color in VEHICLES:
-                f.append([None] * 3)
+            for id_, model, mph, color in Db.vehicles:
+                f.append([id_, "", "", ""])
                 i += 1
                 with tr.c():
                     with td.c():
-                        f[-1][0] = input_(value=model)
+                        f[-1][1] = input_(value=model, id_=id_+"a")
                     with td.c():
-                        f[-1][1] = input_(value=mph, type_="number")
-                    f[-1][2] = RED
+                        f[-1][2] = input_(value=mph, type_="number",
+                                          id_=id_+"b")
+                    f[-1][3] = RED
                     td(select.r(option.r("-----"),
                         (option.r(x, value=j, selected=j==color)
                                 for j, x in enumerate(COLORS))))
                     with td.c():
                         input_(type_="button", value="X",
-                               onclick=(remove_vehicle, i, f), lazy=True)
+                               onclick=(remove_vehicle, id_, f), lazy=True,
+                               id_=id_+"c")
 
         input_(type_="button", value="+", style={"width": "50px"},
                onclick=[add_vehicle, f])
