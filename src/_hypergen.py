@@ -6,7 +6,7 @@ from threading import local
 from contextlib import contextmanager
 from collections import OrderedDict
 from functools import wraps
-from copy import copy
+from copy import deepcopy
 from types import GeneratorType
 
 ### Python 2+3 compatibility ###
@@ -36,7 +36,7 @@ UPDATE = 1
 
 
 def hypergen(func, *args, **kwargs):
-    kwargs = copy(kwargs)
+    kwargs = deepcopy(kwargs)
     auto_id = kwargs.pop("auto_id", False)
     try:
         state.html = []
@@ -87,7 +87,6 @@ def element_start(tag,
                   into=None,
                   sep="",
                   void=False,
-                  liveview=None,
                   when=True,
                   **attrs):
     def sort_attrs(attrs):
@@ -106,32 +105,33 @@ def element_start(tag,
         raise SkipException()
     if into is None:
         into = state.html
-    attrs = sort_attrs(copy(attrs))
-    e = into.extend
+    attrs = sort_attrs(deepcopy(attrs))
+    w = write
 
-    e(("<", tag))
+    w(("<", tag), into=into)
     for k, v in items(attrs):
         k = t(k).rstrip("_").replace("_", "-")
         if k == "meta":
             continue
         elif type(v) is bool:
             if v is True:
-                e((" ", k))
+                w((" ", k), into=into)
         elif k == "style" and type(v) in (dict, OrderedDict):
-            e((" ", k, '="', ";".join(
-                t(k1) + ":" + t(v1) for k1, v1 in items(v)), '"'))
+            w((" ", k, '="', ";".join(
+                t(k1) + ":" + t(v1) for k1, v1 in items(v)), '"'),
+              into=into)
         else:
-            e((" ", k, '="', t(v), '"'))
+            w((" ", k, '="', t(v), '"'), into=into)
     if void:
-        e(("/"))
-    e(('>', ))
+        w(("/"), into=into)
+    w(('>', ), into=into)
 
-    write(*children, into=into, sep=sep)
+    w(*children, into=into, sep=sep)
 
 
 def element_end(tag, children, **kwargs):
     write(*children, **kwargs)
-    kwargs.get("into", state.html).extend(("</", t(tag), ">"))
+    write(("</", t(tag), ">"), **kwargs)
 
 
 def element(tag, children, **attrs):
@@ -300,12 +300,14 @@ class Callback(object):
                     1:-1])
 
 
-def control_element(tag, children, lazy=False, **attrs):
+def control_element(tag, children, **attrs):
+    attrs_copy = deepcopy(attrs)
     if state.auto_id and "id_" not in attrs:
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
     meta = attrs.get("meta", {})
+    lazy = attrs.pop("lazy")
     updates = {}
 
     if state.liveview is True:
@@ -322,10 +324,12 @@ def control_element(tag, children, lazy=False, **attrs):
                                                                 tuple) else v
                 updates[k] = callback.render(callback_argument)
     attrs.update(updates)
-    if not lazy:
-        element(tag, children, **attrs)
 
-    return Node(None, meta)
+    if lazy:
+        write(lambda: control_element(tag, children, **attrs_copy))
+        return Node(None, meta)
+    else:
+        return element(tag, children, **attrs)
 
 
 ### Input ###
@@ -334,22 +338,7 @@ INPUT_TYPES = dict(checkbox="c", month="i", number="i", range="f", week="i")
 
 
 def input_(**attrs):
-    def lazy_promise():
-        into = []
-        node = control_element("input", [], void=True, into=into, **attrs)
-        return Node("".join(into), node.meta)
-
-    into = attrs.pop("into", state.html)
-    add_to = attrs.pop("add_to", False)
-    lazy = attrs.pop("lazy", False)
-    node = control_element("input", [], void=True, lazy=lazy, **attrs)
-
-    if lazy:
-        into.append(lazy_promise)
-    if add_to is not False:
-        add_to.append(node)
-
-    return node
+    return control_element("input", [], void=True, **attrs)
 
 
 def input_ret(**attrs):
