@@ -163,10 +163,12 @@ def petals_template():
         input_(type="button", value="Submit", onclick=(petal_answer, answer))
         span("Streak: ", streak, sep=" ", style="margin-left: 8px")
 
-    with skippable(), table.c(when=len(ANSWERS) > 1):
-        tr(th.r(x) for x in ("Throw", "Your answer", "Correct answer"))
-        for question, answer in zip(QUESTIONS[1:], ANSWERS[1:]):
-            tr(td.r(x) for x in (dies(question, "30px"), answer, facit(question)))
+    if ANSWERS:
+        with table.c():
+            tr(th.r(x) for x in ("Throw", "Your answer", "Correct answer"))
+            for question, answer in zip(QUESTIONS[1:], ANSWERS[1:]):
+                tr(td.r(x) for x in (dies(question, "30px"), answer,
+                                     facit(question)))
 
 
 def roll():

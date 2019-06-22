@@ -82,87 +82,59 @@ def skippable():
 ### Building HTML, internal API ###
 
 
-def element_start(tag,
-                  children,
-                  into=None,
-                  sep="",
-                  void=False,
-                  liveview=None,
-                  when=True,
-                  **attrs):
-    def sort_attrs(attrs):
-        # For testing only, subject to change.
-        sort_attrs = attrs.pop("_sort_attrs", False)
-        if sort_attrs:
-            attrs = OrderedDict((k, attrs[k]) for k in sorted(attrs.keys()))
-            if "style" in attrs and type(attrs["style"]) is dict:
-                attrs["style"] = OrderedDict(
-                    (k, attrs["style"][k])
-                    for k in sorted(attrs["style"].keys()))
-
-        return attrs
-
-    if when is False:
-        raise SkipException()
-    if into is None:
-        into = state.html
-    attrs = sort_attrs(deepcopy(attrs))
-    w = write
-
-    w(("<", tag), into=into)
+def element_start(tag, children, into=None, sep="", void=False, **attrs):
+    attrs = _sort_attrs(attrs)
+    raw(("<", tag), into=into)
     for k, v in items(attrs):
         k = t(k).rstrip("_").replace("_", "-")
-        if k == "meta":
-            continue
-        elif type(v) is bool:
+        if type(v) is bool:
             if v is True:
-                w((" ", k), into=into)
+                raw((" ", k), into=into)
         elif k == "style" and type(v) in (dict, OrderedDict):
-            w((" ", k, '="', ";".join(
+            raw((" ", k, '="', ";".join(
                 t(k1) + ":" + t(v1) for k1, v1 in items(v)), '"'),
-              into=into)
+                into=into)
         else:
-            w((" ", k, '="', t(v), '"'), into=into)
+            raw((" ", k, '="', t(v), '"'), into=into)
+
     if void:
-        w(("/"), into=into)
-    w(('>', ), into=into)
-
-    w(*children, into=into, sep=sep)
-
-
-def element_end(tag, children, **kwargs):
-    write(*children, **kwargs)
-    write(("</", t(tag), ">"), **kwargs)
+        raw(("/"), into=into)
+    raw(('>', ), into=into)
+    write(*children, into=into, sep=sep)
 
 
-def element(tag, children, **attrs):
-    element_start(tag, children, **attrs)
-    if not attrs.get("void", False):
-        element_end(tag, [], **attrs)
-
-    return Node(None, attrs.get("meta", {}))
+def element_end(tag, children, into=None, sep="", void=False):
+    if void is False:
+        write(*children, into=into, sep=sep)
+        raw(("</", t(tag), ">"), into=into)
 
 
-def element_ret(tag, children, **attrs):
+def element(tag, children, into=None, sep="", void=False, **attrs):
+    element_start(tag, children, into=into, sep=sep, void=void, **attrs)
+    element_end(tag, [], into=into, void=void)
+
+
+def element_ret(tag, children, sep="", void=False, **attrs):
     into = []
-    element(tag, children, into=into, **attrs)
+    element(tag, children, into=into, sep=sep, void=void, **attrs)
+    return into
 
-    return Node("".join(into), attrs.get("meta", {}))
 
-
-def element_con(tag, children, **attrs):
-    element = element_start(tag, children, **attrs)
+def element_con(tag, children, into=None, sep="", void=False, **attrs):
+    element = element_start(
+        tag, children, into=into, sep=sep, void=void, **attrs)
     yield element
-    element_end(tag, [], **attrs)
+    element_end(tag, [], into=into, void=void)
 
 
-def element_dec(tag, children, **attrs):
+def element_dec(tag, children, into=None, sep="", void=False, **attrs):
     def _(f):
         @wraps(f)
         def __(*args, **kwargs):
-            element_start(tag, children, **attrs)
+            element_start(
+                tag, children, into=into, sep=sep, void=void, **attrs)
             f(*args, **kwargs)
-            element_end(tag, [], **attrs)
+            element_end(tag, [], into=into, void=void)
 
         return __
 
@@ -172,26 +144,33 @@ def element_dec(tag, children, **attrs):
 ### Building HTML, public API ###
 
 
-def write(*children, **kwargs):
-    into = kwargs.get("into", state.html)
-    sep = t(kwargs.get("sep", ""))
+def _write(_t, children, **kwargs):
+    into = kwargs.get("into", None)
+    if into is None:
+        into = state.html
+    sep = _t(kwargs.get("sep", ""))
     for x in children:
         if x is None:
             continue
         elif type(x) in (list, tuple, GeneratorType):
-            into.extend(t(y) for y in list(x))
+            _write(_t, list(x), into=into, sep=sep)
+            continue
         elif callable(x):
             into.append(x)
         else:
-            into.append(t(x))
-        into.append(sep)
-    if children:
+            into.append(_t(x))
+        if sep:
+            into.append(sep)
+    if sep and children:
         into.pop()
 
 
+def write(*children, **kwargs):
+    _write(t, children, **kwargs)
+
+
 def raw(*children, **kwargs):
-    kwargs.get("into", state.html).extend((kwargs.get("sep",
-                                                      "").join(children), ))
+    _write(lambda x: x, children, **kwargs)
 
 
 ### Flask helpers ###
@@ -226,6 +205,17 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
 
 
 ### Misc ###
+
+
+def _sort_attrs(attrs):
+    # For testing only, subject to change.
+    if attrs.pop("_sort_attrs", False):
+        attrs = OrderedDict((k, attrs[k]) for k in sorted(attrs.keys()))
+        if "style" in attrs and type(attrs["style"]) is dict:
+            attrs["style"] = OrderedDict(
+                (k, attrs["style"][k]) for k in sorted(attrs["style"].keys()))
+
+    return attrs
 
 
 def t(s, quote=True):
@@ -308,7 +298,7 @@ def control_element(tag, children, **attrs):
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
     meta = attrs.get("meta", {})
-    lazy = attrs.pop("lazy")
+    lazy = attrs.pop("lazy", False)
     updates = {}
 
     if state.liveview is True:
@@ -340,23 +330,6 @@ INPUT_TYPES = dict(checkbox="c", month="i", number="i", range="f", week="i")
 
 def input_(**attrs):
     return control_element("input", [], void=True, **attrs)
-
-    def lazy_promise():
-        into = []
-        node = control_element("input", [], void=True, into=into, **attrs)
-        return Node("".join(into), node.meta)
-
-    into = attrs.pop("into", state.html)
-    add_to = attrs.pop("add_to", False)
-    lazy = attrs.pop("lazy", False)
-    node = control_element("input", [], void=True, lazy=lazy, **attrs)
-
-    if lazy:
-        into.append(lazy_promise)
-    if add_to is not False:
-        add_to.append(node)
-
-    return node
 
 
 def input_ret(**attrs):
