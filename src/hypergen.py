@@ -222,6 +222,12 @@ def t(s, quote=True):
     return str(s) if type(s) in (Safe, Node) else escape(str(s), quote=quote)
 
 
+class Html(list):
+    def __init__(self, L=None, meta=None):
+        super(Html, self).__init__(L if L is not None else [])
+        # self.meta = Meta()
+
+
 class Safe(str):
     pass
 
@@ -291,33 +297,28 @@ class Callback(object):
                     1:-1])
 
 
-def control_element(tag, children, **attrs):
-    attrs_copy = deepcopy(attrs)
+def control_element(tag, children, lazy=False, **attrs):
     if state.auto_id and "id_" not in attrs:
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
-    meta = attrs.get("meta", {})
-    lazy = attrs.pop("lazy", False)
+
+    meta = {}
     updates = {}
 
     if state.liveview is True:
         assert attrs.get("id_"), "Needs an id to use an input with liveview."
-        callback_argument = "H.cbs.{}('{}')".format(
+        meta["callback_argument"] = "H.cbs.{}('{}')".format(
             INPUT_TYPES.get(attrs.get("type_", "text"), "s"), attrs["id_"])
-        meta["callback_argument"] = callback_argument
         for k, v in items(attrs):
-            k = t(k).rstrip("_").replace("_", "-")
-            if k == "meta":
-                continue
-            elif k.startswith("on") and type(v) in (list, tuple, Callback):
+            if k.startswith("on") and type(v) in (list, tuple, Callback):
                 callback = Callback(v[0], v[1:]) if type(v) in (list,
                                                                 tuple) else v
-                updates[k] = callback.render(callback_argument)
+                updates[k] = callback.render(meta["callback_argument"])
     attrs.update(updates)
 
     if lazy:
-        write(lambda: control_element(tag, children, **attrs_copy))
+        write(lambda: control_element(tag, children, **attrs))
         return Node(None, meta)
     else:
         return element(tag, children, **attrs)
@@ -3745,10 +3746,10 @@ if __name__ == "__main__":
         input_(value=2, id_="custom", _sort_attrs=True)
         input_(value=3, type="number", _sort_attrs=True)
 
-    assert hypergen(test_input, id_prefix="t9") == '<input value="1"/><input '\
+    assert hypergen(test_input, id_prefix="t9.") == '<input value="1"/><input '\
         'id="t9.custom" value="2"/><input type="number" value="3"/>'
 
-    assert hypergen(test_input, id_prefix="e", liveview=True,
+    assert hypergen(test_input, id_prefix="e.", liveview=True,
                     auto_id=True) == '<input '\
         'id="e.a" value="1"/><input id="e.custom" value="2"/><input '\
         'id="e.b" type="number" value="3"/>'
@@ -3763,7 +3764,7 @@ if __name__ == "__main__":
             onchange=(callback1, 9, [1], True, "foo"),
             _sort_attrs=True)
 
-    assert hypergen(test_liveview_events, id_prefix="I", liveview=True,
+    assert hypergen(test_liveview_events, id_prefix="I.", liveview=True,
                     auto_id=True) == \
         '<input id="I.a" onchange="H.cb(&quot;/hpg/cb1/&quot;,9,[1],true,&quot;'\
         'foo&quot;)" value="91"/>'
@@ -3771,5 +3772,6 @@ if __name__ == "__main__":
     def test_collections_as_children():
         div((div.r(x) for x in [3]), [1], (2, ))
 
+    print(hypergen(test_collections_as_children))
     assert hypergen(
         test_collections_as_children) == '<div><div>3</div>12</div>'
