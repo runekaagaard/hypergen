@@ -237,8 +237,9 @@ def t(s, quote=True):
 
 
 class Blob(list):
-    def __init__(self, html=None):
+    def __init__(self, html=None, meta=None):
         super(Blob, self).__init__(html if html is not None else [])
+        self.meta = meta
 
 
 class Safe(str):
@@ -268,7 +269,7 @@ THIS = "THIS_"
 
 
 def encoder(obj):
-    if type(obj) is Node:
+    if type(obj) is Blob:
         return "H_" + obj.serialize() + "_H"
     else:
         raise TypeError(repr(obj) + " is not JSON serializable")
@@ -295,31 +296,38 @@ class Callback(object):
                     1:-1])
 
 
-def control_element(tag, children, lazy=False, **attrs):
+def control_element(tag,
+                    children,
+                    lazy=False,
+                    into=None,
+                    void=False,
+                    sep="",
+                    **attrs):
     if state.auto_id and "id_" not in attrs:
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
-
+    attrs = _element_start_1(tag, attrs, into)
     meta = {}
-    updates = {}
 
-    if state.liveview is True:
-        assert attrs.get("id_"), "Needs an id to use an input with liveview."
-        meta["callback_argument"] = "H.cbs.{}('{}')".format(
-            INPUT_TYPES.get(attrs.get("type_", "text"), "s"), attrs["id_"])
-        for k, v in items(attrs):
+    for k, v in items(attrs):
+        if state.liveview is True:
+            meta["this"] = "H.cbs.{}('{}')".format(
+                INPUT_TYPES.get(attrs.get("type_", "text"), "s"), attrs["id_"])
             if k.startswith("on") and type(v) in (list, tuple, Callback):
                 callback = Callback(v[0], v[1:]) if type(v) in (list,
                                                                 tuple) else v
-                updates[k] = callback.render(meta["callback_argument"])
-    attrs.update(updates)
+                tmp = lambda: callback.render(meta["this"])
+                raw(" ", k, '="', into=into)
+                write(tmp if lazy else tmp(), into=into)
+                raw('"', into=into)
+                continue
 
-    if lazy:
-        write(lambda: control_element(tag, children, **attrs))
-        return Node(None, meta)
-    else:
-        return element(tag, children, **attrs)
+        _element_start_2(k, v, into)
+
+    _element_start_3(children, into, void, sep)
+
+    return Blob(into, meta)
 
 
 ### Input ###
@@ -332,9 +340,9 @@ def input_(**attrs):
 
 
 def input_ret(**attrs):
-    into = []
-    node = input_(into=into, **attrs)
-    return Node("".join(into), meta=node.meta)
+    into = Blob()
+    input_(into=into, **attrs)
+    return into
 
 
 input_.r = input_ret
