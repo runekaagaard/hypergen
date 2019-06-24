@@ -82,25 +82,37 @@ def skippable():
 ### Building HTML, internal API ###
 
 
-def element_start(tag, children, into=None, sep="", void=False, **attrs):
+def _element_start_1(tag, attrs, into):
     attrs = _sort_attrs(attrs)
     raw(("<", tag), into=into)
-    for k, v in items(attrs):
-        k = t(k).rstrip("_").replace("_", "-")
-        if type(v) is bool:
-            if v is True:
-                raw((" ", k), into=into)
-        elif k == "style" and type(v) in (dict, OrderedDict):
-            raw((" ", k, '="', ";".join(
-                t(k1) + ":" + t(v1) for k1, v1 in items(v)), '"'),
-                into=into)
-        else:
-            raw((" ", k, '="', t(v), '"'), into=into)
+    return attrs
 
+
+def _element_start_2(k, v, into):
+    k = t(k).rstrip("_").replace("_", "-")
+    if type(v) is bool:
+        if v is True:
+            raw((" ", k), into=into)
+    elif k == "style" and type(v) in (dict, OrderedDict):
+        raw((" ", k, '="', ";".join(
+            t(k1) + ":" + t(v1) for k1, v1 in items(v)), '"'),
+            into=into)
+    else:
+        raw((" ", k, '="', t(v), '"'), into=into)
+
+
+def _element_start_3(children, into, void, sep):
     if void:
         raw(("/"), into=into)
     raw(('>', ), into=into)
     write(*children, into=into, sep=sep)
+
+
+def element_start(tag, children, into=None, sep="", void=False, **attrs):
+    attrs = _element_start_1(tag, attrs, into)
+    for k, v in items(attrs):
+        _element_start_2(k, v, into)
+    _element_start_3(children, into, void, sep)
 
 
 def element_end(tag, children, into=None, sep="", void=False):
@@ -115,7 +127,7 @@ def element(tag, children, into=None, sep="", void=False, **attrs):
 
 
 def element_ret(tag, children, sep="", void=False, **attrs):
-    into = []
+    into = Blob()
     element(tag, children, into=into, sep=sep, void=void, **attrs)
     return into
 
@@ -152,6 +164,8 @@ def _write(_t, children, **kwargs):
     for x in children:
         if x is None:
             continue
+        elif type(x) is Blob:
+            into.extend(x)
         elif type(x) in (list, tuple, GeneratorType):
             _write(_t, list(x), into=into, sep=sep)
             continue
@@ -219,32 +233,16 @@ def _sort_attrs(attrs):
 
 
 def t(s, quote=True):
-    return str(s) if type(s) in (Safe, Node) else escape(str(s), quote=quote)
+    return str(s) if type(s) in (Blob, ) else escape(str(s), quote=quote)
 
 
-class Html(list):
-    def __init__(self, L=None, meta=None):
-        super(Html, self).__init__(L if L is not None else [])
-        # self.meta = Meta()
+class Blob(list):
+    def __init__(self, html=None):
+        super(Blob, self).__init__(html if html is not None else [])
 
 
 class Safe(str):
     pass
-
-
-class Node(object):
-    def __init__(self, html, meta=None):
-        self.html = html
-        self.meta = meta if meta is not None else {}
-
-    def __str__(self):
-        return self.html
-
-    def __unicode__(self):
-        return self.html
-
-    def serialize(self):
-        return self.meta["callback_argument"]
 
 
 def base65_counter():
@@ -513,6 +511,5 @@ if __name__ == "__main__":
     def test_collections_as_children():
         div((div.r(x) for x in [3]), [1], (2, ))
 
-    print(hypergen(test_collections_as_children))
     assert hypergen(
         test_collections_as_children) == '<div><div>3</div>12</div>'
