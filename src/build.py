@@ -1,3 +1,7 @@
+import keyword
+GLOBALS = globals()
+BUILTINS = dir(__builtins__)
+
 TEMPLATE = "### TEMPLATE-ELEMENT ###"
 RENDERED = "### RENDERED-ELEMENTS ###"
 TEMPLATE_VOID = "### TEMPLATE-VOID-ELEMENT ###"
@@ -35,10 +39,6 @@ HARDCODED_TAGS = set(["div", "input", "select", "link"])
 
 code = open("_hypergen.py").read()
 template = code.split(TEMPLATE)[1]
-
-import keyword
-GLOBALS = globals()
-BUILTINS = dir(__builtins__)
 
 
 def protect(x):
