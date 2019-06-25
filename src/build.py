@@ -2,32 +2,60 @@ TEMPLATE = "### TEMPLATE-ELEMENT ###"
 RENDERED = "### RENDERED-ELEMENTS ###"
 TEMPLATE_VOID = "### TEMPLATE-VOID-ELEMENT ###"
 RENDERED_VOID = "### RENDERED-VOID-ELEMENTS ###"
+"""
+Tags taken from https://www.w3schools.com/tags/, with:
 
-TAGS = [
-    'a', 'abbr', 'address', 'article', 'aside', 'audio', 'b', 'bdi', 'bdo',
-    'blockquote', 'body', 'button', 'canvas', 'caption', 'cite', 'code',
-    'colgroup', 'datalist', 'dd', 'del_', 'details', 'dfn', 'dl', 'dt', 'em',
-    'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3',
-    'h4', 'h5', 'h6', 'header', 'html', 'i', 'iframe', 'ins', 'kbd', 'keygen',
-    'label', 'legend', 'li', 'main', 'map', 'mark', 'menu', 'meter', 'nav',
-    'object_', 'ol', 'optgroup', 'option', 'output', 'p', 'pre', 'progress',
-    'q', 'rp', 'rt', 'ruby', 's', 'samp', 'section', 'small', 'span', 'strong',
-    'sub', 'summary', 'sup', 'table', 'tbody', 'td', 'textarea', 'tfoot', 'th',
-    'thead', 'time', 'tr', 'u', 'ul', 'var', 'video', 'script', 'style',
-    'html', 'body', 'head'
-]
+JSON.stringify([...document.getElementsByTagName("td")].filter(x => x.firstElementChild && x.firstElementChild.tagName === "A" && x.firstElementChild.href && x.firstElementChild.href.includes("tags/tag_")).map(x => x.firstElementChild.innerHTML.replace("&lt;", "").replace("&gt;", "").replace("!", "")))
 
-VOID_TAGS = [
+# Add h1 to h6 manually.
+"""
+
+ALL_TAGS = set([
+    "DOCTYPE", "a", "abbr", "acronym", "address", "applet", "area", "article",
+    "aside", "audio", "b", "base", "basefont", "bdi", "bdo", "big",
+    "blockquote", "body", "br", "button", "canvas", "caption", "center",
+    "cite", "code", "col", "colgroup", "data", "datalist", "dd", "del",
+    "details", "dfn", "dialog", "dir", "div", "dl", "dt", "em", "embed",
+    "fieldset", "figcaption", "figure", "font", "footer", "form", "frame",
+    "frameset", "h1", "h2", "h3", "h4", "h4", "h5", "head", "header", "hr",
+    "html", "i", "iframe", "img", "input", "ins", "kbd", "label", "legend",
+    "li", "link", "main", "map", "mark", "meta", "meter", "nav", "noframes",
+    "noscript", "object", "ol", "optgroup", "option", "output", "p", "param",
+    "picture", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp",
+    "script", "section", "select", "small", "source", "span", "strike",
+    "strong", "style", "sub", "summary", "sup", "svg", "table", "tbody", "td",
+    "template", "textarea", "tfoot", "th", "thead", "time", "title", "tr",
+    "track", "tt", "u", "ul", "var", "video", "wbr"
+])
+VOID_TAGS = set([
     'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'meta', 'param',
     'source', 'track', 'wbr', 'command', 'keygen', 'menuitem'
-]
+])
+HARDCODED_TAGS = set(["div", "input", "select", "link"])
 
 code = open("_hypergen.py").read()
 template = code.split(TEMPLATE)[1]
 
+import keyword
+GLOBALS = globals()
+BUILTINS = dir(__builtins__)
+
+
+def protect(x):
+    x = x.lower()
+    if x in GLOBALS or x in BUILTINS or x in keyword.kwlist:
+        return x + "_"
+    else:
+        return x
+
+
 s = ""
-for tag in TAGS:
-    s += template.replace("div", tag)
+for tag in sorted(ALL_TAGS - VOID_TAGS - HARDCODED_TAGS):
+    tag = protect(tag)
+    stag = tag.rstrip("_")
+    s += template.replace('"div"',
+                          '"{}"'.format(stag)).replace("div", tag).replace(
+                              "{}__".format(stag), "{}_".format(stag))
 
 code = code.replace(RENDERED, s)
 
@@ -35,8 +63,11 @@ code = code.replace(RENDERED, s)
 
 template = code.split(TEMPLATE_VOID)[1]
 s = ""
-for tag in VOID_TAGS:
-    s += template.replace("link", tag)
+for tag in VOID_TAGS - HARDCODED_TAGS:
+    tag = protect(tag)
+    s += template.replace('"link"',
+                          '"{}"'.format(stag)).replace("link", tag).replace(
+                              "{}__".format(stag), "{}_".format(stag))
 
 code = code.replace(RENDERED_VOID, s)
 

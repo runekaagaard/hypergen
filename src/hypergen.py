@@ -453,6 +453,40 @@ link.r = link_ret
 ### TEMPLATE-VOID-ELEMENT ###
 
 
+def doctype_sta(*children, **attrs):
+    return element_start("doctype", children, **attrs)
+
+
+def doctype_end(*children, **kwargs):
+    return element_end("doctype", children, **kwargs)
+
+
+def doctype_ret(*children, **kwargs):
+    return element_ret("doctype", children, **kwargs)
+
+
+@contextmanager
+def doctype_con(*children, **attrs):
+    for x in element_con("doctype", children, **attrs):
+        yield x
+
+
+def doctype_dec(*children, **attrs):
+    return element_dec("doctype", children, **attrs)
+
+
+def doctype(*children, **attrs):
+    return element("doctype", children, **attrs)
+
+
+doctype.s = doctype_sta
+doctype.e = doctype_end
+doctype.r = doctype_ret
+doctype.c = doctype_con
+doctype.d = doctype_dec
+
+
+
 def a_sta(*children, **attrs):
     return element_start("a", children, **attrs)
 
@@ -521,6 +555,40 @@ abbr.d = abbr_dec
 
 
 
+def acronym_sta(*children, **attrs):
+    return element_start("acronym", children, **attrs)
+
+
+def acronym_end(*children, **kwargs):
+    return element_end("acronym", children, **kwargs)
+
+
+def acronym_ret(*children, **kwargs):
+    return element_ret("acronym", children, **kwargs)
+
+
+@contextmanager
+def acronym_con(*children, **attrs):
+    for x in element_con("acronym", children, **attrs):
+        yield x
+
+
+def acronym_dec(*children, **attrs):
+    return element_dec("acronym", children, **attrs)
+
+
+def acronym(*children, **attrs):
+    return element("acronym", children, **attrs)
+
+
+acronym.s = acronym_sta
+acronym.e = acronym_end
+acronym.r = acronym_ret
+acronym.c = acronym_con
+acronym.d = acronym_dec
+
+
+
 def address_sta(*children, **attrs):
     return element_start("address", children, **attrs)
 
@@ -552,6 +620,40 @@ address.e = address_end
 address.r = address_ret
 address.c = address_con
 address.d = address_dec
+
+
+
+def applet_sta(*children, **attrs):
+    return element_start("applet", children, **attrs)
+
+
+def applet_end(*children, **kwargs):
+    return element_end("applet", children, **kwargs)
+
+
+def applet_ret(*children, **kwargs):
+    return element_ret("applet", children, **kwargs)
+
+
+@contextmanager
+def applet_con(*children, **attrs):
+    for x in element_con("applet", children, **attrs):
+        yield x
+
+
+def applet_dec(*children, **attrs):
+    return element_dec("applet", children, **attrs)
+
+
+def applet(*children, **attrs):
+    return element("applet", children, **attrs)
+
+
+applet.s = applet_sta
+applet.e = applet_end
+applet.r = applet_ret
+applet.c = applet_con
+applet.d = applet_dec
 
 
 
@@ -691,6 +793,40 @@ b.d = b_dec
 
 
 
+def basefont_sta(*children, **attrs):
+    return element_start("basefont", children, **attrs)
+
+
+def basefont_end(*children, **kwargs):
+    return element_end("basefont", children, **kwargs)
+
+
+def basefont_ret(*children, **kwargs):
+    return element_ret("basefont", children, **kwargs)
+
+
+@contextmanager
+def basefont_con(*children, **attrs):
+    for x in element_con("basefont", children, **attrs):
+        yield x
+
+
+def basefont_dec(*children, **attrs):
+    return element_dec("basefont", children, **attrs)
+
+
+def basefont(*children, **attrs):
+    return element("basefont", children, **attrs)
+
+
+basefont.s = basefont_sta
+basefont.e = basefont_end
+basefont.r = basefont_ret
+basefont.c = basefont_con
+basefont.d = basefont_dec
+
+
+
 def bdi_sta(*children, **attrs):
     return element_start("bdi", children, **attrs)
 
@@ -756,6 +892,40 @@ bdo.e = bdo_end
 bdo.r = bdo_ret
 bdo.c = bdo_con
 bdo.d = bdo_dec
+
+
+
+def big_sta(*children, **attrs):
+    return element_start("big", children, **attrs)
+
+
+def big_end(*children, **kwargs):
+    return element_end("big", children, **kwargs)
+
+
+def big_ret(*children, **kwargs):
+    return element_ret("big", children, **kwargs)
+
+
+@contextmanager
+def big_con(*children, **attrs):
+    for x in element_con("big", children, **attrs):
+        yield x
+
+
+def big_dec(*children, **attrs):
+    return element_dec("big", children, **attrs)
+
+
+def big(*children, **attrs):
+    return element("big", children, **attrs)
+
+
+big.s = big_sta
+big.e = big_end
+big.r = big_ret
+big.c = big_con
+big.d = big_dec
 
 
 
@@ -929,6 +1099,40 @@ caption.d = caption_dec
 
 
 
+def center_sta(*children, **attrs):
+    return element_start("center", children, **attrs)
+
+
+def center_end(*children, **kwargs):
+    return element_end("center", children, **kwargs)
+
+
+def center_ret(*children, **kwargs):
+    return element_ret("center", children, **kwargs)
+
+
+@contextmanager
+def center_con(*children, **attrs):
+    for x in element_con("center", children, **attrs):
+        yield x
+
+
+def center_dec(*children, **attrs):
+    return element_dec("center", children, **attrs)
+
+
+def center(*children, **attrs):
+    return element("center", children, **attrs)
+
+
+center.s = center_sta
+center.e = center_end
+center.r = center_ret
+center.c = center_con
+center.d = center_dec
+
+
+
 def cite_sta(*children, **attrs):
     return element_start("cite", children, **attrs)
 
@@ -985,15 +1189,15 @@ def code_dec(*children, **attrs):
     return element_dec("code", children, **attrs)
 
 
-def code(*children, **attrs):
+def code_(*children, **attrs):
     return element("code", children, **attrs)
 
 
-code.s = code_sta
-code.e = code_end
-code.r = code_ret
-code.c = code_con
-code.d = code_dec
+code_.s = code_sta
+code_.e = code_end
+code_.r = code_ret
+code_.c = code_con
+code_.d = code_dec
 
 
 
@@ -1028,6 +1232,40 @@ colgroup.e = colgroup_end
 colgroup.r = colgroup_ret
 colgroup.c = colgroup_con
 colgroup.d = colgroup_dec
+
+
+
+def data_sta(*children, **attrs):
+    return element_start("data", children, **attrs)
+
+
+def data_end(*children, **kwargs):
+    return element_end("data", children, **kwargs)
+
+
+def data_ret(*children, **kwargs):
+    return element_ret("data", children, **kwargs)
+
+
+@contextmanager
+def data_con(*children, **attrs):
+    for x in element_con("data", children, **attrs):
+        yield x
+
+
+def data_dec(*children, **attrs):
+    return element_dec("data", children, **attrs)
+
+
+def data(*children, **attrs):
+    return element("data", children, **attrs)
+
+
+data.s = data_sta
+data.e = data_end
+data.r = data_ret
+data.c = data_con
+data.d = data_dec
 
 
 
@@ -1099,37 +1337,37 @@ dd.d = dd_dec
 
 
 
-def del__sta(*children, **attrs):
-    return element_start("del_", children, **attrs)
+def del_sta(*children, **attrs):
+    return element_start("del", children, **attrs)
 
 
-def del__end(*children, **kwargs):
-    return element_end("del_", children, **kwargs)
+def del_end(*children, **kwargs):
+    return element_end("del", children, **kwargs)
 
 
-def del__ret(*children, **kwargs):
-    return element_ret("del_", children, **kwargs)
+def del_ret(*children, **kwargs):
+    return element_ret("del", children, **kwargs)
 
 
 @contextmanager
-def del__con(*children, **attrs):
-    for x in element_con("del_", children, **attrs):
+def del_con(*children, **attrs):
+    for x in element_con("del", children, **attrs):
         yield x
 
 
-def del__dec(*children, **attrs):
-    return element_dec("del_", children, **attrs)
+def del_dec(*children, **attrs):
+    return element_dec("del", children, **attrs)
 
 
 def del_(*children, **attrs):
-    return element("del_", children, **attrs)
+    return element("del", children, **attrs)
 
 
-del_.s = del__sta
-del_.e = del__end
-del_.r = del__ret
-del_.c = del__con
-del_.d = del__dec
+del_.s = del_sta
+del_.e = del_end
+del_.r = del_ret
+del_.c = del_con
+del_.d = del_dec
 
 
 
@@ -1198,6 +1436,74 @@ dfn.e = dfn_end
 dfn.r = dfn_ret
 dfn.c = dfn_con
 dfn.d = dfn_dec
+
+
+
+def dialog_sta(*children, **attrs):
+    return element_start("dialog", children, **attrs)
+
+
+def dialog_end(*children, **kwargs):
+    return element_end("dialog", children, **kwargs)
+
+
+def dialog_ret(*children, **kwargs):
+    return element_ret("dialog", children, **kwargs)
+
+
+@contextmanager
+def dialog_con(*children, **attrs):
+    for x in element_con("dialog", children, **attrs):
+        yield x
+
+
+def dialog_dec(*children, **attrs):
+    return element_dec("dialog", children, **attrs)
+
+
+def dialog(*children, **attrs):
+    return element("dialog", children, **attrs)
+
+
+dialog.s = dialog_sta
+dialog.e = dialog_end
+dialog.r = dialog_ret
+dialog.c = dialog_con
+dialog.d = dialog_dec
+
+
+
+def dir_sta(*children, **attrs):
+    return element_start("dir", children, **attrs)
+
+
+def dir_end(*children, **kwargs):
+    return element_end("dir", children, **kwargs)
+
+
+def dir_ret(*children, **kwargs):
+    return element_ret("dir", children, **kwargs)
+
+
+@contextmanager
+def dir_con(*children, **attrs):
+    for x in element_con("dir", children, **attrs):
+        yield x
+
+
+def dir_dec(*children, **attrs):
+    return element_dec("dir", children, **attrs)
+
+
+def dir_(*children, **attrs):
+    return element("dir", children, **attrs)
+
+
+dir_.s = dir_sta
+dir_.e = dir_end
+dir_.r = dir_ret
+dir_.c = dir_con
+dir_.d = dir_dec
 
 
 
@@ -1405,6 +1711,40 @@ figure.d = figure_dec
 
 
 
+def font_sta(*children, **attrs):
+    return element_start("font", children, **attrs)
+
+
+def font_end(*children, **kwargs):
+    return element_end("font", children, **kwargs)
+
+
+def font_ret(*children, **kwargs):
+    return element_ret("font", children, **kwargs)
+
+
+@contextmanager
+def font_con(*children, **attrs):
+    for x in element_con("font", children, **attrs):
+        yield x
+
+
+def font_dec(*children, **attrs):
+    return element_dec("font", children, **attrs)
+
+
+def font(*children, **attrs):
+    return element("font", children, **attrs)
+
+
+font.s = font_sta
+font.e = font_end
+font.r = font_ret
+font.c = font_con
+font.d = font_dec
+
+
+
 def footer_sta(*children, **attrs):
     return element_start("footer", children, **attrs)
 
@@ -1470,6 +1810,74 @@ form.e = form_end
 form.r = form_ret
 form.c = form_con
 form.d = form_dec
+
+
+
+def frame_sta(*children, **attrs):
+    return element_start("frame", children, **attrs)
+
+
+def frame_end(*children, **kwargs):
+    return element_end("frame", children, **kwargs)
+
+
+def frame_ret(*children, **kwargs):
+    return element_ret("frame", children, **kwargs)
+
+
+@contextmanager
+def frame_con(*children, **attrs):
+    for x in element_con("frame", children, **attrs):
+        yield x
+
+
+def frame_dec(*children, **attrs):
+    return element_dec("frame", children, **attrs)
+
+
+def frame(*children, **attrs):
+    return element("frame", children, **attrs)
+
+
+frame.s = frame_sta
+frame.e = frame_end
+frame.r = frame_ret
+frame.c = frame_con
+frame.d = frame_dec
+
+
+
+def frameset_sta(*children, **attrs):
+    return element_start("frameset", children, **attrs)
+
+
+def frameset_end(*children, **kwargs):
+    return element_end("frameset", children, **kwargs)
+
+
+def frameset_ret(*children, **kwargs):
+    return element_ret("frameset", children, **kwargs)
+
+
+@contextmanager
+def frameset_con(*children, **attrs):
+    for x in element_con("frameset", children, **attrs):
+        yield x
+
+
+def frameset_dec(*children, **attrs):
+    return element_dec("frameset", children, **attrs)
+
+
+def frameset(*children, **attrs):
+    return element("frameset", children, **attrs)
+
+
+frameset.s = frameset_sta
+frameset.e = frameset_end
+frameset.r = frameset_ret
+frameset.c = frameset_con
+frameset.d = frameset_dec
 
 
 
@@ -1643,37 +2051,37 @@ h5.d = h5_dec
 
 
 
-def h6_sta(*children, **attrs):
-    return element_start("h6", children, **attrs)
+def head_sta(*children, **attrs):
+    return element_start("head", children, **attrs)
 
 
-def h6_end(*children, **kwargs):
-    return element_end("h6", children, **kwargs)
+def head_end(*children, **kwargs):
+    return element_end("head", children, **kwargs)
 
 
-def h6_ret(*children, **kwargs):
-    return element_ret("h6", children, **kwargs)
+def head_ret(*children, **kwargs):
+    return element_ret("head", children, **kwargs)
 
 
 @contextmanager
-def h6_con(*children, **attrs):
-    for x in element_con("h6", children, **attrs):
+def head_con(*children, **attrs):
+    for x in element_con("head", children, **attrs):
         yield x
 
 
-def h6_dec(*children, **attrs):
-    return element_dec("h6", children, **attrs)
+def head_dec(*children, **attrs):
+    return element_dec("head", children, **attrs)
 
 
-def h6(*children, **attrs):
-    return element("h6", children, **attrs)
+def head(*children, **attrs):
+    return element("head", children, **attrs)
 
 
-h6.s = h6_sta
-h6.e = h6_end
-h6.r = h6_ret
-h6.c = h6_con
-h6.d = h6_dec
+head.s = head_sta
+head.e = head_end
+head.r = head_ret
+head.c = head_con
+head.d = head_dec
 
 
 
@@ -1881,40 +2289,6 @@ kbd.d = kbd_dec
 
 
 
-def keygen_sta(*children, **attrs):
-    return element_start("keygen", children, **attrs)
-
-
-def keygen_end(*children, **kwargs):
-    return element_end("keygen", children, **kwargs)
-
-
-def keygen_ret(*children, **kwargs):
-    return element_ret("keygen", children, **kwargs)
-
-
-@contextmanager
-def keygen_con(*children, **attrs):
-    for x in element_con("keygen", children, **attrs):
-        yield x
-
-
-def keygen_dec(*children, **attrs):
-    return element_dec("keygen", children, **attrs)
-
-
-def keygen(*children, **attrs):
-    return element("keygen", children, **attrs)
-
-
-keygen.s = keygen_sta
-keygen.e = keygen_end
-keygen.r = keygen_ret
-keygen.c = keygen_con
-keygen.d = keygen_dec
-
-
-
 def label_sta(*children, **attrs):
     return element_start("label", children, **attrs)
 
@@ -2073,15 +2447,15 @@ def map_dec(*children, **attrs):
     return element_dec("map", children, **attrs)
 
 
-def map(*children, **attrs):
+def map_(*children, **attrs):
     return element("map", children, **attrs)
 
 
-map.s = map_sta
-map.e = map_end
-map.r = map_ret
-map.c = map_con
-map.d = map_dec
+map_.s = map_sta
+map_.e = map_end
+map_.r = map_ret
+map_.c = map_con
+map_.d = map_dec
 
 
 
@@ -2116,40 +2490,6 @@ mark.e = mark_end
 mark.r = mark_ret
 mark.c = mark_con
 mark.d = mark_dec
-
-
-
-def menu_sta(*children, **attrs):
-    return element_start("menu", children, **attrs)
-
-
-def menu_end(*children, **kwargs):
-    return element_end("menu", children, **kwargs)
-
-
-def menu_ret(*children, **kwargs):
-    return element_ret("menu", children, **kwargs)
-
-
-@contextmanager
-def menu_con(*children, **attrs):
-    for x in element_con("menu", children, **attrs):
-        yield x
-
-
-def menu_dec(*children, **attrs):
-    return element_dec("menu", children, **attrs)
-
-
-def menu(*children, **attrs):
-    return element("menu", children, **attrs)
-
-
-menu.s = menu_sta
-menu.e = menu_end
-menu.r = menu_ret
-menu.c = menu_con
-menu.d = menu_dec
 
 
 
@@ -2221,37 +2561,105 @@ nav.d = nav_dec
 
 
 
-def object__sta(*children, **attrs):
-    return element_start("object_", children, **attrs)
+def noframes_sta(*children, **attrs):
+    return element_start("noframes", children, **attrs)
 
 
-def object__end(*children, **kwargs):
-    return element_end("object_", children, **kwargs)
+def noframes_end(*children, **kwargs):
+    return element_end("noframes", children, **kwargs)
 
 
-def object__ret(*children, **kwargs):
-    return element_ret("object_", children, **kwargs)
+def noframes_ret(*children, **kwargs):
+    return element_ret("noframes", children, **kwargs)
 
 
 @contextmanager
-def object__con(*children, **attrs):
-    for x in element_con("object_", children, **attrs):
+def noframes_con(*children, **attrs):
+    for x in element_con("noframes", children, **attrs):
         yield x
 
 
-def object__dec(*children, **attrs):
-    return element_dec("object_", children, **attrs)
+def noframes_dec(*children, **attrs):
+    return element_dec("noframes", children, **attrs)
+
+
+def noframes(*children, **attrs):
+    return element("noframes", children, **attrs)
+
+
+noframes.s = noframes_sta
+noframes.e = noframes_end
+noframes.r = noframes_ret
+noframes.c = noframes_con
+noframes.d = noframes_dec
+
+
+
+def noscript_sta(*children, **attrs):
+    return element_start("noscript", children, **attrs)
+
+
+def noscript_end(*children, **kwargs):
+    return element_end("noscript", children, **kwargs)
+
+
+def noscript_ret(*children, **kwargs):
+    return element_ret("noscript", children, **kwargs)
+
+
+@contextmanager
+def noscript_con(*children, **attrs):
+    for x in element_con("noscript", children, **attrs):
+        yield x
+
+
+def noscript_dec(*children, **attrs):
+    return element_dec("noscript", children, **attrs)
+
+
+def noscript(*children, **attrs):
+    return element("noscript", children, **attrs)
+
+
+noscript.s = noscript_sta
+noscript.e = noscript_end
+noscript.r = noscript_ret
+noscript.c = noscript_con
+noscript.d = noscript_dec
+
+
+
+def object_sta(*children, **attrs):
+    return element_start("object", children, **attrs)
+
+
+def object_end(*children, **kwargs):
+    return element_end("object", children, **kwargs)
+
+
+def object_ret(*children, **kwargs):
+    return element_ret("object", children, **kwargs)
+
+
+@contextmanager
+def object_con(*children, **attrs):
+    for x in element_con("object", children, **attrs):
+        yield x
+
+
+def object_dec(*children, **attrs):
+    return element_dec("object", children, **attrs)
 
 
 def object_(*children, **attrs):
-    return element("object_", children, **attrs)
+    return element("object", children, **attrs)
 
 
-object_.s = object__sta
-object_.e = object__end
-object_.r = object__ret
-object_.c = object__con
-object_.d = object__dec
+object_.s = object_sta
+object_.e = object_end
+object_.r = object_ret
+object_.c = object_con
+object_.d = object_dec
 
 
 
@@ -2422,6 +2830,40 @@ p.e = p_end
 p.r = p_ret
 p.c = p_con
 p.d = p_dec
+
+
+
+def picture_sta(*children, **attrs):
+    return element_start("picture", children, **attrs)
+
+
+def picture_end(*children, **kwargs):
+    return element_end("picture", children, **kwargs)
+
+
+def picture_ret(*children, **kwargs):
+    return element_ret("picture", children, **kwargs)
+
+
+@contextmanager
+def picture_con(*children, **attrs):
+    for x in element_con("picture", children, **attrs):
+        yield x
+
+
+def picture_dec(*children, **attrs):
+    return element_dec("picture", children, **attrs)
+
+
+def picture(*children, **attrs):
+    return element("picture", children, **attrs)
+
+
+picture.s = picture_sta
+picture.e = picture_end
+picture.r = picture_ret
+picture.c = picture_con
+picture.d = picture_dec
 
 
 
@@ -2651,15 +3093,15 @@ def s_dec(*children, **attrs):
     return element_dec("s", children, **attrs)
 
 
-def s(*children, **attrs):
+def s_(*children, **attrs):
     return element("s", children, **attrs)
 
 
-s.s = s_sta
-s.e = s_end
-s.r = s_ret
-s.c = s_con
-s.d = s_dec
+s_.s = s_sta
+s_.e = s_end
+s_.r = s_ret
+s_.c = s_con
+s_.d = s_dec
 
 
 
@@ -2694,6 +3136,40 @@ samp.e = samp_end
 samp.r = samp_ret
 samp.c = samp_con
 samp.d = samp_dec
+
+
+
+def script_sta(*children, **attrs):
+    return element_start("script", children, **attrs)
+
+
+def script_end(*children, **kwargs):
+    return element_end("script", children, **kwargs)
+
+
+def script_ret(*children, **kwargs):
+    return element_ret("script", children, **kwargs)
+
+
+@contextmanager
+def script_con(*children, **attrs):
+    for x in element_con("script", children, **attrs):
+        yield x
+
+
+def script_dec(*children, **attrs):
+    return element_dec("script", children, **attrs)
+
+
+def script(*children, **attrs):
+    return element("script", children, **attrs)
+
+
+script.s = script_sta
+script.e = script_end
+script.r = script_ret
+script.c = script_con
+script.d = script_dec
 
 
 
@@ -2799,6 +3275,40 @@ span.d = span_dec
 
 
 
+def strike_sta(*children, **attrs):
+    return element_start("strike", children, **attrs)
+
+
+def strike_end(*children, **kwargs):
+    return element_end("strike", children, **kwargs)
+
+
+def strike_ret(*children, **kwargs):
+    return element_ret("strike", children, **kwargs)
+
+
+@contextmanager
+def strike_con(*children, **attrs):
+    for x in element_con("strike", children, **attrs):
+        yield x
+
+
+def strike_dec(*children, **attrs):
+    return element_dec("strike", children, **attrs)
+
+
+def strike(*children, **attrs):
+    return element("strike", children, **attrs)
+
+
+strike.s = strike_sta
+strike.e = strike_end
+strike.r = strike_ret
+strike.c = strike_con
+strike.d = strike_dec
+
+
+
 def strong_sta(*children, **attrs):
     return element_start("strong", children, **attrs)
 
@@ -2830,6 +3340,40 @@ strong.e = strong_end
 strong.r = strong_ret
 strong.c = strong_con
 strong.d = strong_dec
+
+
+
+def style_sta(*children, **attrs):
+    return element_start("style", children, **attrs)
+
+
+def style_end(*children, **kwargs):
+    return element_end("style", children, **kwargs)
+
+
+def style_ret(*children, **kwargs):
+    return element_ret("style", children, **kwargs)
+
+
+@contextmanager
+def style_con(*children, **attrs):
+    for x in element_con("style", children, **attrs):
+        yield x
+
+
+def style_dec(*children, **attrs):
+    return element_dec("style", children, **attrs)
+
+
+def style(*children, **attrs):
+    return element("style", children, **attrs)
+
+
+style.s = style_sta
+style.e = style_end
+style.r = style_ret
+style.c = style_con
+style.d = style_dec
 
 
 
@@ -2935,6 +3479,40 @@ sup.d = sup_dec
 
 
 
+def svg_sta(*children, **attrs):
+    return element_start("svg", children, **attrs)
+
+
+def svg_end(*children, **kwargs):
+    return element_end("svg", children, **kwargs)
+
+
+def svg_ret(*children, **kwargs):
+    return element_ret("svg", children, **kwargs)
+
+
+@contextmanager
+def svg_con(*children, **attrs):
+    for x in element_con("svg", children, **attrs):
+        yield x
+
+
+def svg_dec(*children, **attrs):
+    return element_dec("svg", children, **attrs)
+
+
+def svg(*children, **attrs):
+    return element("svg", children, **attrs)
+
+
+svg.s = svg_sta
+svg.e = svg_end
+svg.r = svg_ret
+svg.c = svg_con
+svg.d = svg_dec
+
+
+
 def table_sta(*children, **attrs):
     return element_start("table", children, **attrs)
 
@@ -3034,6 +3612,40 @@ td.e = td_end
 td.r = td_ret
 td.c = td_con
 td.d = td_dec
+
+
+
+def template_sta(*children, **attrs):
+    return element_start("template", children, **attrs)
+
+
+def template_end(*children, **kwargs):
+    return element_end("template", children, **kwargs)
+
+
+def template_ret(*children, **kwargs):
+    return element_ret("template", children, **kwargs)
+
+
+@contextmanager
+def template_con(*children, **attrs):
+    for x in element_con("template", children, **attrs):
+        yield x
+
+
+def template_dec(*children, **attrs):
+    return element_dec("template", children, **attrs)
+
+
+def template_(*children, **attrs):
+    return element("template", children, **attrs)
+
+
+template_.s = template_sta
+template_.e = template_end
+template_.r = template_ret
+template_.c = template_con
+template_.d = template_dec
 
 
 
@@ -3207,6 +3819,40 @@ time.d = time_dec
 
 
 
+def title_sta(*children, **attrs):
+    return element_start("title", children, **attrs)
+
+
+def title_end(*children, **kwargs):
+    return element_end("title", children, **kwargs)
+
+
+def title_ret(*children, **kwargs):
+    return element_ret("title", children, **kwargs)
+
+
+@contextmanager
+def title_con(*children, **attrs):
+    for x in element_con("title", children, **attrs):
+        yield x
+
+
+def title_dec(*children, **attrs):
+    return element_dec("title", children, **attrs)
+
+
+def title(*children, **attrs):
+    return element("title", children, **attrs)
+
+
+title.s = title_sta
+title.e = title_end
+title.r = title_ret
+title.c = title_con
+title.d = title_dec
+
+
+
 def tr_sta(*children, **attrs):
     return element_start("tr", children, **attrs)
 
@@ -3238,6 +3884,40 @@ tr.e = tr_end
 tr.r = tr_ret
 tr.c = tr_con
 tr.d = tr_dec
+
+
+
+def tt_sta(*children, **attrs):
+    return element_start("tt", children, **attrs)
+
+
+def tt_end(*children, **kwargs):
+    return element_end("tt", children, **kwargs)
+
+
+def tt_ret(*children, **kwargs):
+    return element_ret("tt", children, **kwargs)
+
+
+@contextmanager
+def tt_con(*children, **attrs):
+    for x in element_con("tt", children, **attrs):
+        yield x
+
+
+def tt_dec(*children, **attrs):
+    return element_dec("tt", children, **attrs)
+
+
+def tt(*children, **attrs):
+    return element("tt", children, **attrs)
+
+
+tt.s = tt_sta
+tt.e = tt_end
+tt.r = tt_ret
+tt.c = tt_con
+tt.d = tt_dec
 
 
 
@@ -3377,341 +4057,171 @@ video.d = video_dec
 
 
 
-def script_sta(*children, **attrs):
-    return element_start("script", children, **attrs)
-
-
-def script_end(*children, **kwargs):
-    return element_end("script", children, **kwargs)
-
-
-def script_ret(*children, **kwargs):
-    return element_ret("script", children, **kwargs)
-
-
-@contextmanager
-def script_con(*children, **attrs):
-    for x in element_con("script", children, **attrs):
-        yield x
-
-
-def script_dec(*children, **attrs):
-    return element_dec("script", children, **attrs)
-
-
-def script(*children, **attrs):
-    return element("script", children, **attrs)
-
-
-script.s = script_sta
-script.e = script_end
-script.r = script_ret
-script.c = script_con
-script.d = script_dec
-
-
-
-def style_sta(*children, **attrs):
-    return element_start("style", children, **attrs)
-
-
-def style_end(*children, **kwargs):
-    return element_end("style", children, **kwargs)
-
-
-def style_ret(*children, **kwargs):
-    return element_ret("style", children, **kwargs)
-
-
-@contextmanager
-def style_con(*children, **attrs):
-    for x in element_con("style", children, **attrs):
-        yield x
-
-
-def style_dec(*children, **attrs):
-    return element_dec("style", children, **attrs)
-
-
-def style(*children, **attrs):
-    return element("style", children, **attrs)
-
-
-style.s = style_sta
-style.e = style_end
-style.r = style_ret
-style.c = style_con
-style.d = style_dec
-
-
-
-def html_sta(*children, **attrs):
-    return element_start("html", children, **attrs)
-
-
-def html_end(*children, **kwargs):
-    return element_end("html", children, **kwargs)
-
-
-def html_ret(*children, **kwargs):
-    return element_ret("html", children, **kwargs)
-
-
-@contextmanager
-def html_con(*children, **attrs):
-    for x in element_con("html", children, **attrs):
-        yield x
-
-
-def html_dec(*children, **attrs):
-    return element_dec("html", children, **attrs)
-
-
-def html(*children, **attrs):
-    return element("html", children, **attrs)
-
-
-html.s = html_sta
-html.e = html_end
-html.r = html_ret
-html.c = html_con
-html.d = html_dec
-
-
-
-def body_sta(*children, **attrs):
-    return element_start("body", children, **attrs)
-
-
-def body_end(*children, **kwargs):
-    return element_end("body", children, **kwargs)
-
-
-def body_ret(*children, **kwargs):
-    return element_ret("body", children, **kwargs)
-
-
-@contextmanager
-def body_con(*children, **attrs):
-    for x in element_con("body", children, **attrs):
-        yield x
-
-
-def body_dec(*children, **attrs):
-    return element_dec("body", children, **attrs)
-
-
-def body(*children, **attrs):
-    return element("body", children, **attrs)
-
-
-body.s = body_sta
-body.e = body_end
-body.r = body_ret
-body.c = body_con
-body.d = body_dec
-
-
-
-def head_sta(*children, **attrs):
-    return element_start("head", children, **attrs)
-
-
-def head_end(*children, **kwargs):
-    return element_end("head", children, **kwargs)
-
-
-def head_ret(*children, **kwargs):
-    return element_ret("head", children, **kwargs)
-
-
-@contextmanager
-def head_con(*children, **attrs):
-    for x in element_con("head", children, **attrs):
-        yield x
-
-
-def head_dec(*children, **attrs):
-    return element_dec("head", children, **attrs)
-
-
-def head(*children, **attrs):
-    return element("head", children, **attrs)
-
-
-head.s = head_sta
-head.e = head_end
-head.r = head_ret
-head.c = head_con
-head.d = head_dec
-
-
-
-
-
-def area(*children, **attrs):
-    return element("area", children, void=True, **attrs)
-
-
-def area_ret(*children, **attrs):
-    return element_ret("area", children, void=True, **attrs)
-
-
-area.r = area_ret
-
-
-def base(*children, **attrs):
-    return element("base", children, void=True, **attrs)
-
-
-def base_ret(*children, **attrs):
-    return element_ret("base", children, void=True, **attrs)
-
-
-base.r = base_ret
-
-
-def br(*children, **attrs):
-    return element("br", children, void=True, **attrs)
-
-
-def br_ret(*children, **attrs):
-    return element_ret("br", children, void=True, **attrs)
-
-
-br.r = br_ret
-
-
-def col(*children, **attrs):
-    return element("col", children, void=True, **attrs)
-
-
-def col_ret(*children, **attrs):
-    return element_ret("col", children, void=True, **attrs)
-
-
-col.r = col_ret
-
-
-def embed(*children, **attrs):
-    return element("embed", children, void=True, **attrs)
-
-
-def embed_ret(*children, **attrs):
-    return element_ret("embed", children, void=True, **attrs)
-
-
-embed.r = embed_ret
-
-
-def hr(*children, **attrs):
-    return element("hr", children, void=True, **attrs)
-
-
-def hr_ret(*children, **attrs):
-    return element_ret("hr", children, void=True, **attrs)
-
-
-hr.r = hr_ret
-
-
-def img(*children, **attrs):
-    return element("img", children, void=True, **attrs)
-
-
-def img_ret(*children, **attrs):
-    return element_ret("img", children, void=True, **attrs)
-
-
-img.r = img_ret
-
-
-def meta(*children, **attrs):
-    return element("meta", children, void=True, **attrs)
-
-
-def meta_ret(*children, **attrs):
-    return element_ret("meta", children, void=True, **attrs)
-
-
-meta.r = meta_ret
-
-
-def param(*children, **attrs):
-    return element("param", children, void=True, **attrs)
-
-
-def param_ret(*children, **attrs):
-    return element_ret("param", children, void=True, **attrs)
-
-
-param.r = param_ret
-
-
-def source(*children, **attrs):
-    return element("source", children, void=True, **attrs)
-
-
-def source_ret(*children, **attrs):
-    return element_ret("source", children, void=True, **attrs)
-
-
-source.r = source_ret
-
-
-def track(*children, **attrs):
-    return element("track", children, void=True, **attrs)
-
-
-def track_ret(*children, **attrs):
-    return element_ret("track", children, void=True, **attrs)
-
-
-track.r = track_ret
 
 
 def wbr(*children, **attrs):
-    return element("wbr", children, void=True, **attrs)
+    return element("video", children, void=True, **attrs)
 
 
 def wbr_ret(*children, **attrs):
-    return element_ret("wbr", children, void=True, **attrs)
+    return element_ret("video", children, void=True, **attrs)
 
 
 wbr.r = wbr_ret
 
 
-def command(*children, **attrs):
-    return element("command", children, void=True, **attrs)
+def img(*children, **attrs):
+    return element("video", children, void=True, **attrs)
 
 
-def command_ret(*children, **attrs):
-    return element_ret("command", children, void=True, **attrs)
+def img_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
 
 
-command.r = command_ret
+img.r = img_ret
+
+
+def area(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def area_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+area.r = area_ret
+
+
+def hr(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def hr_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+hr.r = hr_ret
+
+
+def param(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def param_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+param.r = param_ret
 
 
 def keygen(*children, **attrs):
-    return element("keygen", children, void=True, **attrs)
+    return element("video", children, void=True, **attrs)
 
 
 def keygen_ret(*children, **attrs):
-    return element_ret("keygen", children, void=True, **attrs)
+    return element_ret("video", children, void=True, **attrs)
 
 
 keygen.r = keygen_ret
 
 
+def source(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def source_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+source.r = source_ret
+
+
+def base(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def base_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+base.r = base_ret
+
+
+def meta(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def meta_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+meta.r = meta_ret
+
+
+def br(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def br_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+br.r = br_ret
+
+
+def track(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def track_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+track.r = track_ret
+
+
 def menuitem(*children, **attrs):
-    return element("menuitem", children, void=True, **attrs)
+    return element("video", children, void=True, **attrs)
 
 
 def menuitem_ret(*children, **attrs):
-    return element_ret("menuitem", children, void=True, **attrs)
+    return element_ret("video", children, void=True, **attrs)
 
 
 menuitem.r = menuitem_ret
+
+
+def command(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def command_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+command.r = command_ret
+
+
+def embed(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def embed_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+embed.r = embed_ret
+
+
+def col(*children, **attrs):
+    return element("video", children, void=True, **attrs)
+
+
+def col_ret(*children, **attrs):
+    return element_ret("video", children, void=True, **attrs)
+
+
+col.r = col_ret
 
 
 
