@@ -1,5 +1,5 @@
 import keyword
-GLOBALS = globals()
+GLOBALS = globals().keys()
 BUILTINS = dir(__builtins__)
 
 TEMPLATE = "### TEMPLATE-ELEMENT ###"

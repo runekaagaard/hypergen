@@ -1161,15 +1161,15 @@ def code_dec(*children, **attrs):
     return element_dec("code", children, **attrs)
 
 
-def code_(*children, **attrs):
+def code(*children, **attrs):
     return element("code", children, **attrs)
 
 
-code_.s = code_sta
-code_.e = code_end
-code_.r = code_ret
-code_.c = code_con
-code_.d = code_dec
+code.s = code_sta
+code.e = code_end
+code.r = code_ret
+code.c = code_con
+code.d = code_dec
 
 
 
@@ -3099,15 +3099,15 @@ def s_dec(*children, **attrs):
     return element_dec("s", children, **attrs)
 
 
-def s_(*children, **attrs):
+def s(*children, **attrs):
     return element("s", children, **attrs)
 
 
-s_.s = s_sta
-s_.e = s_end
-s_.r = s_ret
-s_.c = s_con
-s_.d = s_dec
+s.s = s_sta
+s.e = s_end
+s.r = s_ret
+s.c = s_con
+s.d = s_dec
 
 
 
@@ -3643,15 +3643,15 @@ def template_dec(*children, **attrs):
     return element_dec("template", children, **attrs)
 
 
-def template_(*children, **attrs):
+def template(*children, **attrs):
     return element("template", children, **attrs)
 
 
-template_.s = template_sta
-template_.e = template_end
-template_.r = template_ret
-template_.c = template_con
-template_.d = template_dec
+template.s = template_sta
+template.e = template_end
+template.r = template_ret
+template.c = template_con
+template.d = template_dec
 
 
 
