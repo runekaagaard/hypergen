@@ -1,11 +1,11 @@
 # coding=utf-8
 from __future__ import (absolute_import, division, unicode_literals)
 
-import string, sys, json
+import string, sys, json, datetime
 from threading import local
 from contextlib import contextmanager
 from collections import OrderedDict
-from functools import wraps
+from functools import wraps, partial
 from copy import deepcopy
 from types import GeneratorType
 
@@ -161,6 +161,7 @@ def _write(_t, children, **kwargs):
     if into is None:
         into = state.html
     sep = _t(kwargs.get("sep", ""))
+
     for x in children:
         if x is None:
             continue
@@ -168,7 +169,6 @@ def _write(_t, children, **kwargs):
             into.extend(x)
         elif type(x) in (list, tuple, GeneratorType):
             _write(_t, list(x), into=into, sep=sep)
-            continue
         elif callable(x):
             into.append(x)
         else:
@@ -233,13 +233,25 @@ def _sort_attrs(attrs):
 
 
 def t(s, quote=True):
-    return str(s) if type(s) in (Blob, ) else escape(str(s), quote=quote)
+    return escape(str(s), quote=quote)
 
 
-class Blob(list):
+class Blob(object):
     def __init__(self, html=None, meta=None):
-        super(Blob, self).__init__(html if html is not None else [])
+        self.html = html if html is not None else []
         self.meta = meta
+
+    def append(self, x):
+        return self.html.append(x)
+
+    def extend(self, x):
+        return self.html.extend(x)
+
+    def pop(self, n=-1):
+        return self.html.pop(n)
+
+    def __getitem__(self, index):
+        return self.html[index]
 
 
 class Safe(str):
@@ -265,35 +277,39 @@ def base65_counter():
 
 ### Form elements and liveview ###
 
-THIS = "THIS_"
+
+class THIS(object):
+    pass
 
 
-def encoder(obj):
-    if type(obj) is Blob:
-        return "H_" + obj.serialize() + "_H"
+def encoder(this, o):
+    if o is THIS:
+        return encoder.quote(this)
+    elif type(o) is Blob:
+        return encoder.quote(o.meta["this"])
+    elif isinstance(o, datetime.datetime):
+        assert False, "TODO"
+        return str(o)
     else:
-        raise TypeError(repr(obj) + " is not JSON serializable")
+        raise TypeError(repr(o) + " is not JSON serializable")
 
 
-class Callback(object):
-    def __init__(self, func, args=None, debounce=0):
-        self.func = func
-        self.args = args
-        self.debounce = debounce
+encoder.quote = lambda x: "H_" + x + "_H"
+encoder.unquote = lambda x: x.replace('"H_', "").replace('_H"', "")[1:-1]
 
-    def render_arg(self, arg, callback_argument):
-        if arg == THIS:
-            return callback_argument
-        else:
-            return json.dumps(arg, default=encoder, separators=(',', ':'))
 
-    def render(self, meta):
-        return "H.cb({})".format(
-            json.dumps(
-                [self.func.hypergen_callback_url] + list(self.args),
-                default=encoder,
-                separators=(',', ':')).replace('"H_', "").replace('_H"', "")[
-                    1:-1])
+def _callback(args, this, debounce=0):
+    func = args[0]
+    assert callable(func), ("First callback argument must be a callable, got "
+                            "{}.".format(repr(func)))
+    args = args[1:]
+    return "H.cb({})".format(
+        t(
+            encoder.unquote(
+                json.dumps(
+                    [func.hypergen_callback_url] + list(args),
+                    default=partial(encoder, this),
+                    separators=(',', ':')))))
 
 
 def control_element(tag,
@@ -302,32 +318,37 @@ def control_element(tag,
                     into=None,
                     void=False,
                     sep="",
+                    add_to=None,
                     **attrs):
+    assert "add_to" not in attrs
     if state.auto_id and "id_" not in attrs:
         attrs["id_"] = next(state.id_counter)
     if "id_" in attrs:
         attrs["id_"] = state.id_prefix + attrs["id_"]
     attrs = _element_start_1(tag, attrs, into)
+
     meta = {}
+    if state.liveview is True:
+        meta["this"] = "H.cbs.{}('{}')".format(
+            INPUT_TYPES.get(attrs.get("type_", "text"), "s"), attrs["id_"])
 
     for k, v in items(attrs):
-        if state.liveview is True:
-            meta["this"] = "H.cbs.{}('{}')".format(
-                INPUT_TYPES.get(attrs.get("type_", "text"), "s"), attrs["id_"])
-            if k.startswith("on") and type(v) in (list, tuple, Callback):
-                callback = Callback(v[0], v[1:]) if type(v) in (list,
-                                                                tuple) else v
-                tmp = lambda: callback.render(meta["this"])
-                raw(" ", k, '="', into=into)
-                write(tmp if lazy else tmp(), into=into)
-                raw('"', into=into)
-                continue
-
-        _element_start_2(k, v, into)
+        if state.liveview is True and k.startswith("on") and type(v) in (
+                list, tuple):
+            tmp1 = v
+            tmp2 = lambda: _callback(tmp1, meta["this"])
+            raw(" ", k, '="', into=into)
+            raw(tmp2 if lazy else tmp2(), into=into)
+            raw('"', into=into)
+        else:
+            _element_start_2(k, v, into)
 
     _element_start_3(children, into, void, sep)
 
-    return Blob(into, meta)
+    blob = Blob(into, meta)
+    if add_to is not None:
+        add_to.append(blob)
+    return blob
 
 
 ### Input ###
