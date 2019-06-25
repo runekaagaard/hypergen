@@ -2051,6 +2051,40 @@ h5.d = h5_dec
 
 
 
+def h6_sta(*children, **attrs):
+    return element_start("h6", children, **attrs)
+
+
+def h6_end(*children, **kwargs):
+    return element_end("h6", children, **kwargs)
+
+
+def h6_ret(*children, **kwargs):
+    return element_ret("h6", children, **kwargs)
+
+
+@contextmanager
+def h6_con(*children, **attrs):
+    for x in element_con("h6", children, **attrs):
+        yield x
+
+
+def h6_dec(*children, **attrs):
+    return element_dec("h6", children, **attrs)
+
+
+def h6(*children, **attrs):
+    return element("h6", children, **attrs)
+
+
+h6.s = h6_sta
+h6.e = h6_end
+h6.r = h6_ret
+h6.c = h6_con
+h6.d = h6_dec
+
+
+
 def head_sta(*children, **attrs):
     return element_start("head", children, **attrs)
 
