@@ -48,7 +48,7 @@ var H = (function() {
       url = arguments[0],
       args = [],
       data = [],
-      idPrefix = "h-" + H.i
+      idPrefix = "h" + H.i + "-"
 
     for (var i=1; i<arguments.length; i++) {
       args.push(arguments[i])
