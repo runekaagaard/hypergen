@@ -403,6 +403,12 @@ select.r = select_ret
 select.c = select_con
 select.d = select_dec
 
+### Special tags ###
+
+
+def doctype(type_="html"):
+    raw("<!DOCTYPE ", type_, ">")
+
 
 ### TEMPLATE-ELEMENT ###
 def div_sta(*children, **attrs):

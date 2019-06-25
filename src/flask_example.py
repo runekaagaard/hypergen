@@ -12,7 +12,7 @@ from hypergen import (flask_liveview_hypergen as hypergen,
                       input_, script, raw, label, p, h1, ul, li, a, html, head,
                       body, link, table, tr, th, td, THIS, pre, section, ol,
                       write, span, button, b, skippable, fieldset, legend,
-                      style, form, select, option, title)
+                      style, form, select, option, title, doctype)
 from random import randint
 from itertools import takewhile
 
@@ -27,7 +27,7 @@ i = 0
 ### Shared base ###
 
 def base_template(content_func):
-    raw("<!DOCTYPE html>")
+    doctype()
     with html.c():
         with head.c():
             title("Hypergen Flask Example")

@@ -403,6 +403,12 @@ select.r = select_ret
 select.c = select_con
 select.d = select_dec
 
+### Special tags ###
+
+
+def doctype(type_="html"):
+    raw("<!DOCTYPE ", type_, ">")
+
 
 ### TEMPLATE-ELEMENT ###
 def div_sta(*children, **attrs):
@@ -451,40 +457,6 @@ def link_ret(*children, **attrs):
 link.r = link_ret
 
 ### TEMPLATE-VOID-ELEMENT ###
-
-
-def doctype_sta(*children, **attrs):
-    return element_start("doctype", children, **attrs)
-
-
-def doctype_end(*children, **kwargs):
-    return element_end("doctype", children, **kwargs)
-
-
-def doctype_ret(*children, **kwargs):
-    return element_ret("doctype", children, **kwargs)
-
-
-@contextmanager
-def doctype_con(*children, **attrs):
-    for x in element_con("doctype", children, **attrs):
-        yield x
-
-
-def doctype_dec(*children, **attrs):
-    return element_dec("doctype", children, **attrs)
-
-
-def doctype(*children, **attrs):
-    return element("doctype", children, **attrs)
-
-
-doctype.s = doctype_sta
-doctype.e = doctype_end
-doctype.r = doctype_ret
-doctype.c = doctype_con
-doctype.d = doctype_dec
-
 
 
 def a_sta(*children, **attrs):

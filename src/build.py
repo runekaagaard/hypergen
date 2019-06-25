@@ -15,7 +15,7 @@ JSON.stringify([...document.getElementsByTagName("td")].filter(x => x.firstEleme
 """
 
 ALL_TAGS = set([
-    "DOCTYPE", "a", "abbr", "acronym", "address", "applet", "area", "article",
+    "doctype", "a", "abbr", "acronym", "address", "applet", "area", "article",
     "aside", "audio", "b", "base", "basefont", "bdi", "bdo", "big",
     "blockquote", "body", "br", "button", "canvas", "caption", "center",
     "cite", "code", "col", "colgroup", "data", "datalist", "dd", "del",
@@ -35,14 +35,13 @@ VOID_TAGS = set([
     'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'meta', 'param',
     'source', 'track', 'wbr', 'command', 'keygen', 'menuitem'
 ])
-HARDCODED_TAGS = set(["div", "input", "select", "link"])
+HARDCODED_TAGS = set(["div", "input", "select", "link", "doctype"])
 
 code = open("_hypergen.py").read()
 template = code.split(TEMPLATE)[1]
 
 
 def protect(x):
-    x = x.lower()
     if x in GLOBALS or x in BUILTINS or x in keyword.kwlist:
         return x + "_"
     else:
