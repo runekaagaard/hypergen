@@ -64,6 +64,7 @@ template = code.split(TEMPLATE_VOID)[1]
 s = ""
 for tag in VOID_TAGS - HARDCODED_TAGS:
     tag = protect(tag)
+    stag = tag.rstrip("_")
     s += template.replace('"link"',
                           '"{}"'.format(stag)).replace("link", tag).replace(
                               "{}__".format(stag), "{}_".format(stag))

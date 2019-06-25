@@ -4066,165 +4066,165 @@ video.d = video_dec
 
 
 def wbr(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("wbr", children, void=True, **attrs)
 
 
 def wbr_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("wbr", children, void=True, **attrs)
 
 
 wbr.r = wbr_ret
 
 
 def img(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("img", children, void=True, **attrs)
 
 
 def img_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("img", children, void=True, **attrs)
 
 
 img.r = img_ret
 
 
 def area(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("area", children, void=True, **attrs)
 
 
 def area_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("area", children, void=True, **attrs)
 
 
 area.r = area_ret
 
 
 def hr(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("hr", children, void=True, **attrs)
 
 
 def hr_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("hr", children, void=True, **attrs)
 
 
 hr.r = hr_ret
 
 
 def param(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("param", children, void=True, **attrs)
 
 
 def param_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("param", children, void=True, **attrs)
 
 
 param.r = param_ret
 
 
 def keygen(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("keygen", children, void=True, **attrs)
 
 
 def keygen_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("keygen", children, void=True, **attrs)
 
 
 keygen.r = keygen_ret
 
 
 def source(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("source", children, void=True, **attrs)
 
 
 def source_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("source", children, void=True, **attrs)
 
 
 source.r = source_ret
 
 
 def base(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("base", children, void=True, **attrs)
 
 
 def base_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("base", children, void=True, **attrs)
 
 
 base.r = base_ret
 
 
 def meta(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("meta", children, void=True, **attrs)
 
 
 def meta_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("meta", children, void=True, **attrs)
 
 
 meta.r = meta_ret
 
 
 def br(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("br", children, void=True, **attrs)
 
 
 def br_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("br", children, void=True, **attrs)
 
 
 br.r = br_ret
 
 
 def track(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("track", children, void=True, **attrs)
 
 
 def track_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("track", children, void=True, **attrs)
 
 
 track.r = track_ret
 
 
 def menuitem(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("menuitem", children, void=True, **attrs)
 
 
 def menuitem_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("menuitem", children, void=True, **attrs)
 
 
 menuitem.r = menuitem_ret
 
 
 def command(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("command", children, void=True, **attrs)
 
 
 def command_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("command", children, void=True, **attrs)
 
 
 command.r = command_ret
 
 
 def embed(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("embed", children, void=True, **attrs)
 
 
 def embed_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("embed", children, void=True, **attrs)
 
 
 embed.r = embed_ret
 
 
 def col(*children, **attrs):
-    return element("video", children, void=True, **attrs)
+    return element("col", children, void=True, **attrs)
 
 
 def col_ret(*children, **attrs):
-    return element_ret("video", children, void=True, **attrs)
+    return element_ret("col", children, void=True, **attrs)
 
 
 col.r = col_ret
