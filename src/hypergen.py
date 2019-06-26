@@ -312,14 +312,14 @@ def _callback(args, this, debounce=0):
                     separators=(',', ':')))))
 
 
-def control_element(tag,
-                    children,
-                    lazy=False,
-                    into=None,
-                    void=False,
-                    sep="",
-                    add_to=None,
-                    **attrs):
+def control_element_start(tag,
+                          children,
+                          lazy=False,
+                          into=None,
+                          void=False,
+                          sep="",
+                          add_to=None,
+                          **attrs):
     assert "add_to" not in attrs
     if state.auto_id and "id_" not in attrs:
         attrs["id_"] = next(state.id_counter)
@@ -351,6 +351,48 @@ def control_element(tag,
     return blob
 
 
+def control_element(tag,
+                    children,
+                    lazy=False,
+                    into=None,
+                    void=False,
+                    sep="",
+                    add_to=None,
+                    **attrs):
+    blob = control_element_start(
+        tag,
+        children,
+        lazy=lazy,
+        into=into,
+        void=void,
+        sep="",
+        add_to=add_to,
+        **attrs)
+    element_end(tag, [], into=into, void=void)
+    return blob
+
+
+def control_element_ret(tag,
+                        children,
+                        lazy=False,
+                        into=None,
+                        void=False,
+                        sep="",
+                        add_to=None,
+                        **attrs):
+    into = Blob()
+    control_element_start(
+        tag,
+        children,
+        lazy=lazy,
+        into=into,
+        void=void,
+        sep="",
+        add_to=add_to,
+        **attrs)
+    return into
+
+
 ### Input ###
 
 INPUT_TYPES = dict(checkbox="c", month="i", number="i", range="f", week="i")
@@ -361,9 +403,7 @@ def input_(**attrs):
 
 
 def input_ret(**attrs):
-    into = Blob()
-    input_(into=into, **attrs)
-    return into
+    return control_element_ret("input", [], **attrs)
 
 
 input_.r = input_ret
@@ -372,7 +412,7 @@ input_.r = input_ret
 
 
 def select_sta(*children, **attrs):
-    return element_start("select", children, **attrs)
+    return control_element_start("select", children, **attrs)
 
 
 def select_end(*children, **kwargs):
@@ -380,21 +420,21 @@ def select_end(*children, **kwargs):
 
 
 def select_ret(*children, **kwargs):
-    return element_ret("select", children, **kwargs)
+    return control_element_ret("select", children, **kwargs)
 
 
 @contextmanager
 def select_con(*children, **attrs):
-    for x in element_con("select", children, **attrs):
+    for x in control_element_con("select", children, **attrs):
         yield x
 
 
 def select_dec(*children, **attrs):
-    return element_dec("select", children, **attrs)
+    return control_element_dec("select", children, **attrs)
 
 
 def select(*children, **attrs):
-    return element("select", children, **attrs)
+    return control_element("select", children, **attrs)
 
 
 select.s = select_sta
