@@ -25,6 +25,11 @@ var H = (function() {
   cbs.c = function(id) { return function() {
     return document.getElementById(id).checked
   }}
+  cbs.g = function(id) { return function() {
+    var v = $("#" + id).val()
+    var v1 = parseInt(v)
+    return !isNaN(v1) ? v1 : v
+  }}
 
   function parseArgs(args, data) {
     for (var i=0; i<args.length; i++) {

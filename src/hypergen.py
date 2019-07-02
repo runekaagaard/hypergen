@@ -307,14 +307,15 @@ def _callback(args, this, debounce=0):
                     separators=(',', ':')))))
 
 
-def control_element(tag,
-                    children,
-                    lazy=False,
-                    into=None,
-                    void=False,
-                    sep="",
-                    add_to=None,
-                    **attrs):
+def control_element_start(tag,
+                          children,
+                          lazy=False,
+                          into=None,
+                          void=False,
+                          sep="",
+                          add_to=None,
+                          js_cb="s",
+                          **attrs):
     assert "add_to" not in attrs
     if state.auto_id and "id_" not in attrs:
         attrs["id_"] = next(state.id_counter)
@@ -324,8 +325,7 @@ def control_element(tag,
 
     meta = {}
     if state.liveview is True:
-        meta["this"] = "H.cbs.{}('{}')".format(
-            INPUT_TYPES.get(attrs.get("type_", "text"), "s"), attrs["id_"])
+        meta["this"] = "H.cbs.{}('{}')".format(js_cb, attrs["id_"])
 
     for k, v in items(attrs):
         if state.liveview is True and k.startswith("on") and type(v) in (
@@ -346,19 +346,63 @@ def control_element(tag,
     return blob
 
 
+def control_element(tag,
+                    children,
+                    lazy=False,
+                    into=None,
+                    void=False,
+                    sep="",
+                    add_to=None,
+                    **attrs):
+    blob = control_element_start(
+        tag,
+        children,
+        lazy=lazy,
+        into=into,
+        void=void,
+        sep="",
+        add_to=add_to,
+        **attrs)
+    element_end(tag, [], into=into, void=void)
+    return blob
+
+
+def control_element_ret(tag,
+                        children,
+                        lazy=False,
+                        into=None,
+                        void=False,
+                        sep="",
+                        add_to=None,
+                        **attrs):
+    into = Blob()
+    control_element_start(
+        tag,
+        children,
+        lazy=lazy,
+        into=into,
+        void=void,
+        sep="",
+        add_to=add_to,
+        **attrs)
+    return into
+
+
 ### Input ###
 
 INPUT_TYPES = dict(checkbox="c", month="i", number="i", range="f", week="i")
 
 
 def input_(**attrs):
-    return control_element("input", [], void=True, **attrs)
+    return control_element(
+        "input", [],
+        void=True,
+        js_cb=INPUT_TYPES.get(attrs.get("type_", "text"), "s"),
+        **attrs)
 
 
 def input_ret(**attrs):
-    into = Blob()
-    input_(into=into, **attrs)
-    return into
+    return control_element_ret("input", [], **attrs)
 
 
 input_.r = input_ret
@@ -366,30 +410,51 @@ input_.r = input_ret
 ### Select ###
 
 
+def _js_cb_select(attrs):
+    type_ = attrs.pop("js_cb", None)
+    if type_ is str:
+        attrs["js_cb"] = "s"
+    elif type_ is int:
+        attrs["js_cb"] = "i"
+    elif type_ is float:
+        attrs["js_cb"] = "f"
+    elif type_ is None:
+        attrs["js_cb"] = "g"
+    else:
+        raise Exception(
+            "Bad coercion, {}. Only str, unicode, int and float are"
+            " supported")
+
+
 def select_sta(*children, **attrs):
-    return element_start("select", children, **attrs)
+    _js_cb_select(attrs)
+    return control_element_start("select", children, **attrs)
 
 
 def select_end(*children, **kwargs):
     return element_end("select", children, **kwargs)
 
 
-def select_ret(*children, **kwargs):
-    return element_ret("select", children, **kwargs)
+def select_ret(*children, **attrs):
+    _js_cb_select(attrs)
+    return control_element_ret("select", children, **attrs)
 
 
 @contextmanager
 def select_con(*children, **attrs):
-    for x in element_con("select", children, **attrs):
+    _js_cb_select(attrs)
+    for x in control_element_con("select", children, **attrs):
         yield x
 
 
 def select_dec(*children, **attrs):
-    return element_dec("select", children, **attrs)
+    _js_cb_select(attrs)
+    return control_element_dec("select", children, **attrs)
 
 
 def select(*children, **attrs):
-    return element("select", children, **attrs)
+    _js_cb_select(attrs)
+    return control_element("select", children, **attrs)
 
 
 select.s = select_sta

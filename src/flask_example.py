@@ -210,7 +210,7 @@ class Db:
 
     @staticmethod
     def empty_row():
-        return [Db.new_id(), "", "", ""]
+        return [Db.new_id(), "", "", -1]
 
 Db.vehicles = [
     [Db.new_id(), "Bugatti Chiron Sport", 261, RED],
@@ -253,10 +253,9 @@ def a_basic_form_template():
                 tr(
                     td.r(input_.r(value=model, add_to=row)),
                     td.r(input_.r(value=mph, type_="number", add_to=row)),
-                    td.r(input_.r(value=color, add_to=row)),
-                    # td.r(select.r(input_.r("-----"),
-                    #     (option.r(x, value=j, selected=j==color)
-                    #      for j, x in enumerate(COLORS))), add_to=row)
+                    td.r(select.r(option.r("-----", value=-1),
+                        (option.r(x, value=j, selected=j==color)
+                         for j, x in enumerate(COLORS)), add_to=row)),
                     td.r(input_.r(type_="button", value="X", onclick=(
                         remove_vehicle, id_, fields), lazy=True))
                 )
@@ -266,7 +265,7 @@ def a_basic_form_template():
                onclick=[add_vehicle, fields])
 
     with div.c():
-        input_(type_="button", value="Save", onclick=(save, fields), lazy=True)
+        input_(type_="button", value="Save", onclick=(save, fields))
 
 @app.route('/a-basic-form/')
 def a_basic_form():
