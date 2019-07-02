@@ -38,15 +38,15 @@ UPDATE = 1
 def hypergen(func, *args, **kwargs):
     kwargs = deepcopy(kwargs)
     auto_id = kwargs.pop("auto_id", False)
+    target_id = kwargs.pop("target_id", False)
+    as_deltas = kwargs.pop("as_deltas", False)
     try:
         state.html = []
         state.cache_client = kwargs.pop("cache_client", None)
         state.id_counter = base65_counter() if auto_id else None
         state.id_prefix = kwargs.pop("id_prefix", "")
         state.auto_id = auto_id
-        state.target_id = target_id = kwargs.pop("target_id", False)
         state.liveview = kwargs.pop("liveview", False)
-        as_deltas = kwargs.pop("as_deltas", False)
         func(*args, **kwargs)
         html = "".join(str(x()) if callable(x) else str(x) for x in state.html)
     finally:
@@ -56,7 +56,6 @@ def hypergen(func, *args, **kwargs):
         state.id_prefix = ""
         state.auto_id = False
         state.liveview = False
-        state.target_id = None
 
     if as_deltas:
         return [[UPDATE, target_id, html]]
@@ -252,10 +251,6 @@ class Blob(object):
 
     def __getitem__(self, index):
         return self.html[index]
-
-
-class Safe(str):
-    pass
 
 
 def base65_counter():
