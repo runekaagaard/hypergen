@@ -1,7 +1,7 @@
 # Welcome to hypergen
 Pure python, threadsafe, parallizable, caching and diffing html generator. No more templates, just write python (or cython). Includes a liveview feature similar to Phoenix Liveview.
 
-# How to try the demo?
+# How to try the demos?
 
 ```bash
 git clone git@github.com:runekaagaard/hypergen.git
