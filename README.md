@@ -1,12 +1,22 @@
 # Welcome to hypergen
 Pure python, threadsafe, parallizable, caching and diffing html generator. No more templates, just write python (or cython). Includes a liveview feature similar to Phoenix Liveview.
 
+# How to try the demo?
+
+```bash
+git clone git@github.com:runekaagaard/hypergen.git
+cd hypergen/src/
+virtualenv venv
+source venv/bin/activate
+pip install Werkzeug==0.16.1 flask==1.1.1
+FLASK_ENV=development FLASK_APP=flask_example flask run
+```
+
+Then browse to http://127.0.0.1:5000.
+
 # Example of liveview features inside a flask app.
 
 ```python
-# To run, pip install flask, and then
-#     FLASK_ENV=development FLASK_APP=flask_example flask run
-
 from functools import partial
 
 from flask import Flask, url_for
