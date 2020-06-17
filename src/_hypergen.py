@@ -326,6 +326,8 @@ def control_element_start(tag,
     meta = {}
     if state.liveview is True:
         meta["this"] = "H.cbs.{}('{}')".format(js_cb, attrs["id_"])
+    if into is not None:
+        into.meta = meta
 
     for k, v in items(attrs):
         if state.liveview is True and k.startswith("on") and type(v) in (

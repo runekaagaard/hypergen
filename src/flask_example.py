@@ -160,7 +160,7 @@ def petals_template():
 
     with p.c():
         label("Whats the answer?")
-        answer = input_(type_="number", name="answer")
+        answer = input_(type_="number")
         input_(type="button", value="Submit", onclick=(petal_answer, answer))
         span("Streak: ", streak, sep=" ", style="margin-left: 8px")
 
@@ -212,6 +212,8 @@ class Db:
     def empty_row():
         return [Db.new_id(), "", "", -1]
 
+Db.name = "The Village"
+Db.num_employees = "42"
 Db.vehicles = [
     [Db.new_id(), "Bugatti Chiron Sport", 261, RED],
     [Db.new_id(), "Mercedes-AMG Project One", 261, SILVER],
@@ -232,7 +234,9 @@ def remove_vehicle(id_, vehicles):
     return hypergen(a_basic_form_template, target_id="content")
 
 @callback_route(app, '/save/')
-def save(vehicles):
+def save(name, num_employees, vehicles):
+    Db.name = name
+    Db.num_employees = num_employees
     Db.vehicles = vehicles
     return hypergen(a_basic_form_template, target_id="content")
 
@@ -241,11 +245,12 @@ def a_basic_form_template():
     style(CSS)
     with fieldset.c(legend.r("Garage")):
         with form.c():
-            div(label.r("Name"), input_.r())
-            div(label.r("Address"), input_.r())
-            div(label.r("Number of employees"), input_.r(type_="number"))
+            name = input_.r(value=Db.name)
+            div(label.r("Name"), name)
+            num_employees = input_.r(type_="number", value=Db.num_employees)
+            div(label.r("Number of employees"), num_employees)
 
-    fields = []
+    vehicles = []
     with fieldset.c(legend.r("Vehicles")):
         with table.c(tr.r(th.r(x) for x in ("Model", "MPH", "Color", ""))):
             for id_, model, mph, color in Db.vehicles:
@@ -257,15 +262,16 @@ def a_basic_form_template():
                         (option.r(x, value=j, selected=j==color)
                          for j, x in enumerate(COLORS)), add_to=row)),
                     td.r(input_.r(type_="button", value="X", onclick=(
-                        remove_vehicle, id_, fields), lazy=True))
+                        remove_vehicle, id_, vehicles), lazy=True))
                 )
-                fields.append(row)
+                vehicles.append(row)
 
         input_(type_="button", value="+", style={"width": "50px"},
-               onclick=[add_vehicle, fields])
+               onclick=[add_vehicle, vehicles])
 
     with div.c():
-        input_(type_="button", value="Save", onclick=(save, fields))
+        input_(type_="button", value="Save",
+               onclick=(save, name, num_employees, vehicles))
 
 @app.route('/a-basic-form/')
 def a_basic_form():
