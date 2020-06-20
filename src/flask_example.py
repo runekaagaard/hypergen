@@ -303,31 +303,21 @@ def todomvc_toggle_all(is_done):
     for item in TODOS["items"]:
         item["is_done"] = is_done
 
-    return hypergen(todomvc_template, target_id="content")
-
 @callback_route(app, '/todomvc_toggle_one/')
 def todomvc_toggle_one(i, is_done):
     TODOS["items"][i]["is_done"] = is_done
-
-    return hypergen(todomvc_template, target_id="content")
 
 @callback_route(app, '/todomvc_add/')
 def todomvc_add(task):
     TODOS["items"].append({"task": task, "is_done": False})
 
-    return hypergen(todomvc_template, target_id="content")
-
 @callback_route(app, '/todomvc_clear_completed/')
 def todomvc_clear_completed():
     TODOS["items"] = [x for x in TODOS["items"] if not x["is_done"]]
 
-    return hypergen(todomvc_template, target_id="content")
-
 @callback_route(app, '/todomvc_set_filter/')
 def todomvc_set_filter(filt):
     TODOS["filt"] = filt
-
-    return hypergen(todomvc_template, target_id="content")
 
 def todomvc_template():
     p("This demo is a work in progress.")
@@ -347,4 +337,8 @@ def todomvc_template():
 
 @app.route('/todomvc/')
 def todomvc():
-    return hypergen(base_template, todomvc_template)
+    def default_callback_output():
+        return hypergen(todomvc_template, target_id="content")
+
+    return hypergen(base_template, todomvc_template,
+                    default_callback_output=default_callback_output)
