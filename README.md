@@ -14,69 +14,79 @@ FLASK_ENV=development FLASK_APP=flask_example flask run
 
 Then browse to http://127.0.0.1:5000.
 
-# Example of liveview features inside a flask app.
+# This is how one could write a todo app:
 
 ```python
-from functools import partial
+from hypergen import *
 
-from flask import Flask, url_for
-from hypergen import (flask_liveview_hypergen as hypergen,
-                      flask_liveview_callback_route as callback_route, div,
-                      input_, script, raw, label, p, h1, ul, li, a, html, head,
-                      body, link)
-
-NORMALISE = "https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
-SAKURA = "https://unpkg.com/sakura.css/css/sakura.css"
-JQUERY = "https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"
-
-app = Flask(__name__)
-# The global counter state.
-i = 0
-
+# This is our base template, that can be shared between pages.
 def base_template(content_func):
-    raw("<!DOCTYPE html>")
-    with html():
-        with head():
-            link(href=NORMALISE, rel="stylesheet", type_="text/css")
-            link(href=SAKURA, rel="stylesheet", type_="text/css")
-            script(src=JQUERY)
-            with script(), open("hypergen.js") as f:
-                raw(f.read())
+    doctype()
+    with html.c():
+        with head.c():
+            title("My Todo App")
+            script(src="hypergen.js")
 
-        with body():
-            div(a.r("Home", href=url_for("index")))
-            with div(id_="content"):
+        with body.c():
+            with div.c(id_="content"):
                 content_func()
 
+# Below is the todo app.
+                
+TODOS = {
+    "items": [
+        {"task": "Remember the milk", "is_done": False},
+        {"task": "Walk the dog", "is_done": False},
+        {"task": "Get the kids to school", "is_done": True},
+    ],
+    "toggle_all": False,
+    "filt": None,
+}
 
-def counter_template(i, inc=1):
-    h1("The counter is: ", i)
-    with p():
-        label("Increment with:")
-        inc_with = input_(type_="number", value=inc)
-    with p():
-        input_(
-            type_="button", onclick=(increase_counter, inc_with), value="Add")
+def todomvc_toggle_all(is_done):
+    TODOS["toggle_all"] = is_done
 
+    for item in TODOS["items"]:
+        item["is_done"] = is_done
 
-@callback_route(app, '/inc/')
-def increase_counter(inc):
-    global i
-    i += inc
-    return hypergen(counter_template, i, inc, target_id="content")
+def todomvc_toggle_one(i, is_done):
+    TODOS["items"][i]["is_done"] = is_done
 
+def todomvc_add(task):
+    TODOS["items"].append({"task": task, "is_done": False})
 
-@app.route('/counter/')
-def counter():
-    return hypergen(base_template, partial(counter_template, i))
+def todomvc_clear_completed():
+    TODOS["items"] = [x for x in TODOS["items"] if not x["is_done"]]
 
+def todomvc_set_filter(filt):
+    TODOS["filt"] = filt
 
-@app.route('/')
-def index():
-    def template():
-        h1("Browse the following examples")
-        ul(li.r(a.r("Basic counter", href=url_for("counter"))))
+def todomvc_template():
+    style("input{margin-right: 6px;} ul{list-style: none; padding-left: 0;}")
+    input_(type_="checkbox", checked=TODOS["toggle_all"], onclick=(todomvc_toggle_all, THIS))
+    new_item = input_(placeholder="What needs to be done?")
+    input_(type_="button", value="Add", onclick=(todomvc_add, new_item))
+    with ul.c():
+        for i, item in enumerate(TODOS["items"]):
+            if TODOS["filt"] is not None and TODOS["filt"] != item["is_done"]:
+                continue
+            with li.c():
+                input_(type_="checkbox", checked=item["is_done"],
+                       onclick=(todomvc_toggle_one, i, THIS))
+                write(item["task"])
+                
+    input_(type_="button", value="All", onclick=(todomvc_set_filter, None))
+    input_(type_="button", value="Active", onclick=(todomvc_set_filter, False))
+    input_(type_="button", value="Completed", onclick=(todomvc_set_filter, True))
+    input_(type_="button", value="Clear completed", onclick=(todomvc_clear_completed, ))
 
-    return hypergen(base_template, template)
+@app.route('/todomvc/')
+def todomvc():
+    def callback_output():
+        return hypergen(todomvc_template, target_id="content", flask_app=app)
 
+    html = hypergen(base_template, todomvc_template, flask_app=app,
+                    callback_output=callback_output)
+
+    return html
 ```
