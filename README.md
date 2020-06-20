@@ -12,12 +12,18 @@ pip install Werkzeug==0.16.1 flask==1.1.1
 FLASK_ENV=development FLASK_APP=flask_example flask run
 ```
 
-Then browse to http://127.0.0.1:5000.
+Then browse to http://127.0.0.1:5000. The src for the demos can be found at https://github.com/runekaagaard/hypergen/blob/master/src/flask_example.py.
 
-# This is how one could write a todo app:
+# Example todo app in flask:
 
 ```python
 from hypergen import *
+from flask import Flask
+
+app = Flask(__name__)
+
+# Automatically setup flask routes for callbacks.
+flask_liveview_autoroute_callbacks(app, "/cbs/")
 
 # This is our base template, that can be shared between pages.
 def base_template(content_func):
