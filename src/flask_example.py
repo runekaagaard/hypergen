@@ -284,8 +284,6 @@ def a_basic_form():
 
 # TODO: Make all elements support onXXX events, including button.
 # TODO: Support browser navigation.
-# TODO: Autoset second argument to @callback_route.
-# TODO: Allow for avoiding callback_route all together.
 
 TODOS = {
     "items": [
@@ -316,20 +314,23 @@ def todomvc_set_filter(filt):
     TODOS["filt"] = filt
 
 def todomvc_template():
-    p("This demo is a work in progress.")
+    style("input{margin-right: 6px;} ul{list-style: none; padding-left: 0;}")
     input_(type_="checkbox", checked=TODOS["toggle_all"], onclick=(todomvc_toggle_all, THIS))
     new_item = input_(placeholder="What needs to be done?")
     input_(type_="button", value="Add", onclick=(todomvc_add, new_item))
-    for i, item in enumerate(TODOS["items"]):
-        if TODOS["filt"] is not None and TODOS["filt"] != item["is_done"]:
-            continue
-        with li.c():
-            input_(type_="checkbox", checked=item["is_done"], onclick=(todomvc_toggle_one, i, THIS))
-            write(item["task"])
-    input_(type_="button", value="All", onclick=(todomvc_set_filter, None))
-    input_(type_="button", value="Active", onclick=(todomvc_set_filter, False))
-    input_(type_="button", value="Completed", onclick=(todomvc_set_filter, True))
-    input_(type_="button", value="Clear completed", onclick=(todomvc_clear_completed, ))
+    with ul.c():
+        for i, item in enumerate(TODOS["items"]):
+            if TODOS["filt"] is not None and TODOS["filt"] != item["is_done"]:
+                continue
+            with li.c():
+                input_(type_="checkbox", checked=item["is_done"],
+                       onclick=(todomvc_toggle_one, i, THIS))
+                write(item["task"])
+    with div.c():
+        input_(type_="button", value="All", onclick=(todomvc_set_filter, None))
+        input_(type_="button", value="Active", onclick=(todomvc_set_filter, False))
+        input_(type_="button", value="Completed", onclick=(todomvc_set_filter, True))
+        input_(type_="button", value="Clear completed", onclick=(todomvc_clear_completed, ))
 
 @app.route('/todomvc/')
 def todomvc():
