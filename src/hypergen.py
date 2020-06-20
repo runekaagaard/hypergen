@@ -47,8 +47,7 @@ def hypergen(func, *args, **kwargs):
         state.id_prefix = kwargs.pop("id_prefix", "")
         state.auto_id = auto_id
         state.liveview = kwargs.pop("liveview", False)
-        state.default_callback_output = kwargs.pop("default_callback_output",
-                                                   None)
+        state.callback_output = kwargs.pop("callback_output", None)
         func(*args, **kwargs)
         html = "".join(str(x()) if callable(x) else str(x) for x in state.html)
     finally:
@@ -58,7 +57,7 @@ def hypergen(func, *args, **kwargs):
         state.id_prefix = ""
         state.auto_id = False
         state.liveview = False
-        state.default_callback_output = None
+        state.callback_output = None
 
     if as_deltas:
         return [[UPDATE, target_id, html]]
@@ -213,8 +212,8 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
         def __():
             with app.app_context():
                 data = f(*request.get_json()["args"])
-                if data is None and __.default_callback_output is not None:
-                    data = __.default_callback_output()
+                if data is None and __.callback_output is not None:
+                    data = __.callback_output()
                 return jsonify(data)
 
         __.hypergen_callback_url = path
@@ -304,8 +303,8 @@ def _callback(args, this, debounce=0):
     assert callable(func), ("First callback argument must be a callable, got "
                             "{}.".format(repr(func)))
     args = args[1:]
-    if state.default_callback_output is not None:
-        func.default_callback_output = state.default_callback_output
+    if state.callback_output is not None:
+        func.callback_output = state.callback_output
 
     return "H.cb({})".format(
         t(

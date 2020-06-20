@@ -281,8 +281,6 @@ def a_basic_form():
 
 # TODO: Make all elements support onXXX events, including button.
 # TODO: Support browser navigation.
-# TODO: New argument to hypergen that sets default target_id
-#       used when callback_route's return None.
 # TODO: Autoset second argument to @callback_route.
 # TODO: Allow for avoiding callback_route all together.
 
@@ -337,8 +335,8 @@ def todomvc_template():
 
 @app.route('/todomvc/')
 def todomvc():
-    def default_callback_output():
+    def callback_output():
         return hypergen(todomvc_template, target_id="content")
 
     return hypergen(base_template, todomvc_template,
-                    default_callback_output=default_callback_output)
+                    callback_output=callback_output)
