@@ -30,7 +30,7 @@ def base_template(content_func):
     doctype()
     with html.c():
         with head.c():
-            title("My Todo App")
+            title("I 3> hypergen")
             script(src="hypergen.js")
 
         with body.c():
