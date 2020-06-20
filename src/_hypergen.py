@@ -36,7 +36,7 @@ UPDATE = 1
 
 
 def hypergen(func, *args, **kwargs):
-    autoroutes = kwargs.pop("autoroutes", None)
+    flask_app = kwargs.pop("flask_app", None)
     kwargs = deepcopy(kwargs)
     auto_id = kwargs.pop("auto_id", False)
     target_id = kwargs.pop("target_id", False)
@@ -49,7 +49,7 @@ def hypergen(func, *args, **kwargs):
         state.auto_id = auto_id
         state.liveview = kwargs.pop("liveview", False)
         state.callback_output = kwargs.pop("callback_output", None)
-        state.autoroutes = autoroutes
+        state.flask_app = flask_app
         func(*args, **kwargs)
         html = "".join(str(x()) if callable(x) else str(x) for x in state.html)
     finally:
@@ -60,7 +60,7 @@ def hypergen(func, *args, **kwargs):
         state.auto_id = False
         state.liveview = False
         state.callback_output = None
-        state.autoroutes = None
+        state.flask_app = None
 
     if as_deltas:
         return [[UPDATE, target_id, html]]
@@ -225,38 +225,20 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
     return _
 
 
-def flask_liveview_callback_autoroute(app, prefix, *args, **kwargs):
+def flask_liveview_autoroute_callbacks(app, prefix, *args, **kwargs):
     from flask import request, jsonify
-    autoroutes = {}
-    route = "/{}/<func_name>/".format(prefix)
+    setattr(app, "hypergen_autoroutes", {"prefix": prefix, "routes": {}})
+    route = "{}<func_name>/".format(prefix)
 
     @app.route(route, methods=["POST", "GET"], *args, **kwargs)
     def router(func_name):
-        func = autoroutes[func_name]
+        func = app.hypergen_autoroutes["routes"][func_name]
         with app.app_context():
             data = func(*request.get_json()["args"])
             if data is None and func.callback_output is not None:
                 data = func.callback_output()
+
             return jsonify(data)
-
-    return autoroutes
-    # print "APP, PREFIX", app, prefix
-
-    # assert False
-
-    # def _(f):
-    #     @wraps(f)
-    #     def __(cb_func_path):
-    #         with app.app_context():
-    #             data = f(*request.get_json()["args"])
-    #             if data is None and __.callback_output is not None:
-    #                 data = __.callback_output()
-    #             return jsonify(data)
-
-    #     __.hypergen_callback_url = route
-    #     return __
-
-    # return _
 
 
 ### Misc ###
@@ -346,10 +328,15 @@ def _callback(args, this, debounce=0):
     args = args[1:]
     if state.callback_output is not None:
         func.callback_output = state.callback_output
-    if state.autoroutes is not None:
-        state.autoroutes[func_to_string(func)] = func
-        func.hypergen_callback_url = "/cbs/{}/".format(func_to_string(func))
-    print state.autoroutes
+
+    if state.flask_app is not None and hasattr(state.flask_app,
+                                               "hypergen_autoroutes"):
+        state.flask_app.hypergen_autoroutes["routes"][func_to_string(
+            func)] = func
+        func.hypergen_callback_url = "{}{}/".format(
+            state.flask_app.hypergen_autoroutes["prefix"],
+            func_to_string(func))
+
     return "H.cb({})".format(
         t(
             encoder.unquote(

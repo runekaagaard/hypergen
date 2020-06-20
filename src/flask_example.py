@@ -9,7 +9,7 @@ from functools import partial
 from flask import Flask, url_for
 from hypergen import (flask_liveview_hypergen as hypergen,
                       flask_liveview_callback_route as callback_route,
-                      flask_liveview_callback_autoroute as callback_autoroute,
+                      flask_liveview_autoroute_callbacks as autoroute_callbacks,
                       div, input_, script, raw, label, p, h1, ul, li, a, html,
                       head, body, link, table, tr, th, td, THIS, pre, section,
                       ol, write, span, button, b, skippable, fieldset, legend,
@@ -23,6 +23,8 @@ JQUERY = "https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"
 MORPHDOM = "https://cdn.jsdelivr.net/npm/morphdom@2.5.4/dist/morphdom.min.js"
 
 app = Flask(__name__)
+autoroute_callbacks(app, "/cbs/")
+
 i = 0
 
 ### Shared base ###
@@ -329,14 +331,12 @@ def todomvc_template():
     input_(type_="button", value="Completed", onclick=(todomvc_set_filter, True))
     input_(type_="button", value="Clear completed", onclick=(todomvc_clear_completed, ))
 
-autoroutes = callback_autoroute(app, "cbs")
-
 @app.route('/todomvc/')
 def todomvc():
     def callback_output():
-        return hypergen(todomvc_template, target_id="content")
+        return hypergen(todomvc_template, target_id="content", flask_app=app)
 
-    html = hypergen(base_template, todomvc_template,
-                    callback_output=callback_output, autoroutes=autoroutes)
-    print ",,,,,444,,,,,,,,,,,,,,", autoroutes
+    html = hypergen(base_template, todomvc_template, flask_app=app,
+                    callback_output=callback_output)
+
     return html
