@@ -284,6 +284,7 @@ def a_basic_form():
 # TODO: New argument to hypergen that sets default target_id
 #       used when callback_route's return None.
 # TODO: Autoset second argument to @callback_route.
+# TODO: Allow for avoiding callback_route all together.
 
 TODOS = {
     "items": [
