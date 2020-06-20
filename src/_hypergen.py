@@ -36,6 +36,7 @@ UPDATE = 1
 
 
 def hypergen(func, *args, **kwargs):
+    autoroutes = kwargs.pop("autoroutes", None)
     kwargs = deepcopy(kwargs)
     auto_id = kwargs.pop("auto_id", False)
     target_id = kwargs.pop("target_id", False)
@@ -48,6 +49,7 @@ def hypergen(func, *args, **kwargs):
         state.auto_id = auto_id
         state.liveview = kwargs.pop("liveview", False)
         state.callback_output = kwargs.pop("callback_output", None)
+        state.autoroutes = autoroutes
         func(*args, **kwargs)
         html = "".join(str(x()) if callable(x) else str(x) for x in state.html)
     finally:
@@ -58,6 +60,7 @@ def hypergen(func, *args, **kwargs):
         state.auto_id = False
         state.liveview = False
         state.callback_output = None
+        state.autoroutes = None
 
     if as_deltas:
         return [[UPDATE, target_id, html]]
@@ -222,6 +225,40 @@ def flask_liveview_callback_route(app, path, *args, **kwargs):
     return _
 
 
+def flask_liveview_callback_autoroute(app, prefix, *args, **kwargs):
+    from flask import request, jsonify
+    autoroutes = {}
+    route = "/{}/<func_name>/".format(prefix)
+
+    @app.route(route, methods=["POST", "GET"], *args, **kwargs)
+    def router(func_name):
+        func = autoroutes[func_name]
+        with app.app_context():
+            data = func(*request.get_json()["args"])
+            if data is None and func.callback_output is not None:
+                data = func.callback_output()
+            return jsonify(data)
+
+    return autoroutes
+    # print "APP, PREFIX", app, prefix
+
+    # assert False
+
+    # def _(f):
+    #     @wraps(f)
+    #     def __(cb_func_path):
+    #         with app.app_context():
+    #             data = f(*request.get_json()["args"])
+    #             if data is None and __.callback_output is not None:
+    #                 data = __.callback_output()
+    #             return jsonify(data)
+
+    #     __.hypergen_callback_url = route
+    #     return __
+
+    # return _
+
+
 ### Misc ###
 
 
@@ -298,6 +335,10 @@ encoder.quote = lambda x: "H_" + x + "_H"
 encoder.unquote = lambda x: x.replace('"H_', "").replace('_H"', "")[1:-1]
 
 
+def func_to_string(func):
+    return ".".join((func.__module__, func.__name__))
+
+
 def _callback(args, this, debounce=0):
     func = args[0]
     assert callable(func), ("First callback argument must be a callable, got "
@@ -305,7 +346,10 @@ def _callback(args, this, debounce=0):
     args = args[1:]
     if state.callback_output is not None:
         func.callback_output = state.callback_output
-
+    if state.autoroutes is not None:
+        state.autoroutes[func_to_string(func)] = func
+        func.hypergen_callback_url = "/cbs/{}/".format(func_to_string(func))
+    print state.autoroutes
     return "H.cb({})".format(
         t(
             encoder.unquote(

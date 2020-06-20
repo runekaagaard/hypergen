@@ -8,10 +8,11 @@ from functools import partial
 
 from flask import Flask, url_for
 from hypergen import (flask_liveview_hypergen as hypergen,
-                      flask_liveview_callback_route as callback_route, div,
-                      input_, script, raw, label, p, h1, ul, li, a, html, head,
-                      body, link, table, tr, th, td, THIS, pre, section, ol,
-                      write, span, button, b, skippable, fieldset, legend,
+                      flask_liveview_callback_route as callback_route,
+                      flask_liveview_callback_autoroute as callback_autoroute,
+                      div, input_, script, raw, label, p, h1, ul, li, a, html,
+                      head, body, link, table, tr, th, td, THIS, pre, section,
+                      ol, write, span, button, b, skippable, fieldset, legend,
                       style, form, select, option, title, doctype)
 from random import randint
 from itertools import takewhile
@@ -294,26 +295,21 @@ TODOS = {
     "filt": None,
 }
 
-@callback_route(app, '/todomvc_toggle_all/')
 def todomvc_toggle_all(is_done):
     TODOS["toggle_all"] = is_done
 
     for item in TODOS["items"]:
         item["is_done"] = is_done
 
-@callback_route(app, '/todomvc_toggle_one/')
 def todomvc_toggle_one(i, is_done):
     TODOS["items"][i]["is_done"] = is_done
 
-@callback_route(app, '/todomvc_add/')
 def todomvc_add(task):
     TODOS["items"].append({"task": task, "is_done": False})
 
-@callback_route(app, '/todomvc_clear_completed/')
 def todomvc_clear_completed():
     TODOS["items"] = [x for x in TODOS["items"] if not x["is_done"]]
 
-@callback_route(app, '/todomvc_set_filter/')
 def todomvc_set_filter(filt):
     TODOS["filt"] = filt
 
@@ -333,10 +329,14 @@ def todomvc_template():
     input_(type_="button", value="Completed", onclick=(todomvc_set_filter, True))
     input_(type_="button", value="Clear completed", onclick=(todomvc_clear_completed, ))
 
+autoroutes = callback_autoroute(app, "cbs")
+
 @app.route('/todomvc/')
 def todomvc():
     def callback_output():
         return hypergen(todomvc_template, target_id="content")
 
-    return hypergen(base_template, todomvc_template,
-                    callback_output=callback_output)
+    html = hypergen(base_template, todomvc_template,
+                    callback_output=callback_output, autoroutes=autoroutes)
+    print ",,,,,444,,,,,,,,,,,,,,", autoroutes
+    return html
