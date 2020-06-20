@@ -55,6 +55,7 @@ def index():
             li.r(a.r("Input fields", href=url_for("inputs"))),
             li.r(a.r("Petals around the rose", href=url_for("petals"))),
             li.r(a.r("A basic form", href=url_for("a_basic_form"))),
+            li.r(a.r("TodoMVC implementation", href=url_for("todomvc"))),
         )
 
     return hypergen(base_template, template)
@@ -193,7 +194,6 @@ def petals():
 
 ### A basic form ###
 
-GRID = ("")
 CSS = """
 form { display: grid;grid-template-columns: repeat(2,1fr);grid-column-gap: 10px;
     grid-row-gap: 10px; }
@@ -276,3 +276,74 @@ def a_basic_form_template():
 @app.route('/a-basic-form/')
 def a_basic_form():
     return hypergen(base_template, a_basic_form_template)
+
+### todomvc implementation ###
+
+# TODO: Make all elements support onXXX events, including button.
+# TODO: Support browser navigation.
+# TODO: New argument to hypergen that sets default target_id
+#       used when callback_route's return None.
+# TODO: Autoset second argument to @callback_route.
+
+TODOS = {
+    "items": [
+        {"task": "Remember the milk", "is_done": False},
+        {"task": "Walk the dog", "is_done": False},
+        {"task": "Get the kids to school", "is_done": True},
+    ],
+    "toggle_all": False,
+    "filt": None,
+}
+
+@callback_route(app, '/todomvc_toggle_all/')
+def todomvc_toggle_all(is_done):
+    TODOS["toggle_all"] = is_done
+
+    for item in TODOS["items"]:
+        item["is_done"] = is_done
+
+    return hypergen(todomvc_template, target_id="content")
+
+@callback_route(app, '/todomvc_toggle_one/')
+def todomvc_toggle_one(i, is_done):
+    TODOS["items"][i]["is_done"] = is_done
+
+    return hypergen(todomvc_template, target_id="content")
+
+@callback_route(app, '/todomvc_add/')
+def todomvc_add(task):
+    TODOS["items"].append({"task": task, "is_done": False})
+
+    return hypergen(todomvc_template, target_id="content")
+
+@callback_route(app, '/todomvc_clear_completed/')
+def todomvc_clear_completed():
+    TODOS["items"] = [x for x in TODOS["items"] if not x["is_done"]]
+
+    return hypergen(todomvc_template, target_id="content")
+
+@callback_route(app, '/todomvc_set_filter/')
+def todomvc_set_filter(filt):
+    TODOS["filt"] = filt
+
+    return hypergen(todomvc_template, target_id="content")
+
+def todomvc_template():
+    p("This demo is a work in progress.")
+    input_(type_="checkbox", checked=TODOS["toggle_all"], onclick=(todomvc_toggle_all, THIS))
+    new_item = input_(placeholder="What needs to be done?")
+    input_(type_="button", value="Add", onclick=(todomvc_add, new_item))
+    for i, item in enumerate(TODOS["items"]):
+        if TODOS["filt"] is not None and TODOS["filt"] != item["is_done"]:
+            continue
+        with li.c():
+            input_(type_="checkbox", checked=item["is_done"], onclick=(todomvc_toggle_one, i, THIS))
+            write(item["task"])
+    input_(type_="button", value="All", onclick=(todomvc_set_filter, None))
+    input_(type_="button", value="Active", onclick=(todomvc_set_filter, False))
+    input_(type_="button", value="Completed", onclick=(todomvc_set_filter, True))
+    input_(type_="button", value="Clear completed", onclick=(todomvc_clear_completed, ))
+
+@app.route('/todomvc/')
+def todomvc():
+    return hypergen(base_template, todomvc_template)
