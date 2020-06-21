@@ -14,7 +14,7 @@ FLASK_ENV=development FLASK_APP=flask_example flask run
 
 Then browse to http://127.0.0.1:5000. The src for the demos can be found at https://github.com/runekaagaard/hypergen/blob/master/src/flask_example.py.
 
-# Example todo app in flask:
+# Example todo app on flask
 
 ```python
 from hypergen import *
