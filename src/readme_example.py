@@ -1,23 +1,5 @@
-# Welcome to hypergen
-Pure python, threadsafe, parallizable, caching and diffing html generator. No more templates, just write python (or cython). Includes a liveview feature similar to Phoenix Liveview.
-
-# How to try the demos?
-
-```bash
-git clone git@github.com:runekaagaard/hypergen.git
-cd hypergen/src/
-virtualenv venv
-source venv/bin/activate
-pip install Werkzeug==0.16.1 flask==1.1.1
-FLASK_ENV=development FLASK_APP=flask_example flask run
-```
-
-Then browse to http://127.0.0.1:5000. The src for the demos can be found at https://github.com/runekaagaard/hypergen/blob/master/src/flask_example.py.
-
-# Example todo app in flask:
-
-```python
 # coding=utf-8
+# yapf: disable
 from flask import Flask
 from hypergen import *
 from hypergen import flask_liveview_hypergen as hypergen
@@ -96,4 +78,3 @@ def todomvc():
         return hypergen(template, target_id="content", flask_app=app)
 
     return hypergen(base_template, template, flask_app=app, callback_output=callback_output)
-```

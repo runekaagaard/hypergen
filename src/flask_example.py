@@ -314,7 +314,7 @@ def todomvc_set_filter(filt):
     TODOS["filt"] = filt
 
 def todomvc_template():
-    style("input{margin-right: 6px;} ul{list-style: none; padding-left: 0;}")
+    style("input,span{margin-right: 6px; cursor: pointer;} ul{list-style: none; padding-left: 0;}")
     input_(type_="checkbox", checked=TODOS["toggle_all"], onclick=(todomvc_toggle_all, THIS))
     new_item = input_(placeholder="What needs to be done?")
     input_(type_="button", value="Add", onclick=(todomvc_add, new_item))
@@ -326,11 +326,11 @@ def todomvc_template():
                 input_(type_="checkbox", checked=item["is_done"],
                        onclick=(todomvc_toggle_one, i, THIS))
                 write(item["task"])
-    with div.c():
-        input_(type_="button", value="All", onclick=(todomvc_set_filter, None))
-        input_(type_="button", value="Active", onclick=(todomvc_set_filter, False))
-        input_(type_="button", value="Completed", onclick=(todomvc_set_filter, True))
-        input_(type_="button", value="Clear completed", onclick=(todomvc_clear_completed, ))
+
+    span("All", onclick=(todomvc_set_filter, None))
+    span("Active", onclick=(todomvc_set_filter, False))
+    span("Completed", onclick=(todomvc_set_filter, True))
+    input_(type_="button", value="Clear completed", onclick=(todomvc_clear_completed, ))
 
 @app.route('/todomvc/')
 def todomvc():

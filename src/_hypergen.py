@@ -112,11 +112,8 @@ def _element_start_3(children, into, void, sep):
     write(*children, into=into, sep=sep)
 
 
-def element_start(tag, children, into=None, sep="", void=False, **attrs):
-    attrs = _element_start_1(tag, attrs, into)
-    for k, v in items(attrs):
-        _element_start_2(k, v, into)
-    _element_start_3(children, into, void, sep)
+def element_start(*args, **kwargs):
+    return control_element_start(*args, **kwargs)
 
 
 def element_end(tag, children, into=None, sep="", void=False):
