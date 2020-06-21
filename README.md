@@ -3,7 +3,7 @@
 - a template language in pure (p|c)ython
 - a liveview inspired by Phoenix Liveview
 
-With it, you can write dynamic websites without javascript, template languagues, serialization and deserialization. Just plain Python.
+With it, you can write dynamic websites without javascript, template languages, serialization and deserialization. Just plain Python.
 
 # How to try the demos?
 
