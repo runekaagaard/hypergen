@@ -72,8 +72,8 @@ def template():
     input_(type_="button", value="Clear completed", onclick=(clear_completed, ))
 
 # App route.
-@app.route('/todomvc/')
-def todomvc():
+@app.route('/')
+def todo():
     def callback_output():
         return hypergen(template, target_id="content", flask_app=app)
 
