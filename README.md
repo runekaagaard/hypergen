@@ -1,5 +1,9 @@
-# Welcome to hypergen
-Pure python, threadsafe, parallizable, caching and diffing html generator. No more templates, just write python (or cython). Includes a liveview feature similar to Phoenix Liveview.
+# Hypergen is
+
+- a template language in pure (p|c)ython
+- a liveview inspired by Phoenix Liveview
+
+With it, you can write dynamic websites without javascript, template languagues, serialization and deserialization. Just plain Python.
 
 # How to try the demos?
 
