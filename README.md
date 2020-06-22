@@ -99,4 +99,5 @@ def todo():
     def callback_output():
         return hypergen(template, target_id="content", flask_app=app)
 
-    return hypergen(base_template, template, flask_app=app, callback_output=callback_output)```
+    return hypergen(base_template, template, flask_app=app, callback_output=callback_output)
+```
