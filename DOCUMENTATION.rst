@@ -54,3 +54,51 @@ Each command is an array on the form ``[NAME, ARG1, ARG2, ..., ARGN, KEYWORD_ARG
 *KEYWORD_ARGUMENTS*
     A required object with optional keyword arguments. Will be given as the last argument to the
     command function.
+
+Supported Client Commands
+=========================
+
+hypergen.morph(id_of_element, new_html)
+---------------------------------------
+
+Updates the given element with new html. Uses morphdom for efficency.
+
+hypergen.delete(id_of_element)
+------------------------------
+
+Deletes given element.
+
+hypergen.flash(message, sticky=False)
+--------------------------------
+
+Display a notification message. Set ``sticky`` to true to persist the message.
+
+hypergen.focus(id_of_element)
+------------------------------
+
+Changes the focus to the given element.
+
+hypergen.blur()
+---------------
+
+Removes the focus from the focused element, if any.
+
+hypergen.block(execution_groups)
+--------------------------------
+
+Blocks execution of events for the given execution groups. Use ``"*"`` to block all execution groups.
+
+hypergen.release(execution_groups)
+--------------------------------
+
+Resumes execution of events for the given execution groups. Use ``"*"`` to resume all execution groups.
+
+hypergen.set_state(path, data, merge=False)
+-------------------------------------------
+
+Set or merges the client state at the given path.
+
+hypergen.switch_mode(mode_name)
+-------------------------------
+
+Changes to another execution mode. Hypergen supports out of the box: "MAIN", "OFFLINE" and "SERVER_ERROR_500".
