@@ -1,8 +1,5 @@
-Client / Server Communication Format
-====================================
-
-Server -> Client
-----------------
+Client Communication Format
+===========================
 
 Every time a client side event (onchange, onclick, etc.) triggers a callback view function on the server, the server returns a list of commands for the client to execute. Most of whom manipulates the DOM.
 
