@@ -19,9 +19,6 @@ On the server this looks like this:
             cmd("hypergen.flash", "Updated the page!", sticky=True),
         ])
         
-
-
-
 This happens automatically in the liveview life cycle, but commands can be executed manually by the following javascript:
 
 .. code-block:: javascript
