@@ -1,3 +1,5 @@
+Work in progress...
+
 Client Communication Format
 ===========================
 
@@ -51,6 +53,47 @@ Each command is an array on the form ``[NAME, ARG1, ARG2, ..., ARGN, KEYWORD_ARG
 *KEYWORD_ARGUMENTS*
     A required object with optional keyword arguments. Will be given as the last argument to the
     command function.
+
+
+Server Communication Format
+===========================
+
+Stub.
+
+Execution Groups
+================
+
+Stub.
+
+Execution Modes
+===============
+
+Stub.
+
+Blocking
+--------
+
+Stub.
+
+Concurrency Models
+==================
+
+Stub.
+
+Notifications
+=============
+
+Stub.
+
+Focus
+=====
+
+Stub.
+
+State
+=====
+
+Stub.
 
 Supported Client Commands
 =========================
