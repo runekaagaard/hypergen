@@ -25,6 +25,7 @@ On the server this looks like this:
 This happens automatically in the liveview life cycle, but commands can be executed manually by the following javascript:
 
 .. code-block:: javascript
+                
     import { execute_commands } from 'hypergen'
 
     execute_commands([
