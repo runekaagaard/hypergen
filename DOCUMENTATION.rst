@@ -4,7 +4,25 @@ Client / Server Communication Format
 Server -> Client
 ----------------
 
-The client can receive a list of commands, must of whom manipulates the DOM. This happens automatically in the liveview life cycle, but commands can be executed manually by the following javascript::
+Every time a client side event (onchange, onclick, etc.) triggers a callback view function on the server, the server returns a list of commands for the client to execute. Most of whom manipulates the DOM.
+
+On the server this looks like this:
+
+.. code-block:: python
+                
+    from hypergen import LiveviewResponse, command as cmd
+    
+    @permission_required("myapp.myperm")
+    def my_callback(request):
+        return LiveviewResponse([
+            cmd("hypergen.morph", "id-of-element", "<div>New html for this section</div>")
+            cmd("hypergen.flash", "Updated the page!", sticky=True),
+        ])
+        
+
+
+
+This happens automatically in the liveview life cycle, but commands can be executed manually by the following javascript::
 
     import { execute_commands } from 'hypergen'
 
