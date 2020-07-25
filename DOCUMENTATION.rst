@@ -19,7 +19,7 @@ On the server this looks like this:
             cmd("hypergen.flash", "Updated the page!", sticky=True),
         ])
 
-This generates this json that can be read by the client.
+This generates json that can be read by the client:
      
 .. code-block:: javascript
 
