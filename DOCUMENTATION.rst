@@ -52,5 +52,5 @@ Each command is an array on the form ``[NAME, ARG1, ARG2, ..., ARGN, KEYWORD_ARG
 *ARG1, ARG2, ..., ARGN*
     Optional positional keyword arguments to the command function.
 *KEYWORD_ARGUMENTS*
-    A required object with optional keyword arguments. Will be given as the first argument to the
+    A required object with optional keyword arguments. Will be given as the last argument to the
     command function.
