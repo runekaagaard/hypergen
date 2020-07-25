@@ -18,23 +18,28 @@ On the server this looks like this:
             cmd("hypergen.morph", "id-of-element", "<div>New html for this section</div>"),
             cmd("hypergen.flash", "Updated the page!", sticky=True),
         ])
+
+This generates this json that can be read by the client.
+     
+.. code-block:: javascript
+
+    {
+        "status": 200,
+        "commands": [
+            ["hypergen.morph", "id-of-element", "<div>New html for this section</div>", {}],
+            ["hypergen.flash", "Updated the page!", {sticky: true}],
+        ]
+    }
+
+Thus it is completely possible to use different frameworks and languages in the backend.
         
-This happens automatically in the liveview life cycle, but commands can be executed manually by the following javascript:
+Commands can be executed manually on the client as well:
 
 .. code-block:: javascript
                 
     import { execute_commands } from 'hypergen'
 
     execute_commands([
-        ["hypergen.morph", "id-of-element", "<div>New html for this section</div>", {}],
-        ["hypergen.flash", "Updated the page!", {sticky: true}],
-    ])
-
-or if building javascript is not your thing:
-
-.. code-block:: javascript
-                
-    window.hypergen.execute_commands([
         ["hypergen.morph", "id-of-element", "<div>New html for this section</div>", {}],
         ["hypergen.flash", "Updated the page!", {sticky: true}],
     ])
