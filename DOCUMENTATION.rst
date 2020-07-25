@@ -20,4 +20,13 @@ or if building javascript is not your thing::
         ["hypergen.flash", {sticky: true}, "Updated the page!"],
     ])
 
-Each command is an array on the form `[NAME, KEYWORD_ARGUMENTS, ARG1, ARG2, ..., ARGN]`.
+Each command is an array on the form `[NAME, KEYWORD_ARGUMENTS, ARG1, ARG2, ..., ARGN]`, where:
+
+*NAME*
+    The name of a command function in `hypergen.commands`. Add your own custom commands to
+    `hypergen.commands`.
+*KEYWORD_ARGUMENTS*
+    An object with optional keyword arguments. Will be given as the first argument to the command
+    function.
+*ARG1, ARG2, ..., ARGN*
+    Optional positional keyword arguments to the command function.
