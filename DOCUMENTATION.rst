@@ -22,8 +22,9 @@ On the server this looks like this:
 
 
 
-This happens automatically in the liveview life cycle, but commands can be executed manually by the following javascript::
+This happens automatically in the liveview life cycle, but commands can be executed manually by the following javascript:
 
+.. code-block:: javascript
     import { execute_commands } from 'hypergen'
 
     execute_commands([
@@ -31,8 +32,10 @@ This happens automatically in the liveview life cycle, but commands can be execu
         ["hypergen.flash", {sticky: true}, "Updated the page!"],
     ])
 
-or if building javascript is not your thing::
+or if building javascript is not your thing:
 
+.. code-block:: javascript
+                
     window.hypergen.execute_commands([
         ["hypergen.morph", {}, "id-of-element", "<div>New html for this section</div>"],
         ["hypergen.flash", {sticky: true}, "Updated the page!"],
