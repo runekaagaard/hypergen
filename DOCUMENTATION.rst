@@ -26,8 +26,8 @@ This happens automatically in the liveview life cycle, but commands can be execu
     import { execute_commands } from 'hypergen'
 
     execute_commands([
-        ["hypergen.morph", {}, "id-of-element", "<div>New html for this section</div>"],
-        ["hypergen.flash", {sticky: true}, "Updated the page!"],
+        ["hypergen.morph", "id-of-element", "<div>New html for this section</div>", {}],
+        ["hypergen.flash", "Updated the page!", {sticky: true}],
     ])
 
 or if building javascript is not your thing:
@@ -35,17 +35,17 @@ or if building javascript is not your thing:
 .. code-block:: javascript
                 
     window.hypergen.execute_commands([
-        ["hypergen.morph", {}, "id-of-element", "<div>New html for this section</div>"],
-        ["hypergen.flash", {sticky: true}, "Updated the page!"],
+        ["hypergen.morph", "id-of-element", "<div>New html for this section</div>", {}],
+        ["hypergen.flash", "Updated the page!", {sticky: true}],
     ])
 
-Each command is an array on the form ``[NAME, KEYWORD_ARGUMENTS, ARG1, ARG2, ..., ARGN]``, where:
+Each command is an array on the form ``[NAME, ARG1, ARG2, ..., ARGN, KEYWORD_ARGUMENTS]``, where:
 
 *NAME*
     The name of a command function in ``hypergen.commands``. Add your own custom commands to
     ``hypergen.commands``.
-*KEYWORD_ARGUMENTS*
-    An object with optional keyword arguments. Will be given as the first argument to the command
-    function.
 *ARG1, ARG2, ..., ARGN*
     Optional positional keyword arguments to the command function.
+*KEYWORD_ARGUMENTS*
+    A required object with optional keyword arguments. Will be given as the first argument to the
+    command function.
