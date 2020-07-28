@@ -14,8 +14,8 @@ On the server this looks like this:
     @permission_required("myapp.myperm")
     def my_callback(request):
         return LiveviewResponse([
-            cmd("hypergen.morph", "id-of-element", "<div>New html for this section</div>"),
-            cmd("hypergen.add_notification", "Updated the page!", sticky=True),
+            ["hypergen.morph", "id-of-element", "<div>New html for this section</div>", {}],
+            ["hypergen.add_notification", "Updated the page!", {"sticky": True}],
         ])
 
 This generates json that can be read by the client:
