@@ -155,15 +155,15 @@ hypergen.delete(id_of_element)
 
 Deletes given element.
 
-hypergen.add_notification(message, sticky=False)
+hypergen.add_notification(message, sticky=False, group=None)
 --------------------------------
 
 Display a notification message. Set ``sticky`` to true to persist the message.
 
-hypergen.clear_notifications()
+hypergen.clear_notifications(groups=["*"])
 --------------------------------
 
-Delete all sticky notifications.
+Delete all notifications for given groups.
 
 hypergen.focus(id_of_element)
 ------------------------------
