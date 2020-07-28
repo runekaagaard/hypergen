@@ -15,7 +15,7 @@ On the server this looks like this:
     def my_callback(request):
         return LiveviewResponse([
             cmd("hypergen.morph", "id-of-element", "<div>New html for this section</div>"),
-            cmd("hypergen.flash", "Updated the page!", sticky=True),
+            cmd("hypergen.add_notification", "Updated the page!", sticky=True),
         ])
 
 This generates json that can be read by the client:
@@ -26,7 +26,7 @@ This generates json that can be read by the client:
         "status": 200,
         "commands": [
             ["hypergen.morph", "id-of-element", "<div>New html for this section</div>", {}],
-            ["hypergen.flash", "Updated the page!", {sticky: true}],
+            ["hypergen.add_notification", "Updated the page!", {sticky: true}],
         ]
     }
 
@@ -40,7 +40,7 @@ Commands can be executed manually on the client as well:
 
     execute_commands([
         ["hypergen.morph", "id-of-element", "<div>New html for this section</div>", {}],
-        ["hypergen.flash", "Updated the page!", {sticky: true}],
+        ["hypergen.add_notification", "Updated the page!", {sticky: true}],
     ])
 
 Each command is an array on the form ``[NAME, ARG1, ARG2, ..., ARGN, KEYWORD_ARGUMENTS]``, where:
@@ -70,6 +70,13 @@ Execution Modes
 
 Stub.
 
+*MAIN*
+    Stub.
+*OFFLINE*
+    Stub.
+*SERVER_ERROR_500*
+    Stub.
+
 Blocking
 --------
 
@@ -79,6 +86,13 @@ Concurrency Models
 ==================
 
 Stub.
+
+*SERIAL*
+    Stub.
+*PARALLEL*
+    Stub.
+*RECEIVE_SERIAL*
+    Stub.
 
 Notifications
 =============
@@ -90,10 +104,43 @@ Focus
 
 Stub.
 
-State
-=====
+Client State
+============
 
-Stub.
+.. code-block:: javascript
+
+    {
+        "hypergen": {
+            "execution_modes": {
+                "main": {
+                    "enter": [],
+                    "exit": [],
+                },
+                "offline": {
+                    "enter": [
+                        ["hypergen.add_notification", "Oh-ohh, you are offline.", {"sticky": true}],
+                        ["hypergen.block", "*", {}],
+                    ],
+                    "exit": [
+                        ["hypergen.clear_notifications", {}],
+                        ["hypergen.add_notification", "The wheels are turning again.", {}],
+                        ["hypergen.release", "*", {}],                        
+                    ],
+                },
+                "server_error_500": {
+                    "enter": [
+                        ["hypergen.add_notification", "Unknown server error.", {"sticky": true}],
+                        ["hypergen.block", "*", {}],
+                    ],
+                    "exit": [
+                        ["hypergen.clear_notifications", {}],
+                        ["hypergen.release", "*", {}]                        
+                    ],
+                },
+            }
+
+        }
+    }
 
 Supported Client Commands
 =========================
@@ -108,10 +155,15 @@ hypergen.delete(id_of_element)
 
 Deletes given element.
 
-hypergen.flash(message, sticky=False)
+hypergen.add_notification(message, sticky=False)
 --------------------------------
 
 Display a notification message. Set ``sticky`` to true to persist the message.
+
+hypergen.clear_notifications()
+--------------------------------
+
+Delete all sticky notifications.
 
 hypergen.focus(id_of_element)
 ------------------------------
@@ -142,3 +194,4 @@ hypergen.switch_mode(mode_name)
 -------------------------------
 
 Changes to another execution mode. Hypergen supports out of the box: "MAIN", "OFFLINE" and "SERVER_ERROR_500".
+
