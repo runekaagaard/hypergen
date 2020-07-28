@@ -156,12 +156,12 @@ hypergen.delete(id_of_element)
 Deletes given element.
 
 hypergen.add_notification(message, sticky=False, group=None)
---------------------------------
+------------------------------------------------------------
 
 Display a notification message. Set ``sticky`` to true to persist the message.
 
-hypergen.clear_notifications(groups=["*"])
---------------------------------
+hypergen.clear_notifications(groups=None)
+------------------------------------------
 
 Delete all notifications for given groups.
 
