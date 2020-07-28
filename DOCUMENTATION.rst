@@ -9,7 +9,7 @@ On the server this looks like this:
 
 .. code-block:: python
                 
-    from hypergen import LiveviewResponse, command as cmd
+    from hypergen import LiveviewResponse
     
     @permission_required("myapp.myperm")
     def my_callback(request):
