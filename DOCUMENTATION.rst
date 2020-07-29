@@ -107,9 +107,13 @@ Stub.
 Client State
 ============
 
+The client maintains a thin state to handle going offline and what to do when receiving unknown server errors. This can be set either from the server with the set_state command or directly in the frontend.
+
+It defaults to:
+
 .. code-block:: javascript
 
-    {
+    export var state = {
         hypergen: {
             execution_modes: {
                 main: {
