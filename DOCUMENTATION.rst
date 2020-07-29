@@ -5,7 +5,7 @@ Client Communication Format
 
 Every time a client side event (onchange, onclick, etc.) triggers a callback view function on the server, the server returns a list of commands for the client to execute. Most of whom manipulates the DOM.
 
-On the server this looks like this:
+On the server it looks like this:
 
 .. code-block:: python
                 
@@ -44,7 +44,7 @@ This generates json that can be read by the client:
         ]
     }
 
-Thus it is completely possible to use different frameworks and languages in the backend.
+Thus it is completely possible to use different frameworks and languages on the backend.
         
 Commands can be executed manually on the client as well with ``execute_commands``:
 
