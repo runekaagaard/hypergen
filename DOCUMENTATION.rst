@@ -18,6 +18,20 @@ On the server this looks like this:
             ["hypergen.add_notification", "Updated the page!", {"sticky": True}],
         ])
 
+Or exactly the same using the convenience wrappers:
+
+.. code-block:: python
+                
+    from hypergen import LiveviewResponse
+    from hypergen.commands import morph, add_notification
+    
+    @permission_required("myapp.myperm")
+    def my_callback(request):
+        return LiveviewResponse([
+            morph("id-of-element", "<div>New html for this section</div>"),
+            add_notification("Updated the page!", sticky=True),
+        ])
+
 This generates json that can be read by the client:
      
 .. code-block:: javascript
@@ -107,7 +121,7 @@ Stub.
 Client State
 ============
 
-The client maintains a thin state to handle going offline and what to do when receiving unknown server errors. This can be set either from the server with the set_state command or directly in the frontend.
+The client maintains a thin state to handle going offline and what to do when receiving unknown server errors. This can be set either from the server with the ``set_state`` command or directly in the frontend.
 
 It defaults to:
 
