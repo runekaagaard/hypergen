@@ -130,13 +130,13 @@ Stub.
 Client State
 ============
 
-The client maintains a thin state to handle going offline and what to do when receiving unknown server errors. This can be set either from the server with the ``set_state`` command or directly in the frontend.
+The client maintains a thin state to handle going offline, what to do when receiving unknown server errors and configuring concurrency models. This can be set either from the server with the ``set_state`` command or directly in the frontend.
 
 It defaults to:
 
 .. code-block:: javascript
 
-    export var state = {
+    export var default_state = {
         hypergen: {
             execution_modes: {
                 main: {
@@ -181,7 +181,6 @@ It defaults to:
                 },
                 save: {
                     concurrency_model: SERIAL,
-                    // Empties queue from "main" then blocks all new entries until done.
                     block: ["main"],
                 }
             }
@@ -197,10 +196,10 @@ hypergen.morph(id_of_element, new_html)
 
 Updates the given element with new html. Uses morphdom for efficency.
 
-hypergen.delete(id_of_element)
-------------------------------
+hypergen.add_callback(id_of_element, events, url, request_fn, response_ok_fn, response_failed_fn=default_response_failed)
+-------------------------------------------------------------------------------------------------------------------------
 
-Deletes given element.
+Stub
 
 hypergen.add_notification(message, sticky=False, group=None, throttle=None)
 ---------------------------------------------------------------------------
