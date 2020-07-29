@@ -18,7 +18,7 @@ On the server this looks like this:
             ["hypergen.add_notification", "Updated the page!", {"sticky": True}],
         ])
 
-Or exactly the same using the convenience wrappers:
+or exactly the same using the convenience wrappers:
 
 .. code-block:: python
                 
@@ -46,7 +46,7 @@ This generates json that can be read by the client:
 
 Thus it is completely possible to use different frameworks and languages in the backend.
         
-Commands can be executed manually on the client as well:
+Commands can be executed manually on the client as well with ``execute_commands``:
 
 .. code-block:: javascript
                 
@@ -67,6 +67,15 @@ Each command is an array on the form ``[NAME, ARG1, ARG2, ..., ARGN, KEYWORD_ARG
 *KEYWORD_ARGUMENTS*
     A required object with optional keyword arguments. Will be given as the last argument to the
     command function.
+
+You can also just call the command functions directly:
+
+.. code-block:: javascript
+
+    import { morph, add_notification } from 'hypergen/commands'
+
+    morph("id-of-element", "<div>New html for this section</div>")
+    add_notification("Updated the page!", {sticky: true})
 
 
 Server Communication Format
@@ -136,7 +145,8 @@ It defaults to:
                 },
                 offline: {
                     enter: [
-                        ["hypergen.add_notification", "Oh-ohh, you are offline.", {sticky: true, group: "offline"}],
+                        ["hypergen.add_notification", "Oh-ohh, you are offline.",
+                         {sticky: true, group: "offline"}],
                         ["hypergen.block", "*", {}],
                     ],
                     exit: [
@@ -147,7 +157,8 @@ It defaults to:
                 },
                 server_error_500: {
                     enter: [
-                        ["hypergen.add_notification", "Unknown server error.", {sticky: true, group: "e500"}],
+                        ["hypergen.add_notification", "Unknown server error.",
+                         {sticky: true, group: "e500"}],
                         ["hypergen.block", "*", {}],
                     ],
                     exit: [
