@@ -155,7 +155,7 @@ It defaults to:
                         ["hypergen.release", "*", {}]                        
                     ],
                 },
-            }
+            },
             events: {
                 blocked: [
                     ["hypergen.flash", "Input is blocked. Please try later.", {throttle: 0.25}],
@@ -163,7 +163,7 @@ It defaults to:
                 released: [
                     ["hypergen.flash", "I can accept input again. Go Go Go!"],
                 ]
-            }
+            },
 
         }
     }
