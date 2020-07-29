@@ -184,7 +184,6 @@ It defaults to:
                     block: ["main"],
                 }
             }
-
         }
     }
 
