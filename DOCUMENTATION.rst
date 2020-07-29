@@ -136,6 +136,8 @@ It defaults to:
 
 .. code-block:: javascript
 
+    export const ALL = "_ALL_"
+    
     export var default_state = {
         hypergen: {
             execution_modes: {
@@ -147,23 +149,23 @@ It defaults to:
                     enter: [
                         ["hypergen.add_notification", "Oh-ohh, you are offline.",
                          {sticky: true, group: "offline"}],
-                        ["hypergen.block", "*", {}],
+                        ["hypergen.block", ALL, {}],
                     ],
                     exit: [
                         ["hypergen.clear_notifications", {groups: ["offline"]}],
                         ["hypergen.add_notification", "The wheels are turning again.", {}],
-                        ["hypergen.release", "*", {}],                        
+                        ["hypergen.release", ALL, {}],                        
                     ],
                 },
                 server_error_500: {
                     enter: [
                         ["hypergen.add_notification", "Unknown server error.",
                          {sticky: true, group: "e500"}],
-                        ["hypergen.block", "*", {}],
+                        ["hypergen.block", ALL, {}],
                     ],
                     exit: [
                         ["hypergen.clear_notifications", {groups: ["e500"]}],
-                        ["hypergen.release", "*", {}]                        
+                        ["hypergen.release", ALL, {}]                        
                     ],
                 },
             },
@@ -223,12 +225,12 @@ Removes the focus from the focused element, if any.
 hypergen.block(execution_groups)
 --------------------------------
 
-Blocks execution of events for the given callback groups. Use ``"*"`` to block all callback groups.
+Blocks execution of events for the given callback groups. Use ``ALL`` to block all callback groups.
 
 hypergen.release(execution_groups)
 --------------------------------
 
-Resumes execution of events for the given callback groups. Use ``"*"`` to resume all callback groups.
+Resumes execution of events for the given callback groups. Use ``ALL`` to resume all callback groups.
 
 hypergen.set_state(path, data, merge=False)
 -------------------------------------------
