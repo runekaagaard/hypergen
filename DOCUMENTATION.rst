@@ -83,8 +83,8 @@ Server Communication Format
 
 Stub.
 
-Execution Groups
-================
+Callback Groups
+===============
 
 Stub.
 
@@ -175,6 +175,16 @@ It defaults to:
                     ["hypergen.flash", "I can accept input again. Go Go Go!"],
                 ]
             },
+            callback_groups: {
+                main: {
+                    concurrency_model: RECEIVE_SERIAL,
+                },
+                save: {
+                    concurrency_model: SERIAL,
+                    // Empties queue from "main" then blocks all new entries until done.
+                    block: ["main"],
+                }
+            }
 
         }
     }
@@ -215,12 +225,12 @@ Removes the focus from the focused element, if any.
 hypergen.block(execution_groups)
 --------------------------------
 
-Blocks execution of events for the given execution groups. Use ``"*"`` to block all execution groups.
+Blocks execution of events for the given callback groups. Use ``"*"`` to block all callback groups.
 
 hypergen.release(execution_groups)
 --------------------------------
 
-Resumes execution of events for the given execution groups. Use ``"*"`` to resume all execution groups.
+Resumes execution of events for the given callback groups. Use ``"*"`` to resume all callback groups.
 
 hypergen.set_state(path, data, merge=False)
 -------------------------------------------
