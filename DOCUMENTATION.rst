@@ -110,33 +110,41 @@ Client State
 .. code-block:: javascript
 
     {
-        "hypergen": {
-            "execution_modes": {
-                "main": {
-                    "enter": [],
-                    "exit": [],
+        hypergen: {
+            execution_modes: {
+                main: {
+                    enter: [],
+                    exit: [],
                 },
-                "offline": {
-                    "enter": [
-                        ["hypergen.add_notification", "Oh-ohh, you are offline.", {"sticky": true}],
+                offline: {
+                    enter: [
+                        ["hypergen.add_notification", "Oh-ohh, you are offline.", {sticky: true, group: "offline"}],
                         ["hypergen.block", "*", {}],
                     ],
-                    "exit": [
-                        ["hypergen.clear_notifications", {}],
+                    exit: [
+                        ["hypergen.clear_notifications", {groups: ["offline"]}],
                         ["hypergen.add_notification", "The wheels are turning again.", {}],
                         ["hypergen.release", "*", {}],                        
                     ],
                 },
-                "server_error_500": {
-                    "enter": [
-                        ["hypergen.add_notification", "Unknown server error.", {"sticky": true}],
+                server_error_500: {
+                    enter: [
+                        ["hypergen.add_notification", "Unknown server error.", {sticky: true, group: "e500"}],
                         ["hypergen.block", "*", {}],
                     ],
-                    "exit": [
-                        ["hypergen.clear_notifications", {}],
+                    exit: [
+                        ["hypergen.clear_notifications", {groups: ["e500"]}],
                         ["hypergen.release", "*", {}]                        
                     ],
                 },
+            }
+            events: {
+                blocked: [
+                    ["hypergen.flash", "Input is blocked. Please try later.", {throttle: 0.25}],
+                ]
+                released: [
+                    ["hypergen.flash", "I can accept input again. Go Go Go!"],
+                ]
             }
 
         }
@@ -155,15 +163,15 @@ hypergen.delete(id_of_element)
 
 Deletes given element.
 
-hypergen.add_notification(message, sticky=False, group=None)
-------------------------------------------------------------
+hypergen.add_notification(message, sticky=False, group=None, throttle=None)
+---------------------------------------------------------------------------
 
-Display a notification message. Set ``sticky`` to true to persist the message.
+Display a notification message. Set ``sticky`` to true to persist the message. Optionally mark it as part of a group or throttle similar messages in seconds.
 
 hypergen.clear_notifications(groups=None)
 ------------------------------------------
 
-Delete all notifications for given groups.
+Unless a list of groups is given, removes all notifications.
 
 hypergen.focus(id_of_element)
 ------------------------------
