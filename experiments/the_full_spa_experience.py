@@ -2,6 +2,34 @@
 Thoughts about autosaving data and general QOL improvements.
 """
 
+## views.py ##
+
+from hypergen import liveview
+"""
+Use @liveview to make the view become alive. It does the following:
+
+- Sets up a url for the view.
+- Monitors usage of models (view, create, etc.), and throws an exception if the user does not have
+  the required permissions.
+- If "mutates" is true starts a transaction.
+- Hook up callback functions to the frontend.
+- If "autosave" is true, automatically changes fields changed in the frontend.
+
+To further remove boilerplate, you can add a django object directly in the url. The url should
+persist of the objects primary key, and the view will be passed an instance of that object.
+"""
+from hypergen.dom import h1, p, fieldset, input_
+
+
+@liveview(url="edit_blog_post/<obj:blog.Post>/", mutates=True, autosave=True)
+def edit_blog_post(request, post):
+    h1("Edit the post here.")
+    p("Changes are automatically saved.")
+    with fieldset.c():
+        input_(post.title)
+        input_(post.description)
+
+
 ##  urls.py ##
 
 # Most of the time, it feels redundant to have to edit urls just to add a view, so lets allow a
@@ -53,30 +81,3 @@ class BaseModel(db.Model):
 class Post(BaseModel, hdb.LiveviewModelMixin):
     title = db.TextField()
     content = db.TextField()
-
-
-## views.py ##
-from hypergen import liveview
-"""
-Use @liveview to make the view become alive. It does the following:
-
-- Sets up a url for the view.
-- Monitors usage of models (view, create, etc.), and throws an exception if the user does not have
-  the required permissions.
-- If "mutates" is true starts a transaction.
-- Hook up callback functions to the frontend.
-- If "autosave" is true, automatically changes fields changed in the frontend.
-
-To further remove boilerplate, you can add a django object directly in the url. The url should
-persist of the objects primary key, and the view will be passed an instance of that object.
-"""
-from hypergen.dom import h1, p, fieldset, input_
-
-
-@liveview(url="edit_blog_post/<obj:blog.Post>/", mutates=True, autosave=True)
-def edit_blog_post(request, post):
-    h1("Edit the post here.")
-    p("Changes are automatically saved.")
-    with fieldset.c():
-        input_(post.title)
-        input_(post.description)
