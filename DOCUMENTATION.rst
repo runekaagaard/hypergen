@@ -197,10 +197,10 @@ hypergen.morph(id_of_element, new_html)
 
 Updates the given element with new html. Uses morphdom for efficency.
 
-hypergen.add_callback(id_of_element, events, url, request_fn, response_ok_fn, response_failed_fn=default_response_failed)
--------------------------------------------------------------------------------------------------------------------------
+hypergen.add_callback(id_of_element, events, url)
+------------------------------------------------------------------------------------
 
-Stub
+Creates an eventlistener on ``id_of_element`` for an array of events that performs a callback to the server. The server responds with client commands that will be executed.
 
 hypergen.add_notification(message, sticky=False, group=None, throttle=None)
 ---------------------------------------------------------------------------
