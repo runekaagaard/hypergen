@@ -83,10 +83,10 @@ Server Communication Format
 
 Stub.
 
-Callback Groups
-===============
+Concurrency Groups
+==================
 
-Stub.
+A callback must have a concurrency group assigned. Each concurrency group has a concurrency model and the callbacks in a group are handled accordingly. There are no dependencies across concurrency groups.   
 
 Execution Modes
 ===============
@@ -177,7 +177,7 @@ It defaults to:
                     ["hypergen.flash", "I can accept input again. Go Go Go!"],
                 ]
             },
-            callback_groups: {
+            concurrency_groups: {
                 main: {
                     concurrency_model: RECEIVE_SERIAL,
                 },
@@ -197,7 +197,7 @@ hypergen.morph(id_of_element, new_html)
 
 Updates the given element with new html. Uses morphdom for efficency.
 
-hypergen.add_callback(id_of_element, events, url)
+hypergen.add_callback(id_of_element, events, url, concurrency_group)
 ------------------------------------------------------------------------------------
 
 Creates an eventlistener on ``id_of_element`` for an array of events that performs a callback to the server. The server responds with client commands that will be executed.
@@ -225,12 +225,12 @@ Removes the focus from the focused element, if any.
 hypergen.block(execution_groups)
 --------------------------------
 
-Blocks execution of events for the given callback groups. Use ``ALL`` to block all callback groups.
+Blocks execution of events for the given concurrency groups. Use ``ALL`` to block all concurrency groups.
 
 hypergen.release(execution_groups)
 --------------------------------
 
-Resumes execution of events for the given callback groups. Use ``ALL`` to resume all callback groups.
+Resumes execution of events for the given concurrency groups. Use ``ALL`` to resume all concurrency groups.
 
 hypergen.set_state(path, data, merge=False)
 -------------------------------------------
