@@ -4,6 +4,7 @@ def ipub(outer):
     """
     Decorate an inner function to make it public to the outside.
     """
+    @wraps(outer)
     def _(inner):
         setattr(outer, inner.__name__, inner)
         return inner
